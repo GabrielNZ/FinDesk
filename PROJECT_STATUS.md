@@ -4,11 +4,11 @@ Atualizado em **28/10/2026** (America/Sao_Paulo).
 
 ## Situação atual
 
-**Revisão documental aprovada; preparação do Git em andamento; aplicação ainda não iniciada.** Gabriel aprovou a revisão e solicitou a conexão com Git antes do desenvolvimento. Não há entrega de software validada nem etapa 0 concluída.
+**Preparação do Git aprovada; início da base mínima da aplicação autorizado.** A configuração do repositório será registrada antes do desenvolvimento. Não há entrega de software validada nem etapa 0 concluída.
 
 O diretório estava vazio e não pertencia a um repositório Git. Não havia código, histórico ou instruções locais a harmonizar. Foram encontrados Node.js 24.21.0, npm 11.19.0 e Git 2.55.0.windows.5; compatibilidade da stack ainda não pesquisada.
 
-## Entrega desta rodada
+## Revisão documental aprovada
 
 - Leitura integral do mestre, dos dois complementos anexados e do complemento do chat.
 - Fontes textuais preservadas em `docs/references/`.
@@ -16,6 +16,18 @@ O diretório estava vazio e não pertencia a um repositório Git. Não havia có
 - Visão consolidada e regras operacionais registradas na raiz.
 
 Verificações: leitura das fontes, inspeção do diretório, disponibilidade das ferramentas, integridade das cópias dos anexos e referências locais da documentação. Não foram executados build, testes de aplicação ou instalador, pois não existe aplicação nesta rodada.
+
+## Preparação do Git — aprovada
+
+- Repositório local na branch `master`, rastreando `origin/master`.
+- Remoto `origin`: `https://github.com/GabrielNZ/FinDesk.git`. O remoto estava sem branches antes do primeiro envio.
+- Commit da revisão aprovada: `6db9362` — `docs(projeto): consolida requisitos e regras do FinDesk`, enviado ao GitHub.
+- `.gitignore` preparado para dependências, builds, segredos, bancos locais, logs e diretórios de dados pessoais. Fixtures fictícias, migrações e lockfiles permanecem versionáveis.
+- `.gitattributes` preparado para padronizar os novos arquivos e preservar os bytes dos documentos originais em `docs/references/`.
+
+Verificações: push concluído, upstream configurado, commit local igual ao HEAD remoto e regras de exclusão conferidas (11 caminhos protegidos e 5 versionáveis). A normalização automática do Git converteu quebras de linha de alguns originais no primeiro commit, sem alterar o texto. Com `.gitattributes`, a preservação byte a byte dos três anexos foi preparada e verificada no índice para o próximo commit, sem reescrever o histórico publicado. Espaços finais já existentes nos originais foram mantidos; a documentação consolidada passou em `git diff --cached --check`.
+
+Gabriel aprovou a preparação do Git ao autorizar o início da casca do projeto. Os dois arquivos de configuração e a preservação das quebras de linha dos originais compõem o registro desta entrega, antes do início da base da aplicação.
 
 ## Decisões e pendências
 
@@ -33,8 +45,8 @@ Verificações: leitura das fontes, inspeção do diretório, disponibilidade da
 
 Primeiro conjunto de desenvolvimento já autorizado pelos textos: documentação inicial, registro de decisões, estrutura Angular/Electron/TypeScript, inicialização mínima e propostas de identidade. Sua execução ainda não começou. Essa autorização não se estende a todas as telas da etapa 0 ou a contas reais.
 
-Atividade atual: preparar o repositório local, registrar a documentação aprovada e conectar o destino remoto confirmado por Gabriel. A identidade Git existente foi encontrada e preservada. A branch inicial é `master`, conforme a configuração Git já existente.
+Conexão Git concluída. A identidade Git existente foi preservada. A branch inicial é `master`, conforme a configuração Git já existente.
 
-Última entrega aprovada: **revisão documental**, aprovada por “Ok, vamos para a conexão com o Git”. Repositório Git inicializado localmente; esta documentação compõe o primeiro registro aprovado. Consultar o histórico com `git log --oneline`. Envio da documentação aprovada autorizado pela política de push confirmada. A configuração adicional do Git será apresentada para revisão antes do próximo commit.
+Última entrega aprovada: **preparação do Git**, aprovada por “Legal! Seguinte, vamos começar!”. A revisão documental anterior está registrada em `6db9362`. Política confirmada: **push após cada entrega aprovada**. Próxima entrega autorizada: base mínima Angular/Electron/TypeScript, com documentação arquitetural e propostas de identidade substituíveis.
 
 Após concluir a preparação do Git, a próxima entrega de aplicação é o conjunto inicial limitado já descrito. Pesquisar compatibilidade oficial e manter a marca provisória até a escolha. Decisões relevantes abertas devem ser discutidas antes das partes dependentes.

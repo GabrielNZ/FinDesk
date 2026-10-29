@@ -1,0 +1,7 @@
+# Padronização para os novos arquivos do projeto
+* text=auto eol=lf
+*.bat text eol=crlf
+*.cmd text eol=crlf
+
+# Preservar os bytes dos documentos originais recebidos
+docs/references/** -text
