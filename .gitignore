@@ -3,6 +3,8 @@ node_modules/
 .angular/
 .cache/
 coverage/
+test-results/
+playwright-report/
 *.tsbuildinfo
 
 # Builds e instaladores
@@ -40,6 +42,13 @@ release/
 /reports/
 /statements/
 /personal/
+/FinDesk-Project/data/
+/FinDesk-Project/imports/
+/FinDesk-Project/exports/
+/FinDesk-Project/backups/
+/FinDesk-Project/reports/
+/FinDesk-Project/statements/
+/FinDesk-Project/personal/
 
 # Logs e arquivos temporários
 logs/

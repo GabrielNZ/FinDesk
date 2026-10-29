@@ -5,3 +5,5 @@
 
 # Preservar os bytes dos documentos originais recebidos
 docs/references/** -text
+FinDesk_Especificacao_Financas.md -text
+docs/FINANCAS_SPEC.md -text

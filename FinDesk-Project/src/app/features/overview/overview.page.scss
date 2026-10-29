@@ -1,0 +1,77 @@
+.section-heading {
+  margin-bottom: 16px;
+}
+.section-heading h2 {
+  font-weight: 500;
+  font-size: 14px;
+}
+.area-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+}
+.area-card {
+  display: block;
+  border: 1px solid var(--fd-border);
+  border-radius: var(--fd-radius);
+  padding: 22px 24px;
+  background: var(--fd-surface);
+  transition:
+    background 0.15s,
+    border-color 0.15s;
+}
+.area-card:hover {
+  background: var(--fd-surface-hover);
+  border-color: #46564e;
+}
+.area-card-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.area-icon {
+  width: 34px;
+  height: 34px;
+  display: grid;
+  place-items: center;
+  border: 1px solid #37443c;
+  background: #232c27;
+  color: #a9bdaf;
+  border-radius: 9px;
+}
+.area-icon .pi {
+  font-size: 14px;
+}
+.card-index {
+  font-size: 10px;
+  color: var(--fd-subtle);
+}
+.area-card h3 {
+  font-weight: 500;
+  font-size: 16px;
+  margin-top: 20px;
+}
+.area-card > p {
+  margin-top: 9px;
+  font-size: 12px;
+  line-height: 1.8;
+  color: var(--fd-muted);
+}
+.card-link {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 22px;
+  border-top: 1px solid var(--fd-border);
+  padding-top: 15px;
+  font-size: 11px;
+  color: #c8d8cc;
+}
+.card-link .pi {
+  font-size: 10px;
+}
+@media (max-width: 760px) {
+  .area-grid {
+    grid-template-columns: 1fr;
+  }
+}

@@ -2,6 +2,8 @@
 
 ## Contexto e leitura
 
+O código, assets, testes, scripts, dependências e configurações da aplicação ficam em `FinDesk-Project/`. Execute os comandos npm dentro dessa pasta. A raiz mantém este arquivo, `PROJECT_BRIEF.md`, `PROJECT_STATUS.md`, `README.md`, anotações, especificações recebidas, `docs/` e a configuração Git do único repositório. Não criar outro repositório nem duplicar os arquivos de contexto dentro da aplicação.
+
 Use português brasileiro na interface, documentação e comunicação. Trate Gabriel por “você”.
 
 Antes de trabalhar, leia `PROJECT_BRIEF.md`, `PROJECT_STATUS.md` e as instruções aplicáveis à tarefa. A revisão e o índice das fontes estão em `docs/REVIEW.md`. Os documentos originais ficam em `docs/references/` e não devem ser reescritos para esconder divergências.
@@ -12,6 +14,8 @@ A ordem de leitura das fontes é: documento mestre → complemento de identidade
 
 - Execute autonomamente tarefas internas de um escopo estabelecido: organização interna, ajustes pequenos, correções, validações, testes pertinentes, refatorações locais sem mudança de comportamento e documentação.
 - Antes de implementar funcionalidade relevante, leia decisões existentes, apresente o objetivo compreendido e identifique escolhas abertas. Pesquise limitações técnicas antes de pedir decisões ao proprietário. Recomende uma abordagem e explique consequências.
+- Inclua Gabriel nas decisões de design e desenvolvimento antes de construir a parte dependente. Para telas, discuta composição, densidade, prioridade das informações e interações; ofereça alternativas concretas em pequenas rodadas. Perguntar só sobre bibliotecas e detalhes da janela não substitui essa participação. Detalhes rotineiros dentro da direção acordada continuam autônomos.
+- Use textos objetivos no aplicativo e na comunicação. Sem slogans, frases de efeito, abertura promocional ou explicações repetidas. Texto deve orientar uma ação, identificar informação ou explicar um estado necessário.
 - Discuta escolhas relevantes ainda abertas: integrações, dados acessados e armazenamento, autorização/desconexão, sincronização/conflitos, exclusão/substituição, metodologias financeiras, comportamentos importantes, navegação/identidade, custos/privacidade e mudanças estruturais.
 - Registre respostas e critérios de aceitação antes de implementar a parte dependente. Continue tarefas independentes enquanto aguarda. Não transforme proposta em decisão confirmada.
 - Ao concluir uma pequena entrega significativa, valide, atualize o estado, apresente um resultado verificável e proponha a próxima. Aguarde a resposta antes de iniciar outro conjunto de funcionalidades.
@@ -23,7 +27,9 @@ A ordem de leitura das fontes é: documento mestre → complemento de identidade
 - Produto desktop pessoal para Windows, com Angular, Electron e TypeScript. Investimentos são o principal diferencial.
 - Navegação principal: Visão geral, Finanças e Investimentos. Simulador em Investimentos. Configurações em acesso secundário por engrenagem, com seção Integrações.
 - Nome: **FinDesk**. A referência isolada a “Alça” é uma inconsistência do complemento, não um segundo nome aprovado.
+- Logo: usar o PNG original de Gabriel em `FinDesk-Project/public/brand/logo-original.png`, com moedas e seta ascendente. O arquivo contém versões branca e preta; foi preservado sem alteração. Os SVGs de apresentação apenas enquadram essas versões e não são vetorização. O F anterior foi substituído; não propor outra marca por dificuldade de visualizar um anexo.
 - Tema escuro primeiro. PrimeNG para componentes pontuais, com composição própria e recursos gratuitos. Pesquise compatibilidade oficial antes de escolher versões.
+- Gabriel confirmou Angular 21 + PrimeNG 21 Community MIT e barra nativa do Windows nesta casca. Versões e pesquisa em `docs/DECISIONS.md`. Não atualizar PrimeNG para major com outra licença sem discussão; revisar a base antes do fim previsto do LTS do Angular 21 em junho/2027.
 - SQLite é a escolha padrão proposta e autorizada para avaliação, com justificativa arquitetural a registrar. Não há servidor separado previsto inicialmente.
 - Separe interface, aplicação, domínio e infraestrutura. Componentes Angular não executam SQL nem acessam segredos. Electron usa renderer isolado, preload restrito e tipado e validação também no processo privilegiado.
 - Demonstração identificada, dados fictícios coerentes e separados dos dados reais futuros; seed idempotente, migrações versionadas e restauração explícita. Nunca apagar o banco automaticamente ao abrir.
@@ -49,3 +55,5 @@ Não faça force push, reset destrutivo, limpeza de arquivos não rastreados, ex
 `PROJECT_STATUS.md` na raiz é a fonte única de estado; não criar `docs/STATUS.md`. Registre etapa, última entrega concluída/aprovada, verificações efetivas, limitações, decisões abertas, próxima entrega e autorização para avançar, além da política de push.
 
 Separe sempre **decisão confirmada**, **proposta do Codex**, **pendência de pesquisa** e **pergunta aguardando resposta**. Não declare testes, instalação, cobertura de provedores ou compatibilidade que não foram verificados. Consulte documentação oficial ao selecionar dependências e implementar segurança do Electron. Não realize pesquisas de etapas futuras apenas para apresentá-las como já resolvidas.
+
+Agrupe verificações após conjuntos coerentes de mudanças, conforme o risco. Não crie ou execute testes para cada ajuste simples de texto, estilo ou formatação. Para esses ajustes, revisão e uma verificação conjunta de compilação/layout quando pertinente são suficientes. Regras financeiras, persistência, IPC, segurança e mecânicas relevantes exigem testes adequados. Reutilize evidências ainda válidas; não repita instalação, build completo ou toda a suíte sem mudança, falha ou preocupação concreta que justifique. Antes de commit, confirme que as verificações pertinentes ao diff estão atendidas.

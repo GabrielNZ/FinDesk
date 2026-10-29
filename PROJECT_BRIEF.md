@@ -2,6 +2,12 @@
 
 Este arquivo resume os requisitos recebidos. As fontes integrais e sua precedência estão em [docs/REVIEW.md](docs/REVIEW.md). O estado efetivo do projeto está em [PROJECT_STATUS.md](PROJECT_STATUS.md).
 
+## Especificação vigente de Finanças
+
+A [especificação de Finanças v1.0](docs/FINANCAS_SPEC.md), recebida em 29/10/2026, prevalece nas divergências dessa área. O [diagnóstico F00](docs/FINANCAS_F00.md) confronta os requisitos com o código local e propõe a continuidade. A versão local inclui os cinco submenus Geral / Movimentações / Cartão / Compromissos / Assinaturas, cards personalizáveis, previsões, detecção assistida, orçamento, alertas e disponível até o salário. A execução permanece incremental e inicialmente fictícia; integrações reais têm etapa própria. Esses requisitos não representam funções já implementadas.
+
+Nenhum banco foi adotado. SQLite permanece proposto; a comparação com MySQL e a decisão de armazenamento antecedem a implementação dependente. Não instalar ou migrar banco por interpretação do roadmap anterior.
+
 ## Produto e decisões confirmadas
 
 Aplicativo desktop pessoal de finanças e investimentos de Gabriel, inicialmente para Windows. Interface e documentação em português brasileiro. Nome definido: **FinDesk**. Investimentos são o principal diferencial, com uma área financeira correta e útil como base.
@@ -10,7 +16,7 @@ Stack definida: Angular, Electron e TypeScript. Sem servidor separado necessári
 
 A navegação principal contém **Visão geral**, **Finanças** e **Investimentos**. O simulador pertence a Investimentos. Uma engrenagem abre Configurações, que contém uma seção Integrações; os fluxos dessa seção com dados reais ainda precisam de levantamento.
 
-Tema escuro primeiro, tokens semânticos e preparação para tema claro posterior. Uso pontual de PrimeNG, com composição visual própria, controles consistentes e recursos gratuitos. Não há versão de dependência ou logo definitivo selecionado nesta revisão.
+Tema escuro primeiro, tokens semânticos e preparação para tema claro posterior. Uso pontual de PrimeNG, com composição visual própria, controles consistentes e recursos gratuitos. Gabriel confirmou **Angular 21 + PrimeNG 21 Community MIT** e **barra nativa do Windows**. Na revisão da casca, escolheu manter a base visual e enxugar o conteúdo, sem frases de efeito. A **logo original fornecida**, com moedas e seta ascendente, está preservada em `FinDesk-Project/public/brand/logo-original.png` e aplicada no lugar do F. Versões, histórico e justificativas em [docs/DECISIONS.md](docs/DECISIONS.md).
 
 ## Escolha técnica proposta nas fontes
 
@@ -63,4 +69,6 @@ Não conectar contas reais nem implementar movimentação de dinheiro, ordens ou
 
 ## Organização documental
 
-Pontos de entrada na raiz: `AGENTS.md`, `PROJECT_BRIEF.md`, `PROJECT_STATUS.md` e `README.md`. O detalhamento do projeto será mantido em `docs/PRODUCT.md`, `DECISIONS.md`, `ROADMAP.md`, `ARCHITECTURE.md`, `DOMAIN_RULES.md`, `DATA_MODEL.md`, `DESIGN_SYSTEM.md`, `INTEGRATIONS.md`, `TESTING.md` e `adr/`, conforme a implementação avance. Esses arquivos ainda não foram produzidos; os requisitos originais estão preservados nas referências. Não duplicar o estado em `docs/STATUS.md`.
+A aplicação fica em `FinDesk-Project/`, incluindo código, assets, testes, scripts, configurações npm/Angular/Electron e lockfile. Comandos npm são executados nessa pasta. Documentação, anotações e contexto permanecem na raiz e em `docs/`; o repositório Git continua único na raiz.
+
+Pontos de entrada na raiz: `AGENTS.md`, `PROJECT_BRIEF.md`, `PROJECT_STATUS.md` e `README.md`. O detalhamento está em `docs/PRODUCT.md`, `DECISIONS.md`, `ROADMAP.md`, `ARCHITECTURE.md`, `DOMAIN_RULES.md`, `DATA_MODEL.md`, `DESIGN_SYSTEM.md`, `INTEGRATIONS.md`, `TESTING.md` e `adr/`. A implementação e as pendências estão distinguidas nesses documentos; os requisitos originais permanecem preservados nas referências. Não duplicar o estado em `docs/STATUS.md`.

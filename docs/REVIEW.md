@@ -2,6 +2,8 @@
 
 Revisão de **28/10/2026**, restrita aos requisitos fornecidos e ao estado encontrado no diretório. Não constitui validação de APIs, versões de bibliotecas, termos comerciais ou cálculos implementados.
 
+**Atualização de índice em 29/10/2026:** esta revisão descreve o levantamento inicial. Logo e política de push foram posteriormente confirmadas em [DECISIONS.md](DECISIONS.md); não usar as pendências históricas abaixo como estado atual. A [especificação integral de Finanças v1.0](FINANCAS_SPEC.md), recebida como `FinDesk_Especificacao_Financas.md`, complementa as quatro fontes e prevalece nos conflitos dessa área. O original recebido permanece na raiz; a cópia em `docs/` foi conferida por SHA-256. O [diagnóstico F00](FINANCAS_F00.md) registra o confronto com o código; execução e autorizações ficam em PROJECT_STATUS.
+
 ## Fontes e ordem de leitura
 
 1. [Documento mestre](references/01-DOCUMENTO_MESTRE.md): visão, stack, requisitos, limites, arquitetura proposta, roadmap e critérios de qualidade.
@@ -13,15 +15,15 @@ Os três anexos foram copiados integralmente. O quarto arquivo transcreve o comp
 
 ## Precedência e inconsistências resolvidas na consolidação
 
-| Assunto | Leitura resultante | Fundamentação |
-|---|---|---|
-| Escopo inicial | Estrutura mínima, documentação e propostas de identidade; etapa 0 inteira será fracionada | Complemento de identidade, seções 8 e 9, limita a execução ampla do mestre |
-| Nome | FinDesk; “Alça” é uma referência textual inconsistente | Nome explícito na seção 1 do complemento de identidade; menção isolada na seção 3 |
-| Estado do projeto | `PROJECT_STATUS.md` na raiz | Substituição explícita de `docs/STATUS.md` na seção 7 do complemento |
-| Autonomia | Implementar decisões estabelecidas e detalhes rotineiros; levantar escolhas relevantes abertas | Complemento do chat, seções 1 a 4 |
-| Continuação | Aprovar a entrega apresentada, commitar e seguir para a próxima proposta, após esclarecer decisões relevantes pendentes | Complemento Git, seções 2 e 3; complemento do chat, seção 6 |
-| Configurações | Engrenagem acessível abre Configurações com seção Integrações | Complemento do chat, seção 5; os fluxos internos não estão aprovados |
-| Commit e push | Aprovação da entrega autoriza commit local; push depende de política combinada e destino confirmado | Complemento Git, seções 7 e 9 |
+| Assunto           | Leitura resultante                                                                                                      | Fundamentação                                                                     |
+| ----------------- | ----------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------- |
+| Escopo inicial    | Estrutura mínima, documentação e propostas de identidade; etapa 0 inteira será fracionada                               | Complemento de identidade, seções 8 e 9, limita a execução ampla do mestre        |
+| Nome              | FinDesk; “Alça” é uma referência textual inconsistente                                                                  | Nome explícito na seção 1 do complemento de identidade; menção isolada na seção 3 |
+| Estado do projeto | `PROJECT_STATUS.md` na raiz                                                                                             | Substituição explícita de `docs/STATUS.md` na seção 7 do complemento              |
+| Autonomia         | Implementar decisões estabelecidas e detalhes rotineiros; levantar escolhas relevantes abertas                          | Complemento do chat, seções 1 a 4                                                 |
+| Continuação       | Aprovar a entrega apresentada, commitar e seguir para a próxima proposta, após esclarecer decisões relevantes pendentes | Complemento Git, seções 2 e 3; complemento do chat, seção 6                       |
+| Configurações     | Engrenagem acessível abre Configurações com seção Integrações                                                           | Complemento do chat, seção 5; os fluxos internos não estão aprovados              |
+| Commit e push     | Aprovação da entrega autoriza commit local; push depende de política combinada e destino confirmado                     | Complemento Git, seções 7 e 9                                                     |
 
 As fontes foram preservadas, inclusive seus trechos inconsistentes. As correções de interpretação estão nesta revisão e na consolidação, sem alterar silenciosamente os originais.
 
@@ -46,15 +48,15 @@ As fontes foram preservadas, inclusive seus trechos inconsistentes. As correçõ
 
 ## Pendências por momento de decisão
 
-| Momento | O que falta | Tratamento |
-|---|---|---|
-| Preparação da base | Versões compatíveis, ferramentas e detalhes seguros do Electron | Pesquisa em documentação oficial antes da instalação/implementação |
-| Preparação das propostas de marca | Referência visual legível, caso necessária para fidelidade ao símbolo anexado | Obter visualização adequada; não inventar detalhes da imagem |
-| Escolha de identidade | Avaliação de duas propostas em fundo escuro e tamanho pequeno | Escolha/ajuste de Gabriel antes de consolidar a marca |
-| Configuração inicial de Git | Política de push; destino antes do primeiro envio | Oferecer as duas políticas previstas e registrar a escolha; verificar identidade existente |
-| Entrega de tela relevante | Comportamentos e critérios de aceitação ainda abertos | Levantamento breve, com recomendação e registro das respostas |
-| Simulador/indicadores | Metodologia e limites não definidos | Discussão antes dos cálculos dependentes, com testes pertinentes |
-| Integrações reais | Provedor, cobertura, custos, consentimento, dados, retenção e conflitos | Pesquisa oficial primeiro; levantamento com Gabriel em rodadas pequenas |
+| Momento                           | O que falta                                                                   | Tratamento                                                                                 |
+| --------------------------------- | ----------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------ |
+| Preparação da base                | Versões compatíveis, ferramentas e detalhes seguros do Electron               | Pesquisa em documentação oficial antes da instalação/implementação                         |
+| Preparação das propostas de marca | Referência visual legível, caso necessária para fidelidade ao símbolo anexado | Obter visualização adequada; não inventar detalhes da imagem                               |
+| Escolha de identidade             | Avaliação de duas propostas em fundo escuro e tamanho pequeno                 | Escolha/ajuste de Gabriel antes de consolidar a marca                                      |
+| Configuração inicial de Git       | Política de push; destino antes do primeiro envio                             | Oferecer as duas políticas previstas e registrar a escolha; verificar identidade existente |
+| Entrega de tela relevante         | Comportamentos e critérios de aceitação ainda abertos                         | Levantamento breve, com recomendação e registro das respostas                              |
+| Simulador/indicadores             | Metodologia e limites não definidos                                           | Discussão antes dos cálculos dependentes, com testes pertinentes                           |
+| Integrações reais                 | Provedor, cobertura, custos, consentimento, dados, retenção e conflitos       | Pesquisa oficial primeiro; levantamento com Gabriel em rodadas pequenas                    |
 
 Não foram feitas pesquisas externas nesta rodada porque o objeto foi a consistência das fontes, sem escolha de dependências ou confirmação de informações atuais de provedores. As pendências técnicas permanecem explicitamente sem verificação.
 

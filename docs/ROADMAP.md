@@ -1,0 +1,33 @@
+# Roadmap por pequenas entregas
+
+O roadmap integral está no [mestre](references/01-DOCUMENTO_MESTRE.md), seção 18. Os complementos alteram o ritmo, não eliminam os requisitos das etapas. Aprovação e execução reais ficam em [PROJECT_STATUS.md](../PROJECT_STATUS.md).
+
+## Finanças — sequência vigente
+
+A [especificação de Finanças](FINANCAS_SPEC.md), seção 18, define F00–F20 e prevalece sobre a distribuição antiga dessa área nas fases gerais abaixo. O [diagnóstico F00](FINANCAS_F00.md) contém a matriz existente/parcial/ausente e a adaptação proposta: F01a para rastreabilidade, catálogo fictício e levantamento; F01b para regras comuns/fixtures testadas; F01c para persistência mínima após decisão conjunta, antes de F02/F03 dependerem de preferências salvas. Essa subdivisão aguarda autorização.
+
+Assinaturas mensais/anuais, compromissos, salário previsto, detecção assistida, cards dinâmicos, orçamento, alertas e disponível pertencem à versão local de Finanças. Não adiar esses itens com base nas fases gerais antigas. Integrações reais ficam em F20, após pesquisa e autorização específica. O plano não amplia o escopo de Investimentos nem inclui metas completas ou execução de pagamentos.
+
+## Etapa 0 — fundação e demonstração
+
+| Entrega                          | Escopo e critério central                                                                       | Situação                                               |
+| -------------------------------- | ----------------------------------------------------------------------------------------------- | ------------------------------------------------------ |
+| Revisão documental               | Fontes preservadas, requisitos consolidados e precedência definida                              | Aprovada e enviada                                     |
+| Preparação do Git                | Remoto, histórico, exclusões, preservação das fontes e política de push                         | Aprovada e enviada                                     |
+| Base desktop                     | Janela, navegação provisória, PrimeNG pontual, contrato IPC, decisões e propostas de identidade | Aprovada em 29/10/2026, com os ajustes e reorganização |
+| Persistência da demonstração     | SQLite a detalhar, migrações, seed idempotente, separação de dados e restauração explícita      | Proposta; levantar comportamentos antes de implementar |
+| Demonstração de uma área por vez | Totais coerentes, navegação, filtros e expansões com dados fictícios                            | Não iniciada; acordar prioridade e metodologia         |
+| Cartão demonstrativo             | Faturas, parcelas, centavos, estornos e alternância de metodologias                             | Não iniciada                                           |
+| Carteira demonstrativa           | BRL/USD, instituições, detalhes e movimentações                                                 | Não iniciada                                           |
+| Simulador simples                | Hipóteses editáveis, gráfico conectado e cálculos acordados/testados                            | Não iniciada                                           |
+| Revisão da etapa                 | Estados de falha/vazio/atualização, preservação local, acessibilidade e critérios do mestre     | Não iniciada                                           |
+
+Essa subdivisão é uma proposta do Codex; não autoriza iniciar todos os itens. Avaliar antes do fim previsto do LTS do Angular 21 em junho/2027 uma atualização que preserve licença, manutenção e compatibilidade.
+
+## Etapas seguintes
+
+1. **MVP local utilizável:** cadastros reais locais, movimentações, cartão, investimentos, simulador validado e importação de formatos examinados.
+2. **Integrações e histórico:** conectores pesquisados, sincronização não bloqueante ao abrir, conciliação e preservação das personalizações.
+3. **Profundidade e personalização:** rentabilidade com metodologia acordada, separação de fluxos/mercado/câmbio, tema claro, painel e exportação/restauração.
+4. **Planejamento avançado:** metas, aportes variáveis, premissas por classe, inflação/câmbio, alertas em uso e janelas destacáveis quando úteis.
+5. **Acesso pelo iPhone:** definir dados, autenticação, sincronização, custos e acesso com computador desligado antes de escolher a solução.
