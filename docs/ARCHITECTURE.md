@@ -28,7 +28,9 @@ Por solicitação de Gabriel em 29/10/2026, toda a aplicação e suas ferramenta
 | `FinDesk-Project/scripts/dev.mjs`                 | Compilação inicial do Electron, servidor Angular local e encerramento dos processos iniciados pelo script |
 | `FinDesk-Project/tests/`                          | Segurança das fronteiras e teste real de navegação no Electron                                            |
 
-As camadas de domínio, aplicação financeira e infraestrutura de dados ainda não têm implementação. Não foram criadas pastas vazias nem interfaces genéricas para antecipar funções desconhecidas. Ao introduzir regras, elas entram no domínio TypeScript puro; casos de uso coordenam regras e portas necessárias; persistência fica na infraestrutura privilegiada. Angular não executa SQL nem recebe credenciais.
+A F01b acrescenta `FinDesk-Project/domain/` com dinheiro, datas civis, contratos de fatos e validação de vínculos/saldos/subtotais. É TypeScript puro, sem Angular, Electron, arquivos ou rede. `FinDesk-Project/fixtures/financas/demo.ts` contém somente fatos inventados e relógio fixo, com fábricas independentes para as variantes. Não é seed, banco ou fonte pessoal.
+
+`tsconfig.domain.json` verifica/compila domínio e fixtures para testes Node em `out/`. A interface ainda não consome esses fatos; a ponte desktop continua expondo somente versão. Casos de uso financeiros, infraestrutura de dados e persistência permanecem futuros. Angular não executa SQL nem recebe credenciais. Não houve nova dependência ou mudança na fronteira de segurança.
 
 ## Estado e gestos da navegação
 

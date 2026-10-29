@@ -60,12 +60,13 @@ Não são novas decisões de produto nem uma troca de stack. Detalhes em [ARCHIT
 - Electron isolado e com sandbox; conteúdo de produção por protocolo local restrito, sem `file://` como origem da interface.
 - Tokens semânticos e preset da versão MIT de PrimeUIX para PrimeNG pontual. Fontes do sistema, sem downloads de fontes, analytics ou telemetria do app.
 - npm e lockfile; TypeScript estrito, ESLint, Prettier, testes de segurança e teste de navegação no Electron.
+- F01b concretiza a representação apresentada na F01a em `FinDesk-Project/domain/`, sem frameworks/I/O: centavos seguros e razões BigInt para apresentação, datas civis e fatos/vínculos observados. Fixtures de demonstração ficam em `fixtures/financas/`, fora de banco e interface. Contratos de compra/parcela/previsão são distintos de movimento de caixa. Não é implementação de relatório ou ciclo bancário.
 
 ## Propostas do Codex
 
 - SQLite está confirmado em D23; driver, esquema e persistência continuam sem implementação. As alternativas e a pesquisa estão no [ADR 0002](adr/0002-sqlite-local-proposto.md).
 - A base visual será mantida com conteúdo enxuto, conforme D12. Os estudos A/B são históricos; a logo original agora está aplicada conforme D10. Ver [DESIGN_SYSTEM.md](DESIGN_SYSTEM.md).
-- Próxima pequena entrega sugerida após a revisão da F01a: F01b, regras comuns de dinheiro/datas e fixtures executáveis dos cenários independentes das políticas ainda abertas. Representações técnicas propostas em [DATA_MODEL.md](DATA_MODEL.md); F01c permanece separada para persistência.
+- Próxima pequena entrega sugerida após a revisão da F01b: F01c, começando pelo levantamento de dados/preferências/restauração e avaliação controlada da API/driver SQLite. O motor confirmado não aprova automaticamente esses comportamentos.
 
 ## Pesquisas realizadas e manutenção
 
@@ -91,4 +92,4 @@ Angular/PrimeNG e barra nativa continuam confirmados em D07/D08. A limpeza de co
 
 **Respondidas na F01a:** banco SQLite (D23) e método padrão dos gastos por fatura (D24). Não repetir essas perguntas sem novas evidências.
 
-Continuam para as entregas correspondentes: biblioteca e esquema, localização/separação/restauração/preferências, regras de ciclos, parâmetros de detecção/variáveis/alertas, metodologias restantes de indicadores/simulador, arquivos de importação, cobertura/termos de integrações e empacotamento. Não há aprovação implícita dessas escolhas. A proposta técnica de precisão/datas está documentada para revisão na F01a; não é requisito de produto inferido de uma resposta sobre o banco.
+Continuam para as entregas correspondentes: biblioteca e esquema, localização/separação/restauração/preferências, regras de ciclos, parâmetros de detecção/variáveis/alertas, metodologias restantes de indicadores/simulador, arquivos de importação, cobertura/termos de integrações e empacotamento. Não há aprovação implícita dessas escolhas. A proposta técnica de precisão/datas foi concretizada dentro do escopo autorizado da F01b; sua aceitação de implementação acompanha a revisão dessa entrega, sem atribuir novas decisões de produto à resposta sobre o banco.

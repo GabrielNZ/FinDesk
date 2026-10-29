@@ -8,6 +8,8 @@ A [especificação de Finanças](FINANCAS_SPEC.md), seção 18, define F00–F20
 
 Assinaturas mensais/anuais, compromissos, salário previsto, detecção assistida, cards dinâmicos, orçamento, alertas e disponível pertencem à versão local de Finanças. Não adiar esses itens com base nas fases gerais antigas. Integrações reais ficam em F20, após pesquisa e autorização específica. O plano não amplia o escopo de Investimentos nem inclui metas completas ou execução de pagamentos.
 
+A F01b concretiza somente a base de domínio e os fatos fictícios prioritários, com cobertura delimitada no catálogo. A próxima subetapa proposta é F01c: pesquisar/validar o driver de SQLite e levantar com Gabriel diretórios, separação, restauração e preferências antes de implementar a parte dependente. Não pular esse levantamento por SQLite já estar confirmado.
+
 ## Etapa 0 — fundação e demonstração
 
 | Entrega                          | Escopo e critério central                                                                       | Situação                                               |

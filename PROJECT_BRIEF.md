@@ -8,7 +8,7 @@ A [especificação de Finanças v1.0](docs/FINANCAS_SPEC.md), recebida em 29/10/
 
 SQLite local foi confirmado em F01a (D23), após comparação com MySQL; ainda não implementado. Driver, localização, separação/restauração e novas operações IPC ficam para a F01c. Parcelas por fatura foram confirmadas como padrão dos gastos (D24), mantendo a visão pelo valor total contratado.
 
-Rastreabilidade e catálogo preparados em F01a: [requisitos por ID](docs/financas/REQUISITOS.md) e [cenários fictícios](docs/financas/CENARIOS.md). Os documentos não equivalem a fixtures executáveis ou funcionalidades implementadas.
+Rastreabilidade e catálogo preparados em F01a: [requisitos por ID](docs/financas/REQUISITOS.md) e [cenários fictícios](docs/financas/CENARIOS.md). F01b concretiza dinheiro/datas, fatos e fixtures básicas com testes em domínio puro. Somente a cobertura indicada no catálogo é executável; os fluxos financeiros ainda não aparecem nas telas e não há persistência.
 
 ## Produto e decisões confirmadas
 

@@ -1,0 +1,13 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "module": "CommonJS",
+    "moduleResolution": "node",
+    "rootDir": ".",
+    "outDir": "./out",
+    "types": [],
+    "lib": ["ES2022"],
+    "sourceMap": true
+  },
+  "include": ["domain/**/*.ts", "fixtures/**/*.ts"]
+}

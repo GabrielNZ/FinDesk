@@ -28,9 +28,9 @@ Precisão monetária, quantidades fracionárias, datas civis, chaves de idempot�
 
 Na próxima entrega de persistência, revisar o [ADR SQLite](adr/0002-sqlite-local-proposto.md), discutir os comportamentos de dados e registrar critérios antes de criar esquema e seed. Fixtures fictícias reproduzíveis serão versionadas; bancos pessoais não.
 
-## Proposta técnica F01a — dinheiro, datas e contratos
+## Representação de dinheiro, datas e contratos — F01a/F01b
 
-Esta seção é proposta do Codex para a revisão da F01a, não código, esquema SQL ou biblioteca escolhida. Regras de negócio confirmadas ficam em DOMAIN_RULES; o detalhamento visual continua na especificação.
+As propostas da F01a foram aprovadas para concretização ao autorizar F01b. `FinDesk-Project/domain/` implementa as quantias, datas e os fatos básicos abaixo; isso não é esquema SQL, importador ou biblioteca de banco escolhida. Regras de negócio confirmadas ficam em DOMAIN_RULES; o detalhamento visual continua na especificação.
 
 | Conceito           | Representação proposta                                                                                                                                                  | Validação/implicação                                                                                                                                                                                                    |
 | ------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -57,4 +57,12 @@ Para um gerador futuro de parcelas, propor quociente inteiro e distribuir os cen
 - **Personalização:** categoria/anotação/regra manual separada do dado de origem; atualização preserva override. Alterações têm alcance explícito.
 - **Expectativa de cenário:** fatos e resultados invariantes separados dos cálculos condicionados a decisões abertas. Seed/banco não são o formato de transporte da interface.
 
-Aceitação proposta para F01b: valores/datas validados, somas por moeda e limites explícitos, agenda observada de parcelas somando a compra, vínculos sem duplicação, fonte/cobertura e variantes determinísticas. Nenhum calendário bancário, disponibilidade diária, parser ou motor de recorrência será inventado para concluir essa base.
+## Implementação delimitada da F01b
+
+- `money.ts`: centavos seguros por moeda, soma/subtração, subtotal conhecido com contagem de ausências, divisão e conversão para apresentação. Razões usam BigInt internamente, evitando perda de precisão no produto intermediário; o resultado público continua sendo centavos inteiros seguros. Conversão preserva original e metadados, sem criar lançamento.
+- `civil-date.ts`: validação gregoriana (anos 0001–9999), intervalo civil inclusivo fornecido, mês calendário e relógio fixo. Nenhum ciclo de salário/cartão é calculado; as previsões trazem datas explícitas.
+- `finance-facts.ts`: contas e abertura, movimentos de caixa tipados, cartões/limites com fonte, compras/parcelas/faturas, expectativa salarial, fatos de assinatura e cobertura. Parcelas deste contrato são explicitamente observadas na fonte; agenda de compromisso futuro não afirma que a fatura já foi cobrada. Estimativas exigirão contrato próprio na etapa pertinente. Instantes de coleta são ISO UTC canônico; datas de negócio continuam civis. Fontes da demonstração são simuladas.
+- `finance.ts`: valida IDs/referências, moedas/sinais, contrapartidas de transferência na mesma moeda, pagamento integral recíproco, agenda observada completa/parcial e metadados. Repetição do ID externo na mesma conta/fonte é recusada; isso não implementa reimportação idempotente ou conciliação automática. Pagamento integral pode sair de outra conta própria da mesma moeda.
+- Saldo por conta = snapshot de abertura + movimentos de caixa posteriores até a data explícita. Consulta anterior à abertura é desconhecida e falha explicitamente. O subtotal de fatura soma itens conhecidos, sem declarar uma fatura em formação como total final. A cobertura acompanha os fatos e precisará ser apresentada pelos futuros casos de uso/telas.
+
+As agendas de parcelas vêm observadas nas fixtures; não foi criado gerador que escolha fechamento, primeiro mês ou regra de dia útil. A distribuição de sobra nas primeiras parcelas permanece a proposta para esse futuro gerador. Estornos/rotativo/parcial, relatórios de consumo, disponível diário, regras de detecção e persistência continuam para as etapas correspondentes. Estes tipos são internos; não substituem validação de entradas de arquivos ou novos contratos IPC.

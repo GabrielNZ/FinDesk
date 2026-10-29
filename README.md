@@ -2,7 +2,7 @@
 
 Projeto pessoal de finanças e investimentos para Windows, previsto em Angular, Electron e TypeScript.
 
-Esta entrega contém a **casca navegável do aplicativo**, com páginas de estrutura e tema escuro para avaliação. A logo original fornecida por Gabriel está aplicada e preservada em `FinDesk-Project/public/brand/logo-original.png`. Ainda não há dados financeiros, SQLite ou conexões bancárias. A barra da janela é a nativa do Windows.
+Esta entrega contém a **casca navegável do aplicativo**, com páginas de estrutura e tema escuro para avaliação. A logo original fornecida por Gabriel está aplicada e preservada em `FinDesk-Project/public/brand/logo-original.png`. A F01b acrescenta domínio de dinheiro/datas e fixtures fictícias testadas; elas ainda não aparecem na interface. Não há banco ou conexão bancária implementados. A barra da janela é a nativa do Windows.
 
 ## Instalar e executar
 
@@ -57,6 +57,8 @@ npm run test:desktop
 O build da interface fica em `FinDesk-Project/dist/renderer/browser/`; o desktop compilado, em `FinDesk-Project/out/desktop/`. `check` reúne tipos, lint, formatação e testes de segurança. `test:desktop` compila e testa a janela real do Electron; os testes de navegação mostram a janela para conferir gestos e transições no Windows. Capturas/traces ficam em `FinDesk-Project/test-results/`, fora do Git. Não há teste de instalador ou persistência, pois essas funções não foram implementadas.
 
 Formatação da aplicação: `npm run format` e `npm run format:check`. Esses comandos ficam limitados a `FinDesk-Project/`; a documentação externa e os originais recebidos permanecem fora da formatação automática.
+
+`npm run test:domain` compila domínio/fixtures e executa os testes financeiros básicos sem abrir a interface. `npm test` inclui também os testes de segurança; `npm run check` verifica tipos, lint, formatação e esses testes. A F01b não implementa persistência ou indicadores na tela.
 
 As verificações são agrupadas conforme o risco da mudança; não é necessário repetir todos esses comandos para ajustes simples. A frequência está definida em [docs/TESTING.md](docs/TESTING.md).
 

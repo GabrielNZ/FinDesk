@@ -29,10 +29,11 @@ Os demais comandos desta página pressupõem o diretório `FinDesk-Project/`. N�
 
 ## Cobertura desta fatia
 
-- `typecheck`: TypeScript estrito de desktop, templates Angular e testes/configuração.
+- `typecheck`: TypeScript estrito de desktop, domínio/fixtures, templates Angular e testes/configuração.
 - `lint`: ESLint e regras Angular de código, templates e acessibilidade; scripts Node incluídos.
 - `format:check`: Prettier; originais em `docs/references/` e arquivos gerados estão excluídos intencionalmente.
-- `test`: quatro testes Node verificam origens confiáveis da ponte, restrição do modo de desenvolvimento, arquivos contidos no build e CSP.
+- `test`: compila desktop/domínio e executa quatro testes de segurança e 18 testes de domínio. `test:domain` compila e executa somente os 18 testes de domínio, sem abrir Electron.
+- `tests/domain/`: IDs FIN e cenários C nos nomes dos testes. Cobre centavos/limites/ausência/moedas, taxas exatas e arredondamento, calendário/bissextos/quatro fusos, caixa separado de cartão e previsão, parcelas observadas/centavos/ano, transferências, pagamento integral, Sem categoria, IDs de origem e instantes de coleta. Nenhuma regra de ciclo é inferida desses testes.
 - `test:desktop`: build completo e teste Playwright no Electron real; protocolo local, versão pela ponte, ausência de Node no renderer, sandbox no Windows, navegação/recarga, Configurações/Integrações, propostas SVG, diálogo PrimeNG, Escape, janela menor e ausência de erros capturados no console.
 - O mesmo teste também confere o botão abaixo de Configurações, recolhimento em 72 px, ganho de largura do conteúdo, navegação com ícones e expansão por teclado. Não é necessário repetir testes de domínio/segurança isolados por uma mudança apenas de navegação visual.
 - `navigation.spec.ts` usa mouse real para verificar encaixe nas quatro bordas, prévia sem texto, recolhimento pelo botão em cada orientação, cancelamento, menu por teclado e controles em janela menor. Confere também que a borda não redimensiona e não há separador ajustável, conforme D20.
@@ -58,4 +59,4 @@ Na F01a foram conferidos vínculos documentais, IDs, referências entre cenário
 
 A F00 foi uma inspeção estática e documental, sem alterações de código. Reutilizou os resultados anteriores da casca e conferiu integridade da especificação, links locais e diff; não repetiu instalação, build ou testes de execução e não validou cálculos financeiros.
 
-Não há testes de cálculo financeiro, persistência, seed ou migração porque essas funções ainda não existem nesta entrega. Não há instalador Windows ou distribuição validados. A validação da janela de desenvolvimento não substitui teste futuro do aplicativo empacotado. Não registrar aprovação visual como confirmada apenas porque um teste automatizado passou.
+Na F01b passaram tipos/templates, lint, formatação e os 22 testes Node (18 domínio + quatro segurança). A interface e a ponte não mudaram; build web, inspeção visual e Playwright não foram repetidos nesta rodada. Não há teste de persistência, seed/migração, relatórios, disponível diário, importação ou integração real. A validação no Node de desenvolvimento não comprova banco ou empacotamento no Electron; estes continuam para as etapas pertinentes. Não registrar aprovação visual como confirmada apenas porque um teste automatizado passou.

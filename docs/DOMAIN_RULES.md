@@ -1,6 +1,6 @@
 # Regras financeiras
 
-As regras originais estão no [mestre](references/01-DOCUMENTO_MESTRE.md), especialmente seções 10 a 14 e 16. Esta casca ainda não implementa cálculos financeiros.
+As regras originais estão no [mestre](references/01-DOCUMENTO_MESTRE.md), especialmente seções 10 a 14 e 16. A F01b implementa a base exata de dinheiro/datas e valida fatos, saldos de caixa e subtotais de itens conhecidos em domínio puro. Indicadores/telas financeiras, persistência e integrações ainda não estão implementados.
 
 Para Finanças, a [especificação vigente](FINANCAS_SPEC.md) detalha e prevalece sobre sugestões antigas conflitantes. Confirmados: saldo atual distinto de resultado; salário previsto fora do caixa até receber; disponível conceitual = saldo de hoje − obrigações não pagas no horizonte − protegido; assinatura anual com equivalente mensal separado do desembolso integral; obrigação de cartão descontada uma única vez; vencidos preservados e ausência de cobrança condicionada à cobertura.
 
@@ -21,4 +21,4 @@ As seções 6, 7, 8 e 11–16 mantêm pendentes fronteiras dos ciclos, dias/atra
 - **Simulações:** cenários hipotéticos, com aporte no momento declarado, taxas efetivas corretamente convertidas, taxa zero, limites, valores nominais/reais e resultado bruto/líquido explícitos. Não incluir impostos sem modelo acordado nem alterar posições reais.
 - **Conciliação:** preferir identificadores externos; possíveis coincidências ambíguas precisam de revisão. Preservar personalizações e não apagar histórico por omissão de uma resposta.
 
-Metodologias e limites ainda abertos serão apresentados ao proprietário antes dos cálculos dependentes. Não há fórmulas aprovadas por implementação nesta entrega.
+Metodologias e limites ainda abertos serão apresentados ao proprietário antes dos cálculos dependentes. A escolha D24 orienta relatórios futuros; a F01b não implementa alocação temporal de consumo, apenas conserva os fatos e seus vínculos. O cálculo do saldo usa somente caixa; compras/parcelas/previsões/limites não criam novos débitos de conta.

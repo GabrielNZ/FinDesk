@@ -1,6 +1,6 @@
 # Finanças — catálogo fictício para F01b e etapas seguintes
 
-**Proposta de fixtures, não arquivos executáveis ou dados pessoais.** IDs e critérios em [REQUISITOS.md](REQUISITOS.md). Todos os nomes de bancos/serviços abaixo são apenas referências de demonstração; valores, contas, datas e relações foram inventados. Não há número real de conta/cartão, extrato, credencial ou consulta externa de logos.
+**Catálogo de fixtures, sem dados pessoais.** A F01b concretiza o conjunto base e variantes de C09/C18 em [demo.ts](../../FinDesk-Project/fixtures/financas/demo.ts); os demais cenários não se tornam automaticamente executados por constarem aqui. IDs e critérios em [REQUISITOS.md](REQUISITOS.md). Todos os nomes de bancos/serviços abaixo são apenas referências de demonstração; valores, contas, datas e relações foram inventados. Não há número real de conta/cartão, extrato, credencial ou consulta externa de logos.
 
 ## Convenções e conjunto base
 
@@ -84,3 +84,7 @@ Um cartão `card-demo` ligado a demo-a, final fictício `0000`. Fonte manual fic
 Na F01b, priorizar C02–C07, C09/C10, C12, C17/C18, C23 e C31 para dinheiro/datas/vínculos e fatos independentes das decisões restantes. Os outros cenários permanecem catalogados para suas etapas; não implementar importador, motor de detecção, interface ou banco para dizer que todos os casos já passam.
 
 Cada fixture futura deve declarar ID/versionamento, relógio, fontes/cobertura, fatos, vínculos, alterações da variante, resultado esperado e pendências. Fatos observados, previsão e estimativa são registros distintos; uma associação identifica o mesmo evento econômico, sem criar um novo débito de caixa. Não usar o catálogo como seed de dados pessoais.
+
+## Cobertura efetiva da F01b
+
+Implementados como fatos/cálculos comuns: C02–C07, C09/C10, equivalente de C12, separação previsto/recebido em C17/C18, conversão fictícia C23 e precisão/datas de C31. C01/C19 têm cobertura apenas dos intervalos/calendário/fusos, sem tela/ciclo. C11 cobre rejeição de identidade repetida, sem parser ou deduplicação de arquivos. C22 cobre validade dos instantes, sem política de cobertura para médias/inativação. Testes em `FinDesk-Project/tests/domain/`; resultados de execução e autorização no PROJECT_STATUS.

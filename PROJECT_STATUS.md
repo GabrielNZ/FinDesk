@@ -4,9 +4,21 @@ Atualizado em **29/10/2026** (America/Sao_Paulo).
 
 ## Situação atual
 
-**F01a aprovada; F01b autorizada por Gabriel em 29/10/2026.** Primeiro registrar a entrega documental aprovada com commit/push; depois implementar regras comuns de dinheiro/datas, fixtures executáveis e testes pertinentes. A aprovação não encerra as decisões abertas de ciclos, previsões ou persistência. Aplicação em `FinDesk-Project/`; documentação/contexto fora dela.
+**F01b aprovada; F01c autorizada para levantamento e avaliação técnica.** Gabriel autorizou a próxima entrega em 29/10/2026. Registrar primeiro F01b com commit/push; depois pesquisar e avaliar persistência SQLite, discutindo os comportamentos de dados antes da implementação dependente. Aplicação em `FinDesk-Project/`; documentação/contexto fora dela.
 
-## F01a — entrega atual
+## F01b — entrega atual
+
+- **Implementado:** [domínio puro](FinDesk-Project/domain/finance.ts), dinheiro em centavos seguros por moeda, somas/subtrações controladas, subtotal conhecido com ausência explícita, divisão/conversão de apresentação com razão exata, datas civis/calendário/intervalos e relógio fixo.
+- **Fatos e fixtures:** [demo.ts](FinDesk-Project/fixtures/financas/demo.ts), conjunto base C02–C07/C10 e variantes C09/C18; origens/cobertura fictícias, contas BRL/USD, caixa separado de compras/parcelas/faturas/previsões, agendas observadas atravessando ano, mensal/anual e recebimento salarial antecipado/atrasado. Sem dados pessoais ou seed de banco.
+- **Consistência:** IDs/moedas/sinais e vínculos validados, contrapartidas de transferência, pagamento integral recíproco, agenda somando a compra e identificação explícita das parcelas observadas. Saldo usa abertura + caixa até data fornecida; itens de cartão/previsão não criam débito. Subtotal de fatura em formação não é apresentado como total final. Pagamento pode partir de outra conta própria na mesma moeda.
+- **Verificação:** tipos/templates, lint, formatação e 22 testes Node aprovados (18 domínio + quatro segurança). Testes de domínio incluem quatro fusos, meses curtos/bissextos, centavos, excesso de precisão, ausência, moeda, cronograma observado, previsão versus fato e identidades/vínculos inválidos. Rodada final de domínio repetida somente após acrescentar a identificação obrigatória de parcela observada. Sem repetir Playwright/build web, pois interface/ponte não mudaram.
+- **Limites:** não há tela financeira consumindo fixtures, banco, nova API IPC, importação/conciliação, gerador de ciclo/parcelamento, fórmula diária, estorno/rotativo/parcial ou motor de previsão/detecção. A rejeição de ID de origem repetido verifica o conjunto interno; não implementa reimportação idempotente. Cobertura de cada cenário está delimitada no catálogo.
+- **Dependências:** nenhuma biblioteca adicionada, versões/lockfile preservados. `npm run test:domain` executa somente domínio; `npm test` inclui segurança; `npm run check` inclui os novos arquivos nas verificações.
+- **Perguntas aguardando resposta:** nenhuma necessária para concluir F01b. Datas de ciclos, parâmetros de indicadores, séries/associações e detalhes da persistência continuam abertos para suas entregas.
+- **Próxima entrega proposta — F01c:** levantamento de persistência da demonstração/preferências, avaliação controlada do driver/API SQLite e proposta de localização, separação dos ambientes, restauração e migrações. Trazer alternativas técnicas verificadas e discutir os comportamentos de dados antes da implementação dependente; não avançar automaticamente a F02.
+- **Autorização:** F01b aprovada por “vamos para a próxima”; commit/push autorizados e F01c iniciada pelo levantamento proposto. A autorização não define sozinha diretórios, restauração, retenção ou arquitetura do acesso ao banco.
+
+## F01a — histórico da entrega aprovada
 
 - **Concluído:** [52 requisitos com IDs, fonte, aceitação e etapas](docs/financas/REQUISITOS.md), [catálogo de 31 cenários fictícios](docs/financas/CENARIOS.md), comparação pesquisada de armazenamento e [proposta de representação/contratos](docs/DATA_MODEL.md). Fatos, previsões, resultados invariantes e políticas pendentes estão separados. As fixtures executáveis ficam para F01b.
 - **Respostas confirmadas:** SQLite local; gastos por parcelas de cada fatura por padrão, mantendo a visão do total contratado na data da compra. Pagamento de fatura continua sem duplicar consumo. D23/D24 registram as perguntas, respostas e limites; não perguntar novamente sem novas evidências.
@@ -36,7 +48,7 @@ Atualizado em **29/10/2026** (America/Sao_Paulo).
 - **Dependências propostas:** F01b para regras comuns e fixtures executáveis após respostas pertinentes; F01c para persistência mínima após decisão conjunta, antes das preferências salvas de F02/F03. F02–F20 seguem a referência da especificação, com subdivisões quando necessário.
 - **Pesquisa de armazenamento:** comparação e escolha concluídas na F01a; driver e detalhes de persistência continuam pendentes. Integração real permanece para F20.
 - **Levantamento:** demais temas da seção 16 serão discutidos em pequenas rodadas antes da implementação dependente; não bloqueiam fatos/cálculos comuns independentes.
-- **Histórico de autorização:** casca, ajustes, F00 e reorganização aprovados/commitados/enviados; depois Gabriel autorizou F01a. Avanço para F01b aguarda revisão da entrega atual.
+- **Histórico de autorização:** casca/F00/reorganização em `6920552`; F01a aprovada e enviada em `4694ef9`; F01b autorizada e implementada para revisão. Próxima proposta: F01c, começando pelo levantamento.
 
 ## Entrega atual
 
@@ -71,14 +83,15 @@ Detalhes e fontes em [docs/DECISIONS.md](docs/DECISIONS.md). Revisar a base ante
 - `npm ci` reinstalou as dependências pelo lockfile com sucesso; depois passaram `npm run check` e `npm run test:desktop`, já com a marca aplicada.
 - Abertura normal, sem o modo oculto de teste, mostrou a janela; o Electron reconheceu o ícone ICO gerado.
 
-Não há teste de instalador, persistência, cálculos ou integrações, pois essas funções ainda não foram implementadas. As verificações de execução incluem o Windows deste ambiente; não representam validação de outras plataformas.
+Esses resultados são históricos da casca. A F01b adicionou os testes de domínio descritos no bloco atual. Ainda não há teste de instalador, persistência, indicadores nas telas ou integrações. As verificações incluem o Windows deste ambiente; não representam validação de outras plataformas.
 
 ## Git e aprovação
 
 - Remoto: `https://github.com/GabrielNZ/FinDesk.git`; branch `master`, rastreando `origin/master`.
 - Revisão documental aprovada e enviada: `6db9362` — `docs(projeto): consolida requisitos e regras do FinDesk`.
 - Preparação Git aprovada e enviada: `f6a250d` — `chore(git): configura exclusões e preservação dos documentos`.
-- **Última entrega aprovada e enviada:** `6920552` — `feat(base): adiciona casca desktop e organiza projeto`, incluindo os ajustes, F00 e reorganização. F01a é a entrega atual, ainda sem commit/push.
+- Casca/F00/reorganização aprovadas e enviadas: `6920552` — `feat(base): adiciona casca desktop e organiza projeto`.
+- **Última entrega aprovada e enviada:** `4694ef9` — `docs(financas): consolida requisitos e cenários da F01a`. F01b é a entrega atual, ainda sem commit/push.
 - Política confirmada: **push após cada entrega aprovada**. Identidade Git existente preservada. Originais mantidos byte a byte no histórico após a configuração de atributos.
 
 ## Pendências e próxima entrega proposta
@@ -93,7 +106,7 @@ Não há teste de instalador, persistência, cálculos ou integrações, pois es
 
 **Aprovação atual:** Gabriel aprovou expressamente as mudanças existentes e autorizou commit/push. Substitui a pendência anterior de revisão do conjunto.
 
-**Próximo passo vigente:** revisar F01a e, mediante continuidade, registrar a entrega conforme a política Git e iniciar F01b conforme o bloco atual. Não implementar F01c ou F02–F20 automaticamente.
+**Próximo passo vigente:** revisar F01b e, mediante continuidade, registrar a entrega conforme a política Git e iniciar o levantamento da F01c conforme o bloco atual. Não implementar persistência nem F02–F20 automaticamente.
 
 **Espaçamento superior:** reduzidas a altura do cabeçalho e a margem interna superior do conteúdo após a remoção da linha divisória, conforme solicitado. Botão de informação preservado à direita. Ajuste apenas de CSS, revisado sem executar a suíte.
 
