@@ -60,6 +60,8 @@ Formatação da aplicação: `npm run format` e `npm run format:check`. Esses co
 
 `npm run test:domain` compila domínio/fixtures e executa os testes financeiros básicos sem abrir a interface. `npm test` inclui também os testes de segurança; `npm run check` verifica tipos, lint, formatação e esses testes. A F01b não implementa persistência ou indicadores na tela.
 
+`npm run probe:sqlite` avalia a API SQLite incluída no Electron usando um worker e bancos temporários fictícios. É uma ferramenta isolada, não parte da inicialização normal nem um teste de persistência já integrada. [Decisões e plano da F01c](docs/financas/PERSISTENCIA.md).
+
 As verificações são agrupadas conforme o risco da mudança; não é necessário repetir todos esses comandos para ajustes simples. A frequência está definida em [docs/TESTING.md](docs/TESTING.md).
 
 ## Documentação
@@ -75,6 +77,7 @@ Leia nesta ordem:
 - [Escopo desta entrega](docs/PRODUCT.md) e [roadmap](docs/ROADMAP.md).
 - [Especificação integral de Finanças](docs/FINANCAS_SPEC.md) e [diagnóstico local F00 / próxima entrega proposta](docs/FINANCAS_F00.md).
 - [Requisitos de Finanças por ID](docs/financas/REQUISITOS.md) e [catálogo fictício da F01a](docs/financas/CENARIOS.md).
+- [Persistência local: decisões, avaliação e próximas fatias](docs/financas/PERSISTENCIA.md).
 - [Regras financeiras](docs/DOMAIN_RULES.md) e [modelo de dados](docs/DATA_MODEL.md).
 - [Sistema visual e propostas](docs/DESIGN_SYSTEM.md), [integrações](docs/INTEGRATIONS.md) e [testes](docs/TESTING.md).
 - [ADR da base desktop](docs/adr/0001-base-desktop.md) e [decisão SQLite / comparação com MySQL](docs/adr/0002-sqlite-local-proposto.md).

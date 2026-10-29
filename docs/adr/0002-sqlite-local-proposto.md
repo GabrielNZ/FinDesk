@@ -1,6 +1,6 @@
 # ADR 0002 — SQLite local
 
-**Decisão confirmada por Gabriel em F01a, 29/10/2026 (D23): SQLite local. Ainda não implementado.** Caminho deste ADR mantido para preservar os links históricos.
+**Decisões confirmadas: D23 — SQLite local; D25 — API incluída node:sqlite em worker privilegiado; D26/D27 — localização e restauração.** Capacidade técnica avaliada, sem persistência na execução normal ainda. Caminho deste ADR mantido para preservar os links históricos.
 
 ## Contexto e histórico
 
@@ -27,12 +27,24 @@ Sondagem local do executável Electron instalado, sem abrir banco: **Electron 45
 
 O [documento oficial da versão Node 24.22.1](https://raw.githubusercontent.com/nodejs/node/v24.22.1/doc/api/sqlite.md) classifica `node:sqlite` como release candidate e descreve DatabaseSync como síncrono. É candidato a avaliar, sem dependência externa adicional; disponibilidade do módulo não comprova leitura/gravação persistente, transações, desempenho ou distribuição. Não criar operações longas que congelem a interface; a execução privilegiada e eventual worker serão discutidos na F01c se exigirem mudança estrutural.
 
-Um driver nativo externo continua como alternativa a pesquisar se necessário. O [Electron documenta a ABI específica e a reconstrução desses módulos](https://www.electronjs.org/docs/latest/tutorial/using-native-node-modules); não instalar biblioteca ou ferramenta de rebuild por precaução. Nenhum driver foi selecionado ou adicionado nesta entrega.
+Na F01c.1, Gabriel confirmou a API incluída com worker dedicado após a prova abaixo. Um driver nativo externo não foi necessário. O [Electron documenta a ABI específica e a reconstrução desses módulos](https://www.electronjs.org/docs/latest/tutorial/using-native-node-modules); não instalar biblioteca ou ferramenta de rebuild por precaução.
 
-## Limites e aceitação antes de F01c
+## Avaliação F01c.1 e decisão do acesso
 
-- Confirmar localização dos arquivos, separação demonstração/pessoal e alcance das preferências; migrações versionadas e seed idempotente, sem apagar ao abrir.
-- Propor restauração explícita que afete somente o ambiente escolhido. Dados locais não substituem backup independente.
+`npm run probe:sqlite` inicia Electron 45.1.0 de verdade, com perfil temporário e sem `ELECTRON_RUN_AS_NODE`. Worker Node dedicado usa o Node embarcado 24.22.1. Passaram escrita/leitura parametrizadas, rollback, chaves estrangeiras, inteiros/BigInt, reabertura/versão/integridade e cópia consistente via backup. A limpeza tem verificação do destino; nenhum banco pessoal ou perfil normal é usado. O script não participa da inicialização normal.
+
+**Escolha confirmada D25:** node:sqlite no worker. A execução síncrona fica fora da thread principal, sem habilitar Node na interface ou mudar sandbox. A prova não é benchmark nem validação de distribuição; a condição release candidate permanece registrada e requer revalidação nas atualizações do Electron.
+
+Alternativas examinadas: executar a API síncrona na thread principal seria mais simples, mas pode bloquear o aplicativo; usar [better-sqlite3](https://github.com/WiseLibs/better-sqlite3/blob/master/README.md) exigiria uma dependência externa nativa e avaliação/rebuild da ABI. Compatibilidade desse pacote com este Electron não foi testada; não foi instalado nem aprovado. A recomendação pelo módulo incluído decorre do cenário e da prova, não de uma alegação de superioridade geral.
+
+Fontes adicionais: [Node worker_threads](https://nodejs.org/api/worker_threads.html), [orientação de desempenho do Electron](https://www.electronjs.org/docs/latest/tutorial/performance), [transações SQLite](https://www.sqlite.org/lang_transaction.html) e [caminhos de dados do Electron](https://www.electronjs.org/docs/latest/api/app#appgetpathname). A documentação de Web Workers do renderer não é o mecanismo escolhido.
+
+**D26/D27 confirmadas:** `%LOCALAPPDATA%\FinDesk\data`; demonstração em arquivo separado dos dados pessoais futuros; restauração repõe fatos fictícios preservando preferências/layout, com ação de layout distinta. Critérios e subdivisão proposta da implementação em [PERSISTENCIA.md](../financas/PERSISTENCIA.md).
+
+## Critérios restantes de implementação
+
+- Aplicar a localização D26 e a separação/restauração D27; definir formatos das preferências pertinentes, migrações versionadas e seed idempotente, sem apagar ao abrir.
+- Implementar restauração explícita somente da demonstração, preservando preferências/layout; propor sua composição na interface. Dados locais não substituem backup independente.
 - Avaliar driver/API na execução real do Electron, transações/rollback, precisão/inteiros, parâmetros SQL e validação das novas operações IPC.
 - Testar reabertura, migração e preservação em falha, com perfis/bancos fictícios; empacotamento ainda não validado.
 - Angular não executa SQL, não recebe caminhos arbitrários ou credenciais. Banco e operações de arquivo ficam no lado privilegiado.

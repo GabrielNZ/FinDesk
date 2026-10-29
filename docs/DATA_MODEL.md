@@ -6,7 +6,7 @@
 
 A [especificação de Finanças](FINANCAS_SPEC.md) exige ainda categorias/estabelecimentos e regras manuais, compromissos avulsos e séries recorrentes com ocorrências, assinaturas mensais/anuais e histórico, salário previsto confirmado, vínculos de pagamento/conciliação, cobertura temporal da fonte, sugestões confirmáveis, orçamentos/alertas e preferências de período/layout por área. São conceitos requeridos, sem esquema ou entidades de código adotados nesta F00.
 
-Preservar a distinção entre origem e personalização, previsão e fato, cobrança no cartão e desembolso da fatura. F01a registra o [catálogo fictício](financas/CENARIOS.md) e a proposta abaixo, antes das fixtures executáveis. SQLite foi confirmado em D23 após comparação com MySQL; driver, local de armazenamento e separação/restauração continuam pendentes. Ver [ADR 0002](adr/0002-sqlite-local-proposto.md).
+Preservar a distinção entre origem e personalização, previsão e fato, cobrança no cartão e desembolso da fatura. Catálogo e fixtures da F01b estão vinculados abaixo. SQLite foi confirmado em D23; D25–D27 confirmam API incluída/worker, diretório LocalAppData e restauração demo preservando preferências/layout. Esquema/migrações e contratos de armazenamento ainda não implementados. Ver [ADR 0002](adr/0002-sqlite-local-proposto.md) e [plano de persistência](financas/PERSISTENCIA.md).
 
 ## Contrato existente
 

@@ -58,6 +58,8 @@ O isolamento não dispensa validação das futuras operações de dados. Fuses, 
 
 ## Evolução local
 
-SQLite foi confirmado na F01a; [ADR 0002](adr/0002-sqlite-local-proposto.md) registra a comparação e os limites. Antes da persistência, discutir os comportamentos abertos, definir separação/restauração da demonstração e migrações, e validar o driver no Node embarcado do Electron. A sondagem da F01a encontrou Node 24.22.1 e a API node:sqlite disponível; não abriu banco nem validou persistência/distribuição. A escolha do executor para operações demoradas não foi antecipada. Não confundir a versão Node de desenvolvimento com a embarcada.
+SQLite foi confirmado na F01a; [ADR 0002](adr/0002-sqlite-local-proposto.md) registra comparação, prova e limites. Na F01c.1, node:sqlite foi avaliado no Electron real em worker Node dedicado, com arquivos/perfil temporários e sem renderer. Não é worker privilegiado da interface; a segurança da janela não mudou. D25 confirma essa arquitetura para a próxima implementação; não há novo serviço persistente integrado ao aplicativo ainda.
+
+D26/D27 confirmam diretório LocalAppData e restauração demo preservando preferências/layout. A implementação será subdividida conforme [PERSISTENCIA.md](financas/PERSISTENCIA.md). A prova não define esquema financeiro, migrações ou novo contrato IPC nem comprova distribuição. Não confundir o Node de desenvolvimento com o embarcado.
 
 Domínio e casos de uso devem permanecer independentes do transporte desktop sempre que possível. Essa separação prepara a evolução sem implementar antecipadamente uma plataforma móvel.

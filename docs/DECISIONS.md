@@ -49,6 +49,12 @@ Implementação vigente: captura de ponteiro mantém o arraste da alça; a barra
 
 **D24 — método padrão dos gastos confirmado na F01a, 29/10/2026:** Gabriel escolheu “Parcelas por fatura (recomendado)” para resumo e relatórios. Compra de 1.200 em 6x aparece como 200 em cada fatura; total contratado de 1.200 na data da compra permanece como outra visão. Pagamento da fatura não vira outro gasto. Não define sozinho alocação em ciclos salariais, estornos por período ou fluxo de caixa; detalhar nas entregas dependentes.
 
+**D25 — acesso ao SQLite e worker, confirmado na F01c em 29/10/2026:** após prova no Electron real e explicação de que a API é release candidate, Gabriel escolheu “API incluída + worker dedicado (recomendado)”. Usar node:sqlite no lado privilegiado, fora da thread principal. Não habilitar Node/Web Workers privilegiados no renderer. Prova e limites no ADR 0002; revalidar em atualizações do runtime, sem driver externo instalado.
+
+**D26 — diretório de dados, confirmado na F01c:** Gabriel escolheu “LocalAppData\\FinDesk\\data (recomendado)”, isto é, `%LOCALAPPDATA%\FinDesk\data`, fora do repositório. Não usar a pasta Roaming padrão do Electron para esses bancos por decisão unilateral. Esta avaliação criou apenas bancos temporários; o caminho escolhido ainda não foi utilizado pela aplicação.
+
+**D27 — restauração, confirmado na F01c:** Gabriel escolheu “Restaurar dados e manter preferências/layout (recomendado)”. Demonstração separada dos dados pessoais futuros; restaurar repõe somente os fatos fictícios. Preferências/layout permanecem; restaurar layout é ação distinta. A composição da seção em Configurações ainda será discutida.
+
 ## Escolhas de implementação dentro da arquitetura estabelecida
 
 Não são novas decisões de produto nem uma troca de stack. Detalhes em [ARCHITECTURE.md](ARCHITECTURE.md) e [ADR 0001](adr/0001-base-desktop.md).
@@ -66,7 +72,7 @@ Não são novas decisões de produto nem uma troca de stack. Detalhes em [ARCHIT
 
 - SQLite está confirmado em D23; driver, esquema e persistência continuam sem implementação. As alternativas e a pesquisa estão no [ADR 0002](adr/0002-sqlite-local-proposto.md).
 - A base visual será mantida com conteúdo enxuto, conforme D12. Os estudos A/B são históricos; a logo original agora está aplicada conforme D10. Ver [DESIGN_SYSTEM.md](DESIGN_SYSTEM.md).
-- Próxima pequena entrega sugerida após a revisão da F01b: F01c, começando pelo levantamento de dados/preferências/restauração e avaliação controlada da API/driver SQLite. O motor confirmado não aprova automaticamente esses comportamentos.
+- A F01c começou pelo levantamento e prova isolada, documentados como F01c.1 em [PERSISTENCIA.md](financas/PERSISTENCIA.md). Próxima fatia proposta: F01c.2, armazenamento mínimo e testes com as decisões D25–D27; F01c.3 para o acesso explícito da restauração na interface, com composição discutida antes de implementar.
 
 ## Pesquisas realizadas e manutenção
 
@@ -92,4 +98,6 @@ Angular/PrimeNG e barra nativa continuam confirmados em D07/D08. A limpeza de co
 
 **Respondidas na F01a:** banco SQLite (D23) e método padrão dos gastos por fatura (D24). Não repetir essas perguntas sem novas evidências.
 
-Continuam para as entregas correspondentes: biblioteca e esquema, localização/separação/restauração/preferências, regras de ciclos, parâmetros de detecção/variáveis/alertas, metodologias restantes de indicadores/simulador, arquivos de importação, cobertura/termos de integrações e empacotamento. Não há aprovação implícita dessas escolhas. A proposta técnica de precisão/datas foi concretizada dentro do escopo autorizado da F01b; sua aceitação de implementação acompanha a revisão dessa entrega, sem atribuir novas decisões de produto à resposta sobre o banco.
+**Respondidas na F01c:** API incluída com worker (D25), diretório LocalAppData (D26) e restauração de dados demo preservando preferências/layout (D27). Não repetir essas escolhas sem novas evidências.
+
+Continuam para as entregas correspondentes: esquema/migrações e formatos de preferências, composição da restauração na interface, regras de ciclos, parâmetros de detecção/variáveis/alertas, metodologias restantes de indicadores/simulador, arquivos de importação, cobertura/termos de integrações e empacotamento. Não há aprovação implícita dessas escolhas. Precisão/datas da F01b aprovadas ao autorizar a próxima entrega.
