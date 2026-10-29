@@ -6,7 +6,9 @@ Este arquivo resume os requisitos recebidos. As fontes integrais e sua precedên
 
 A [especificação de Finanças v1.0](docs/FINANCAS_SPEC.md), recebida em 29/10/2026, prevalece nas divergências dessa área. O [diagnóstico F00](docs/FINANCAS_F00.md) confronta os requisitos com o código local e propõe a continuidade. A versão local inclui os cinco submenus Geral / Movimentações / Cartão / Compromissos / Assinaturas, cards personalizáveis, previsões, detecção assistida, orçamento, alertas e disponível até o salário. A execução permanece incremental e inicialmente fictícia; integrações reais têm etapa própria. Esses requisitos não representam funções já implementadas.
 
-Nenhum banco foi adotado. SQLite permanece proposto; a comparação com MySQL e a decisão de armazenamento antecedem a implementação dependente. Não instalar ou migrar banco por interpretação do roadmap anterior.
+SQLite local foi confirmado em F01a (D23), após comparação com MySQL; ainda não implementado. Driver, localização, separação/restauração e novas operações IPC ficam para a F01c. Parcelas por fatura foram confirmadas como padrão dos gastos (D24), mantendo a visão pelo valor total contratado.
+
+Rastreabilidade e catálogo preparados em F01a: [requisitos por ID](docs/financas/REQUISITOS.md) e [cenários fictícios](docs/financas/CENARIOS.md). Os documentos não equivalem a fixtures executáveis ou funcionalidades implementadas.
 
 ## Produto e decisões confirmadas
 
@@ -18,9 +20,9 @@ A navegação principal contém **Visão geral**, **Finanças** e **Investimento
 
 Tema escuro primeiro, tokens semânticos e preparação para tema claro posterior. Uso pontual de PrimeNG, com composição visual própria, controles consistentes e recursos gratuitos. Gabriel confirmou **Angular 21 + PrimeNG 21 Community MIT** e **barra nativa do Windows**. Na revisão da casca, escolheu manter a base visual e enxugar o conteúdo, sem frases de efeito. A **logo original fornecida**, com moedas e seta ascendente, está preservada em `FinDesk-Project/public/brand/logo-original.png` e aplicada no lugar do F. Versões, histórico e justificativas em [docs/DECISIONS.md](docs/DECISIONS.md).
 
-## Escolha técnica proposta nas fontes
+## Escolha de armazenamento
 
-SQLite local é a escolha padrão proposta, cuja adoção e justificativa devem ser registradas em ADR. A tabela do mestre não transforma essa proposta em banco implementado ou em escolha de biblioteca de acesso já concluída.
+SQLite passou de proposta nas fontes a escolha confirmada pelo proprietário na F01a. A comparação, a resposta e os limites estão no [ADR 0002](docs/adr/0002-sqlite-local-proposto.md). Isso não transforma banco, driver, esquema ou persistência em implementação concluída.
 
 Arquitetura prevista: interface Angular para apresentação; aplicação para casos de uso; domínio independente de frameworks sempre que possível; infraestrutura para persistência, importação e integrações; operações privilegiadas no processo principal do Electron, com preload pequeno e tipado e IPC validado. Não colocar SQL, segredos ou cálculos financeiros centrais nos componentes.
 

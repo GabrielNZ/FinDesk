@@ -45,6 +45,10 @@ Implementação vigente: captura de ponteiro mantém o arraste da alça; a barra
 
 **D22 — organização do repositório, solicitada em 29/10/2026:** agrupar todo o código da aplicação e suas ferramentas em `FinDesk-Project/`; manter documentos, anotações e contexto fora dela, na raiz e em `docs/`. Git continua na raiz, sem repositório aninhado ou pacote npm de redirecionamento. Código, assets, testes e configurações mantêm suas relações internas. Comandos npm passam a ser executados dentro da aplicação. Reorganização anterior à F01a, sem autorização de avanço funcional.
 
+**D23 — SQLite local confirmado na F01a, 29/10/2026:** após comparação pesquisada SQLite/MySQL, Gabriel escolheu “SQLite local (recomendado)”. Confirma o motor para o uso local; driver, local dos arquivos, separação/restauração, backup e credenciais não foram decididos nessa pergunta. Comparação e sondagem do runtime no [ADR 0002](adr/0002-sqlite-local-proposto.md). Nenhum banco foi criado ou biblioteca instalada.
+
+**D24 — método padrão dos gastos confirmado na F01a, 29/10/2026:** Gabriel escolheu “Parcelas por fatura (recomendado)” para resumo e relatórios. Compra de 1.200 em 6x aparece como 200 em cada fatura; total contratado de 1.200 na data da compra permanece como outra visão. Pagamento da fatura não vira outro gasto. Não define sozinho alocação em ciclos salariais, estornos por período ou fluxo de caixa; detalhar nas entregas dependentes.
+
 ## Escolhas de implementação dentro da arquitetura estabelecida
 
 Não são novas decisões de produto nem uma troca de stack. Detalhes em [ARCHITECTURE.md](ARCHITECTURE.md) e [ADR 0001](adr/0001-base-desktop.md).
@@ -59,9 +63,9 @@ Não são novas decisões de produto nem uma troca de stack. Detalhes em [ARCHIT
 
 ## Propostas do Codex
 
-- SQLite permanece escolha padrão proposta, autorizada tecnicamente pelo mestre, com a justificativa em [ADR 0002](adr/0002-sqlite-local-proposto.md). Driver, esquema e persistência ainda não implementados nesta casca.
+- SQLite está confirmado em D23; driver, esquema e persistência continuam sem implementação. As alternativas e a pesquisa estão no [ADR 0002](adr/0002-sqlite-local-proposto.md).
 - A base visual será mantida com conteúdo enxuto, conforme D12. Os estudos A/B são históricos; a logo original agora está aplicada conforme D10. Ver [DESIGN_SYSTEM.md](DESIGN_SYSTEM.md).
-- Próxima pequena entrega sugerida após F00: F01a, rastreabilidade dos requisitos, catálogo fictício e primeiro levantamento de metodologia/persistência. A subdivisão F01a/F01b/F01c está proposta em [FINANCAS_F00.md](FINANCAS_F00.md), sem autorização de implementação dependente.
+- Próxima pequena entrega sugerida após a revisão da F01a: F01b, regras comuns de dinheiro/datas e fixtures executáveis dos cenários independentes das políticas ainda abertas. Representações técnicas propostas em [DATA_MODEL.md](DATA_MODEL.md); F01c permanece separada para persistência.
 
 ## Pesquisas realizadas e manutenção
 
@@ -85,4 +89,6 @@ Angular/PrimeNG e barra nativa continuam confirmados em D07/D08. A limpeza de co
 
 **Tipografia respondida:** a opção A foi confirmada e aplicada conforme D15. A comparação A/B/C permanece apenas como artefato de avaliação fora do app, com valores fictícios identificados.
 
-Continuam para as entregas correspondentes: comparação/decisão do banco, biblioteca e esquema, restauração e preferências, metodologias de indicadores/simulador, arquivos de importação, cobertura/termos de integrações e empacotamento. Não há aprovação implícita dessas escolhas.
+**Respondidas na F01a:** banco SQLite (D23) e método padrão dos gastos por fatura (D24). Não repetir essas perguntas sem novas evidências.
+
+Continuam para as entregas correspondentes: biblioteca e esquema, localização/separação/restauração/preferências, regras de ciclos, parâmetros de detecção/variáveis/alertas, metodologias restantes de indicadores/simulador, arquivos de importação, cobertura/termos de integrações e empacotamento. Não há aprovação implícita dessas escolhas. A proposta técnica de precisão/datas está documentada para revisão na F01a; não é requisito de produto inferido de uma resposta sobre o banco.

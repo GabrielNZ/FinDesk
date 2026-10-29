@@ -52,7 +52,9 @@ O suporte de Electron no Playwright é [experimental](https://playwright.dev/doc
 
 ## Limites
 
-Para Finanças, o plano de cobertura vem da [especificação](FINANCAS_SPEC.md), seção 20, e será vinculado a IDs/cenários em F01. Inclui precisão/parcelas, transferências e faturas sem duplicação, mensal/anual, ausência versus zero, datas/ciclos, histórico/cobertura, déficit, conciliação/deduplicação e reabertura/seed idempotente. Cards também exigirão gestos distintos, teclado, retorno do foco com filtros preservados, restauração e inspeção visual em janelas diferentes. Essa cobertura é planejada, ainda não executada.
+Para Finanças, o plano de cobertura vem da [especificação](FINANCAS_SPEC.md), seção 20, e está ligado na F01a a [IDs de requisitos](financas/REQUISITOS.md) e [cenários C01–C31](financas/CENARIOS.md). Inclui precisão/parcelas, transferências e faturas sem duplicação, mensal/anual, ausência versus zero, datas/ciclos, histórico/cobertura, déficit, conciliação/deduplicação e reabertura/seed idempotente. Cards também exigirão gestos distintos, teclado, retorno do foco com filtros preservados, restauração e inspeção visual em janelas diferentes. Essa cobertura é planejada, ainda não executada.
+
+Na F01a foram conferidos vínculos documentais, IDs, referências entre cenários e aritmética dos exemplos; houve sondagem isolada da versão embarcada/API SQLite, sem abertura de banco. Isso não é teste de domínio ou persistência. A F01b proposta deve começar pelos cenários independentes das políticas em aberto, conforme a lista ao final do catálogo; não precisa implementar todos os cenários futuros para validar dinheiro/datas/fatos básicos.
 
 A F00 foi uma inspeção estática e documental, sem alterações de código. Reutilizou os resultados anteriores da casca e conferiu integridade da especificação, links locais e diff; não repetiu instalação, build ou testes de execução e não validou cálculos financeiros.
 

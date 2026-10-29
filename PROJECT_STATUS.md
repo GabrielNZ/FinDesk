@@ -4,7 +4,19 @@ Atualizado em **29/10/2026** (America/Sao_Paulo).
 
 ## Situação atual
 
-**Casca, F00 e reorganização aprovadas por Gabriel em 29/10/2026, com autorização explícita de commit e push.** A aplicação fica em `FinDesk-Project/`; documentação, anotações e contexto permanecem na raiz e em `docs/`. F01a continua proposta, ainda não iniciada; a aprovação atual cobre o trabalho existente e seu registro Git.
+**F01a aprovada; F01b autorizada por Gabriel em 29/10/2026.** Primeiro registrar a entrega documental aprovada com commit/push; depois implementar regras comuns de dinheiro/datas, fixtures executáveis e testes pertinentes. A aprovação não encerra as decisões abertas de ciclos, previsões ou persistência. Aplicação em `FinDesk-Project/`; documentação/contexto fora dela.
+
+## F01a — entrega atual
+
+- **Concluído:** [52 requisitos com IDs, fonte, aceitação e etapas](docs/financas/REQUISITOS.md), [catálogo de 31 cenários fictícios](docs/financas/CENARIOS.md), comparação pesquisada de armazenamento e [proposta de representação/contratos](docs/DATA_MODEL.md). Fatos, previsões, resultados invariantes e políticas pendentes estão separados. As fixtures executáveis ficam para F01b.
+- **Respostas confirmadas:** SQLite local; gastos por parcelas de cada fatura por padrão, mantendo a visão do total contratado na data da compra. Pagamento de fatura continua sem duplicar consumo. D23/D24 registram as perguntas, respostas e limites; não perguntar novamente sem novas evidências.
+- **Pesquisa técnica concluída nesta fatia:** [ADR 0002](docs/adr/0002-sqlite-local-proposto.md) compara SQLite e MySQL com fontes oficiais sobre execução local, instalação/manutenção, backup e compatibilidade. Sondagem local: Electron 45.1.0, Node embarcado 24.22.1, ABI 150, DatabaseSync disponível em node:sqlite. O módulo foi carregado sem abrir banco; driver continua em avaliação, sem garantia de persistência/empacotamento.
+- **Propostas técnicas para revisão:** centavos inteiros com verificação de segurança das operações; datas civis separadas de instantes; distribuição de sobra nas primeiras parcelas geradas, preservando agenda observada; arredondamento explícito de exibição e taxa representada com precisão própria. Não são novas fórmulas financeiras já implementadas.
+- **Validação documental:** integridade das fontes, IDs/referências e links locais, aritmética do diário/parcelas/conversão fictícia e diff. Sem novo build, testes de interface ou suíte financeira, pois o código não mudou. A sondagem de runtime não é teste de banco.
+- **Pendências de pesquisa:** driver/execução e diretórios da persistência em F01c; origem/licença das logos e bibliotecas de cards nas etapas pertinentes. Sem pesquisa ou conexão de provedor bancário nesta rodada.
+- **Perguntas aguardando resposta:** nenhuma nesta primeira rodada; as duas perguntas foram respondidas. Permanecem para as etapas correspondentes as políticas de ciclos/fechamento/dias úteis, disponível diário, protegido, parâmetros de médias/detecção/alertas, séries/pagamentos e inativação/reativação. O catálogo identifica os resultados condicionais.
+- **Próxima entrega proposta — F01b:** tipos/regras comuns de dinheiro e datas, fixtures executáveis dos fatos-base e testes pertinentes (moeda/precisão, vínculos, transferências/faturas sem duplicação, parcelas observadas e relógio determinístico). Usar os cenários prioritários ao final do catálogo; não construir os motores/telas/indicadores ainda dependentes das políticas abertas. Persistência continua separada em F01c.
+- **Autorização:** “vamos para a próxima” aprova F01a, autoriza seu commit/push e o início de F01b conforme o escopo acima. As propostas técnicas de representação apresentadas na F01a serão concretizadas nessa base, preservando os limites documentados. F01c não foi autorizada automaticamente.
 
 ## Reorganização atual
 
@@ -17,14 +29,14 @@ Atualizado em **29/10/2026** (America/Sao_Paulo).
 ## Finanças — continuidade incremental
 
 - **Requisito confirmado:** seguir a [especificação integral de Finanças](docs/FINANCAS_SPEC.md), por pequenas entregas. Ela prevalece sobre sugestões antigas conflitantes dessa área; não muda a stack, a marca ou o comportamento vigente da navbar.
-- **Concluído em F00:** [diagnóstico, matriz de lacunas e plano adaptado](docs/FINANCAS_F00.md). Existentes: base Angular/Electron, identidade, tokens, navegação e fronteira desktop. Parcial: acesso a Finanças, Configurações e infraestrutura de testes. Ausentes: dados/domínio financeiros, banco, cálculos, cinco submenus e demais fluxos F02–F20.
+- **Concluído em F00:** [diagnóstico, matriz de lacunas e plano adaptado](docs/FINANCAS_F00.md), aprovado no commit `6920552`. Existentes: base Angular/Electron, identidade, tokens, navegação e fronteira desktop. Parcial: acesso a Finanças, Configurações e infraestrutura de testes. Ausentes: dados/domínio financeiros, banco, cálculos, cinco submenus e demais fluxos F02–F20. F01a não muda essa condição do software.
 - **Documentação:** original recebido na raiz preservado; cópia integral em `docs/FINANCAS_SPEC.md` com SHA-256 idêntico. Brief, índice, roadmap, decisões, design, regras, modelo, testes e ADR receberam referências/ajustes de precedência. A rastreabilidade detalhada por IDs ainda pertence à F01a.
 - **Verificações desta F00:** inspeção estática do código/documentos, comparação de hash da especificação, links locais dos documentos alterados e `git diff --check`. Sem novo build, teste funcional ou inspeção visual. Resultados anteriores da casca foram reutilizados; não constituem cobertura financeira.
-- **Proposta do Codex — próxima entrega F01a:** IDs/rastreabilidade, catálogo de cenários fictícios e levantamento inicial. Pesquisar comparação SQLite/MySQL antes da decisão de armazenamento e discutir metodologia padrão de gastos antes dos cálculos dependentes. Sem instalar banco, criar telas ou fechar políticas por conta própria.
+- **F01a autorizada:** entrega documental e respostas descritas no bloco atual acima; sem instalar banco ou criar telas.
 - **Dependências propostas:** F01b para regras comuns e fixtures executáveis após respostas pertinentes; F01c para persistência mínima após decisão conjunta, antes das preferências salvas de F02/F03. F02–F20 seguem a referência da especificação, com subdivisões quando necessário.
-- **Pendências de pesquisa:** comparação de armazenamento/compatibilidade do driver, sem adoção de SQLite ou MySQL; demais pesquisas apenas nas etapas pertinentes. Nenhuma pesquisa nova de provedor nesta rodada.
-- **Perguntas aguardando resposta:** nenhuma pergunta de produto nova nesta F00. Os temas da seção 16 serão levantados em pequenas rodadas com recomendações. F00 aprovada; F01a aguarda continuidade.
-- **Autorização:** Gabriel aprovou explicitamente todas as mudanças atuais e pediu commit e push em 29/10/2026. Abrange casca, ajustes visuais/navbar, F00 e reorganização. Não iniciar F01–F20 durante esta tarefa de registro Git.
+- **Pesquisa de armazenamento:** comparação e escolha concluídas na F01a; driver e detalhes de persistência continuam pendentes. Integração real permanece para F20.
+- **Levantamento:** demais temas da seção 16 serão discutidos em pequenas rodadas antes da implementação dependente; não bloqueiam fatos/cálculos comuns independentes.
+- **Histórico de autorização:** casca, ajustes, F00 e reorganização aprovados/commitados/enviados; depois Gabriel autorizou F01a. Avanço para F01b aguarda revisão da entrega atual.
 
 ## Entrega atual
 
@@ -44,7 +56,7 @@ Atualizado em **29/10/2026** (America/Sao_Paulo).
 4. **Manter a base visual e enxugar o conteúdo**, resposta explícita na revisão; sem adensar ou redesenhar o layout nesta rodada.
 5. **Participação antes de decisões relevantes de design/desenvolvimento** e **verificações agrupadas por conjunto de mudanças**, sem testes repetitivos de cada ajuste simples.
 
-Detalhes e fontes em [docs/DECISIONS.md](docs/DECISIONS.md). Revisar a base antes do fim previsto do LTS do Angular 21 em junho/2027. SQLite continua padrão proposto, com ADR, sem driver ou banco implementado.
+Detalhes e fontes em [docs/DECISIONS.md](docs/DECISIONS.md). Revisar a base antes do fim previsto do LTS do Angular 21 em junho/2027. SQLite está confirmado (D23), com ADR, sem driver selecionado ou banco implementado.
 
 ## Verificações da base anterior à limpeza de conteúdo
 
@@ -66,7 +78,7 @@ Não há teste de instalador, persistência, cálculos ou integrações, pois es
 - Remoto: `https://github.com/GabrielNZ/FinDesk.git`; branch `master`, rastreando `origin/master`.
 - Revisão documental aprovada e enviada: `6db9362` — `docs(projeto): consolida requisitos e regras do FinDesk`.
 - Preparação Git aprovada e enviada: `f6a250d` — `chore(git): configura exclusões e preservação dos documentos`.
-- **Entrega atual aprovada:** casca desktop, ajustes de identidade/navegação, diagnóstico F00 e organização em `FinDesk-Project/`. Registro autorizado com a mensagem `feat(base): adiciona casca desktop e organiza projeto`; hash e envio devem ser conferidos no histórico e no remoto, sem manter um hash autorreferente neste arquivo.
+- **Última entrega aprovada e enviada:** `6920552` — `feat(base): adiciona casca desktop e organiza projeto`, incluindo os ajustes, F00 e reorganização. F01a é a entrega atual, ainda sem commit/push.
 - Política confirmada: **push após cada entrega aprovada**. Identidade Git existente preservada. Originais mantidos byte a byte no histórico após a configuração de atributos.
 
 ## Pendências e próxima entrega proposta
@@ -81,7 +93,7 @@ Não há teste de instalador, persistência, cálculos ou integrações, pois es
 
 **Aprovação atual:** Gabriel aprovou expressamente as mudanças existentes e autorizou commit/push. Substitui a pendência anterior de revisão do conjunto.
 
-**Próximo passo vigente:** após concluir o registro Git aprovado, aguardar continuidade para F01a conforme o bloco acima. Não há nova funcionalidade em execução nesta tarefa.
+**Próximo passo vigente:** revisar F01a e, mediante continuidade, registrar a entrega conforme a política Git e iniciar F01b conforme o bloco atual. Não implementar F01c ou F02–F20 automaticamente.
 
 **Espaçamento superior:** reduzidas a altura do cabeçalho e a margem interna superior do conteúdo após a remoção da linha divisória, conforme solicitado. Botão de informação preservado à direita. Ajuste apenas de CSS, revisado sem executar a suíte.
 
@@ -91,7 +103,7 @@ Não há teste de instalador, persistência, cálculos ou integrações, pois es
 
 **Reposicionamento da navbar — ajuste atual:** por solicitação de 29/10/2026, removidos o redimensionamento pela borda, seus controles/gestos e o texto “Soltar: posição”. Permanece a alça para encaixar à esquerda, direita, em cima ou embaixo, com prévia visual sem legenda e confirmação ao soltar. O botão de recolher/expandir e a adaptação horizontal permanecem. D20 substitui as partes correspondentes de D18/D19. Estado em memória, sem novas operações IPC ou banco. Verificação conjunta concluída: tipos/templates, lint e build web passaram; os cinco testes Playwright no Electron passaram, cobrindo encaixe nos quatro lados, prévia sem texto, recolhimento/expansão, cancelamento, alternativa por teclado, ausência de redimensionamento pela borda e navegação da casca.
 
-**Proposta anterior de persistência — reorganizada pela F00:** a persistência local da demonstração/preferências passa à subetapa proposta F01c, após comparação SQLite/MySQL e decisões de dados. Migrações, seed idempotente e restauração explícita continuam requisitos; banco/driver não estão escolhidos.
+**Persistência — reorganizada pela F00:** a demonstração/preferências ficam para F01c. Comparação e decisão do motor SQLite concluídas em F01a; driver, diretórios e comportamento de separação/restauração ainda pendentes. Migrações, seed idempotente e restauração explícita continuam requisitos.
 
 Ainda não implementados: os fluxos da versão local de Finanças definidos em F01–F19, inclusive cards dinâmicos, compromissos, assinaturas, previsões, detecção, disponível, orçamento e alertas. Integrações reais permanecem separadas em F20. Carteira de investimentos, simulador, tema claro, backup/restauração elaborados e instalador seguem seus escopos próprios. Consultar [docs/ROADMAP.md](docs/ROADMAP.md) e [docs/INTEGRATIONS.md](docs/INTEGRATIONS.md).
 

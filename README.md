@@ -72,8 +72,9 @@ Leia nesta ordem:
 - [Decisões e versões](docs/DECISIONS.md) e [arquitetura](docs/ARCHITECTURE.md).
 - [Escopo desta entrega](docs/PRODUCT.md) e [roadmap](docs/ROADMAP.md).
 - [Especificação integral de Finanças](docs/FINANCAS_SPEC.md) e [diagnóstico local F00 / próxima entrega proposta](docs/FINANCAS_F00.md).
+- [Requisitos de Finanças por ID](docs/financas/REQUISITOS.md) e [catálogo fictício da F01a](docs/financas/CENARIOS.md).
 - [Regras financeiras](docs/DOMAIN_RULES.md) e [modelo de dados](docs/DATA_MODEL.md).
 - [Sistema visual e propostas](docs/DESIGN_SYSTEM.md), [integrações](docs/INTEGRATIONS.md) e [testes](docs/TESTING.md).
-- [ADR da base desktop](docs/adr/0001-base-desktop.md) e [proposta SQLite](docs/adr/0002-sqlite-local-proposto.md).
+- [ADR da base desktop](docs/adr/0001-base-desktop.md) e [decisão SQLite / comparação com MySQL](docs/adr/0002-sqlite-local-proposto.md).
 
 Os originais estão preservados em `docs/references/`. Propostas, pesquisas pendentes e decisões confirmadas são identificadas separadamente. Código novo só será commitado e enviado após a aprovação da entrega, conforme a política registrada em `AGENTS.md`.

@@ -9,7 +9,7 @@ flowchart LR
   PRE --> IPC[IPC validado no processo principal]
   IPC --> MAIN[Electron: operações locais]
   APP[Aplicação: casos de uso futuros] --> DOMAIN[Domínio TypeScript puro]
-  MAIN -. persistência futura .-> SQLITE[SQLite local proposto]
+  MAIN -. persistência futura .-> SQLITE[SQLite local confirmado, não implementado]
 ```
 
 ## Código existente
@@ -56,6 +56,6 @@ O isolamento não dispensa validação das futuras operações de dados. Fuses, 
 
 ## Evolução local
 
-SQLite permanece proposto; [ADR 0002](adr/0002-sqlite-local-proposto.md) registra as condições para adotá-lo. Antes da persistência, discutir os comportamentos abertos, definir a separação de demonstração/dados futuros e migrations, e pesquisar o driver compatível com o Node embutido no Electron. Não confundir a versão Node de desenvolvimento com a versão embarcada.
+SQLite foi confirmado na F01a; [ADR 0002](adr/0002-sqlite-local-proposto.md) registra a comparação e os limites. Antes da persistência, discutir os comportamentos abertos, definir separação/restauração da demonstração e migrações, e validar o driver no Node embarcado do Electron. A sondagem da F01a encontrou Node 24.22.1 e a API node:sqlite disponível; não abriu banco nem validou persistência/distribuição. A escolha do executor para operações demoradas não foi antecipada. Não confundir a versão Node de desenvolvimento com a embarcada.
 
 Domínio e casos de uso devem permanecer independentes do transporte desktop sempre que possível. Essa separação prepara a evolução sem implementar antecipadamente uma plataforma móvel.

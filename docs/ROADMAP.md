@@ -4,7 +4,7 @@ O roadmap integral está no [mestre](references/01-DOCUMENTO_MESTRE.md), seção
 
 ## Finanças — sequência vigente
 
-A [especificação de Finanças](FINANCAS_SPEC.md), seção 18, define F00–F20 e prevalece sobre a distribuição antiga dessa área nas fases gerais abaixo. O [diagnóstico F00](FINANCAS_F00.md) contém a matriz existente/parcial/ausente e a adaptação proposta: F01a para rastreabilidade, catálogo fictício e levantamento; F01b para regras comuns/fixtures testadas; F01c para persistência mínima após decisão conjunta, antes de F02/F03 dependerem de preferências salvas. Essa subdivisão aguarda autorização.
+A [especificação de Finanças](FINANCAS_SPEC.md), seção 18, define F00–F20 e prevalece sobre a distribuição antiga dessa área nas fases gerais abaixo. O [diagnóstico F00](FINANCAS_F00.md) contém a adaptação: F01a para rastreabilidade, catálogo fictício e levantamento; F01b para regras comuns/fixtures testadas; F01c para persistência mínima após decisões pertinentes, antes de F02/F03 dependerem de preferências salvas. Requisitos e verificações por ID estão em [financas/REQUISITOS.md](financas/REQUISITOS.md), e os dados propostos em [financas/CENARIOS.md](financas/CENARIOS.md). Estado/autorização da entrega ficam exclusivamente no PROJECT_STATUS.
 
 Assinaturas mensais/anuais, compromissos, salário previsto, detecção assistida, cards dinâmicos, orçamento, alertas e disponível pertencem à versão local de Finanças. Não adiar esses itens com base nas fases gerais antigas. Integrações reais ficam em F20, após pesquisa e autorização específica. O plano não amplia o escopo de Investimentos nem inclui metas completas ou execução de pagamentos.
 
@@ -15,7 +15,7 @@ Assinaturas mensais/anuais, compromissos, salário previsto, detecção assistid
 | Revisão documental               | Fontes preservadas, requisitos consolidados e precedência definida                              | Aprovada e enviada                                     |
 | Preparação do Git                | Remoto, histórico, exclusões, preservação das fontes e política de push                         | Aprovada e enviada                                     |
 | Base desktop                     | Janela, navegação provisória, PrimeNG pontual, contrato IPC, decisões e propostas de identidade | Aprovada em 29/10/2026, com os ajustes e reorganização |
-| Persistência da demonstração     | SQLite a detalhar, migrações, seed idempotente, separação de dados e restauração explícita      | Proposta; levantar comportamentos antes de implementar |
+| Persistência da demonstração     | SQLite confirmado; driver/migrações, seed idempotente, separação e restauração a detalhar       | F01c: levantar comportamentos antes de implementar     |
 | Demonstração de uma área por vez | Totais coerentes, navegação, filtros e expansões com dados fictícios                            | Não iniciada; acordar prioridade e metodologia         |
 | Cartão demonstrativo             | Faturas, parcelas, centavos, estornos e alternância de metodologias                             | Não iniciada                                           |
 | Carteira demonstrativa           | BRL/USD, instituições, detalhes e movimentações                                                 | Não iniciada                                           |
