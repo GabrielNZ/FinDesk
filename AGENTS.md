@@ -1,0 +1,51 @@
+# Instruções de trabalho — FinDesk
+
+## Contexto e leitura
+
+Use português brasileiro na interface, documentação e comunicação. Trate Gabriel por “você”.
+
+Antes de trabalhar, leia `PROJECT_BRIEF.md`, `PROJECT_STATUS.md` e as instruções aplicáveis à tarefa. A revisão e o índice das fontes estão em `docs/REVIEW.md`. Os documentos originais ficam em `docs/references/` e não devem ser reescritos para esconder divergências.
+
+A ordem de leitura das fontes é: documento mestre → complemento de identidade, componentes e ritmo → complemento de Git → complemento de levantamento conjunto. A precedência é por assunto: cada complemento substitui explicitamente as regras anteriores conflitantes do seu âmbito. O último complemento prevalece nas decisões relevantes de produto, integração e arquitetura.
+
+## Colaboração e escopo
+
+- Execute autonomamente tarefas internas de um escopo estabelecido: organização interna, ajustes pequenos, correções, validações, testes pertinentes, refatorações locais sem mudança de comportamento e documentação.
+- Antes de implementar funcionalidade relevante, leia decisões existentes, apresente o objetivo compreendido e identifique escolhas abertas. Pesquise limitações técnicas antes de pedir decisões ao proprietário. Recomende uma abordagem e explique consequências.
+- Discuta escolhas relevantes ainda abertas: integrações, dados acessados e armazenamento, autorização/desconexão, sincronização/conflitos, exclusão/substituição, metodologias financeiras, comportamentos importantes, navegação/identidade, custos/privacidade e mudanças estruturais.
+- Registre respostas e critérios de aceitação antes de implementar a parte dependente. Continue tarefas independentes enquanto aguarda. Não transforme proposta em decisão confirmada.
+- Ao concluir uma pequena entrega significativa, valide, atualize o estado, apresente um resultado verificável e proponha a próxima. Aguarde a resposta antes de iniciar outro conjunto de funcionalidades.
+- “Pode ir para a próxima” aprova o trabalho apresentado e autoriza a próxima pequena entrega proposta; decisões importantes ainda abertas continuam exigindo levantamento.
+- Não repita perguntas já respondidas, salvo novas evidências. O primeiro conjunto limitado descrito nas fontes já está autorizado; não peça permissão novamente apenas para iniciá-lo.
+
+## Direção estabelecida
+
+- Produto desktop pessoal para Windows, com Angular, Electron e TypeScript. Investimentos são o principal diferencial.
+- Navegação principal: Visão geral, Finanças e Investimentos. Simulador em Investimentos. Configurações em acesso secundário por engrenagem, com seção Integrações.
+- Nome: **FinDesk**. A referência isolada a “Alça” é uma inconsistência do complemento, não um segundo nome aprovado.
+- Tema escuro primeiro. PrimeNG para componentes pontuais, com composição própria e recursos gratuitos. Pesquise compatibilidade oficial antes de escolher versões.
+- SQLite é a escolha padrão proposta e autorizada para avaliação, com justificativa arquitetural a registrar. Não há servidor separado previsto inicialmente.
+- Separe interface, aplicação, domínio e infraestrutura. Componentes Angular não executam SQL nem acessam segredos. Electron usa renderer isolado, preload restrito e tipado e validação também no processo privilegiado.
+- Demonstração identificada, dados fictícios coerentes e separados dos dados reais futuros; seed idempotente, migrações versionadas e restauração explícita. Nunca apagar o banco automaticamente ao abrir.
+- Consulte as regras financeiras completas nas fontes antes de implementá-las. Controle precisão e arredondamento; preserve moedas originais; não some BRL com USD; diferencie ausente de zero. Transferências próprias, aportes e pagamentos de fatura não podem duplicar receitas, despesas ou rendimentos.
+- Não conectar contas reais, solicitar credenciais, publicar/distribuir, criar custos, introduzir telemetria ou enviar dados financeiros para IA sem a discussão/autorização aplicável. Não implementar pagamentos, ordens de compra ou movimentação de dinheiro.
+
+## Git e aprovação
+
+Fluxo: **implementar → validar → apresentar → receber aprovação → commitar → iniciar a próxima entrega**.
+
+A aprovação da entrega autoriza seu commit local sem outra pergunta. Faça e valide correções solicitadas junto da aprovação antes do commit. Inclua somente o trabalho apresentado; revise status, diff, arquivos selecionados e conteúdo preparado. Preserve mudanças de terceiros. Não crie commits vazios ou checkpoints incompletos sem acordo.
+
+Use `tipo(escopo): descrição`, com descrição curta e específica em português. Antes de configurar Git, confira repositório, histórico, branch e remotos. Use a identidade já configurada pelo proprietário; não invente nome/e-mail.
+
+A política de push confirmada por Gabriel é **push após cada entrega aprovada**. O destino confirmado é `https://github.com/GabrielNZ/FinDesk.git`. Após revisar, validar e commitar a entrega aprovada, envie os commits correspondentes a esse remoto sem repetir a pergunta. Não inclua trabalho ainda não aprovado. Não confunda commit local com publicação no GitHub.
+
+Não versione segredos, `.env` real, bancos pessoais/auxiliares, extratos, importações reais, logs pessoais, backups, dependências, builds ou instaladores. Versione código, migrações, fixtures fictícias, configurações sem segredos, lockfile, documentação e assets aprovados. Configure `.gitignore` na preparação do repositório.
+
+Não faça force push, reset destrutivo, limpeza de arquivos não rastreados, exclusão de branches com trabalho, reescrita de commits publicados ou alteração/remoção de remoto sem autorização específica.
+
+## Continuidade e qualidade
+
+`PROJECT_STATUS.md` na raiz é a fonte única de estado; não criar `docs/STATUS.md`. Registre etapa, última entrega concluída/aprovada, verificações efetivas, limitações, decisões abertas, próxima entrega e autorização para avançar, além da política de push.
+
+Separe sempre **decisão confirmada**, **proposta do Codex**, **pendência de pesquisa** e **pergunta aguardando resposta**. Não declare testes, instalação, cobertura de provedores ou compatibilidade que não foram verificados. Consulte documentação oficial ao selecionar dependências e implementar segurança do Electron. Não realize pesquisas de etapas futuras apenas para apresentá-las como já resolvidas.

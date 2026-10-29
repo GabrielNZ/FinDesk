@@ -1,0 +1,66 @@
+# FinDesk — visão consolidada
+
+Este arquivo resume os requisitos recebidos. As fontes integrais e sua precedência estão em [docs/REVIEW.md](docs/REVIEW.md). O estado efetivo do projeto está em [PROJECT_STATUS.md](PROJECT_STATUS.md).
+
+## Produto e decisões confirmadas
+
+Aplicativo desktop pessoal de finanças e investimentos de Gabriel, inicialmente para Windows. Interface e documentação em português brasileiro. Nome definido: **FinDesk**. Investimentos são o principal diferencial, com uma área financeira correta e útil como base.
+
+Stack definida: Angular, Electron e TypeScript. Sem servidor separado necessário na primeira versão, sem autenticação própria no MVP e sem execução contínua com o aplicativo fechado. Prioridade a funcionamento local e ausência de custos recorrentes ou infraestrutura remota obrigatória.
+
+A navegação principal contém **Visão geral**, **Finanças** e **Investimentos**. O simulador pertence a Investimentos. Uma engrenagem abre Configurações, que contém uma seção Integrações; os fluxos dessa seção com dados reais ainda precisam de levantamento.
+
+Tema escuro primeiro, tokens semânticos e preparação para tema claro posterior. Uso pontual de PrimeNG, com composição visual própria, controles consistentes e recursos gratuitos. Não há versão de dependência ou logo definitivo selecionado nesta revisão.
+
+## Escolha técnica proposta nas fontes
+
+SQLite local é a escolha padrão proposta, cuja adoção e justificativa devem ser registradas em ADR. A tabela do mestre não transforma essa proposta em banco implementado ou em escolha de biblioteca de acesso já concluída.
+
+Arquitetura prevista: interface Angular para apresentação; aplicação para casos de uso; domínio independente de frameworks sempre que possível; infraestrutura para persistência, importação e integrações; operações privilegiadas no processo principal do Electron, com preload pequeno e tipado e IPC validado. Não colocar SQL, segredos ou cálculos financeiros centrais nos componentes.
+
+## Primeiro conjunto de trabalho autorizado pelos documentos
+
+O complemento de identidade limita o início a:
+
+1. Inspeção do ambiente e instruções.
+2. Documentação inicial e registro de decisões.
+3. Estrutura Angular/Electron/TypeScript.
+4. Inicialização mínima da aplicação.
+5. Duas propostas simples de identidade, avaliáveis em fundo escuro e tamanho pequeno.
+
+Esse conjunto substitui a interpretação de que toda a etapa 0 deve ser entregue de uma vez. A primeira rodada foi de revisão dos documentos; o estado atual está em `PROJECT_STATUS.md`. A identidade deve permanecer provisória e substituível enquanto a escolha estiver pendente.
+
+As próximas pequenas entregas devem ser apresentadas, avaliadas e autorizadas individualmente. Não há aprovação automática do restante do roadmap.
+
+## Requisitos da etapa 0 completa, a executar em pequenas entregas
+
+- Base real Angular/Electron, TypeScript estrito, comandos reproduzíveis e verificações proporcionais.
+- Persistência local básica com migrações, seed idempotente, demonstração separada de dados reais e restauração explícita. Preservação na reabertura; armazenamento local não equivale a backup.
+- Três áreas navegáveis, tema escuro consistente, filtros e expansões funcionais e estados carregado, vazio, atualizando, falha e dados antigos preservados.
+- Visão geral com resumo financeiro, patrimônio por moeda ou conversão fictícia identificada, faturas e carteira.
+- Finanças com lista filtrável, categorias, faturas navegáveis e parcelas. Alternância explícita entre consumo contratado e parcelas mensais, com totais coerentes e sem duplicar o pagamento de fatura como consumo.
+- Carteira demonstrativa com CDBs e ETFs, posições em BRL/USD, filtros por instituição, detalhes e movimentações fictícias. Instituições e ativos citados são referências, não carteira real verificada.
+- Simulador com uma fatia funcional determinística e testada, controles e gráfico conectados, premissas fictícias editáveis e resultados claramente hipotéticos.
+- Acessibilidade, foco visível, alternativas ao arraste, movimento reduzido, valores exatos acessíveis e adaptação a diferentes tamanhos de janela.
+
+O conjunto fictício deve ser pequeno, coerente e reproduzível, cobrindo os casos listados no mestre, inclusive virada do ano, distribuição de centavos, estorno, transferência própria, pagamento integral, aporte, dividendo, resgate/venda, histórico incompleto e possível duplicidade. Nem todos exigem fluxo completo na etapa 0.
+
+## Regras financeiras e metodologias
+
+Dinheiro exige precisão e arredondamento controlados; quantidades fracionárias e cotações têm precisão própria. Preserve moeda e valores originais. Toda conversão informa cotação e data; BRL e USD não são somados diretamente. Datas civis não podem mudar de dia por conversão indevida de fuso.
+
+Transferências entre contas próprias não são receita/despesa consolidada. Aporte não é rendimento; compra de ativo não é consumo; resgate/venda não é automaticamente rendimento. Pagamento de fatura não duplica compras contabilizadas. Parcelas preservam vínculo e soma total; valores observados e estimados são distintos. Estornos mantêm rastreabilidade.
+
+Dados desconhecidos não viram zero, e histórico incompleto deve ser informado. Variação de saldo não equivale a rentabilidade. Cada indicador explicita sua composição, sem dupla contagem de posições. Metodologias ainda abertas precisam de discussão antes da implementação, inclusive no protótipo quando afetarem o entendimento dos valores.
+
+## Evolução e limites
+
+Após a etapa 0: MVP local utilizável; integrações/histórico; profundidade analítica e personalização; planejamento avançado; acesso pelo iPhone. A ordem pode ser ajustada por decisão registrada. Importação depende de arquivos examinados. Rentabilidade exige metodologia explícita. Simulações especificam aportes, taxas, inflação e resultado bruto/líquido conforme o escopo acordado.
+
+Meu Pluggy é somente candidato citado, sem gratuidade, limites ou cobertura verificados. Não presumir suporte a Nubank ou Nomad. Integrações exigem pesquisa oficial e levantamento sobre autorização, dados, armazenamento, atualização, falhas, consentimento, desconexão e convivência com dados manuais/importados.
+
+Não conectar contas reais nem implementar movimentação de dinheiro, ordens ou pagamentos nesta fase. Custos, serviços remotos obrigatórios, publicação/distribuição, envio de dados financeiros para IA e mudanças relevantes de arquitetura ou produto exigem discussão prévia.
+
+## Organização documental
+
+Pontos de entrada na raiz: `AGENTS.md`, `PROJECT_BRIEF.md`, `PROJECT_STATUS.md` e `README.md`. O detalhamento do projeto será mantido em `docs/PRODUCT.md`, `DECISIONS.md`, `ROADMAP.md`, `ARCHITECTURE.md`, `DOMAIN_RULES.md`, `DATA_MODEL.md`, `DESIGN_SYSTEM.md`, `INTEGRATIONS.md`, `TESTING.md` e `adr/`, conforme a implementação avance. Esses arquivos ainda não foram produzidos; os requisitos originais estão preservados nas referências. Não duplicar o estado em `docs/STATUS.md`.
