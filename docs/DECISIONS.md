@@ -59,6 +59,30 @@ Implementação vigente: captura de ponteiro mantém o arraste da alça; a barra
 
 **D29 — confirmação inline, confirmada na F01c.3:** Gabriel escolheu “Confirmação na própria seção (recomendado)”. Texto proposto aceito: “Repor os dados fictícios? Preferências e layout serão mantidos.” Ações Cancelar e Restaurar, sem modal adicional. D27 continua definindo o alcance da operação; não há nova escolha de exclusão de dados pessoais.
 
+**D30 — composição da F02a, confirmada:** Gabriel escolheu composição compacta: saldo à esquerda, importação/conta/moeda à direita, submenus e período abaixo; reorganizar controles em janela estreita.
+
+**D31 — conta inicial, confirmada:** Gabriel escolheu lembrar a última conta, com Nubank de demonstração na primeira abertura. Preservar a seleção entre submenus e nas próximas aberturas; não salvar o mês histórico como preferência.
+
+**D32 — entrega incremental da F02, confirmada:** começar pelo calendário e contexto compartilhado; ciclos de salário/cartão ficam indisponíveis com indicação breve nessa primeira fatia. D37/D38 posteriormente autorizam a primeira implementação com datas salvas e definem seu comportamento, sem encerrar configuração/recorrências.
+
+**D33 — câmbio da demonstração, confirmado:** usar a cotação fictícia do cenário v1, 1 USD = 5 BRL em 29/10/2026, claramente identificada. Oferecer Original/BRL/USD e Todas as contas, com total convertido somente em moeda comum. Não há provedor real escolhido. Critérios em [financas/ESTRUTURA.md](financas/ESTRUTURA.md).
+
+**D34 — revisão do saldo e seletores, solicitada por Gabriel:** retirar os textos visíveis “Saldo em conta · …” e “Saldo na referência fictícia de …”; apresentar o saldo em card, com ícone de carteira no canto. Banco/conta e moeda passam a botões circulares com marca/bandeira. Demonstração permanece identificada no título e a cotação fictícia continua explícita quando há conversão; contexto/data podem permanecer nos nomes acessíveis, sem repetir parágrafos.
+
+**D35 — opções soltas com expansão, confirmada por Gabriel:** ao abrir, círculos descem deslizando, sem caixa/fundo do seletor. Não é roda/carrossel e a “rolagem” descreve o movimento de expansão. Ao passar o mouse, cada círculo se alonga lateralmente e revela o nome dentro do próprio botão de pontas bem arredondadas; o foco por teclado oferece o mesmo acesso. Sem tooltip separado para substituir essa interação. Preservar seleção/persistência e os estados já aprovados. Novos controles financeiros devem partir dessa direção, sem adiar a interação própria para o fim do protótipo.
+
+**D36 — revisão seguinte do cabeçalho, solicitada por Gabriel:** saldo com fundo uniforme, sem degradê, e altura um pouco maior. Conta/moeda não repetem a opção selecionada na lista; gatilho fechado mantém somente hover, opções abertas continuam expandindo lateralmente. Período passa a três botões quadrados com cantos arredondados, calendário/cofre com moeda/cartão, mutuamente exclusivos e calendário inicial. A disposição foi esclarecida e substituída por D39; colocar ações no título e intervalo abaixo dos botões foi interpretação rejeitada do Codex, não decisão de Gabriel.
+
+**D37 — primeira ligação dos ciclos, confirmada por Gabriel:** usar somente datas fictícias já salvas, sem gerar ausentes. Salário segue a data prevista até a véspera da próxima (regra já confirmada). Cartão vai do dia seguinte ao fechamento anterior até o próximo fechamento, incluindo este dia; vínculos observados de compras/faturas preservados. Modos dependem da conta selecionada; Todas as contas ou falta de datas necessárias tornam o modo indisponível, com motivo no hover/foco. Configuração de recorrência, dias úteis e meses curtos gerados permanece para etapa própria.
+
+**D38 — troca de conta sem ciclo, confirmada por Gabriel:** “Troca para o calendário sem avisar, pois se não está disponível não tem o que fazer”. Se a nova conta não suporta o modo salário/cartão ativo, voltar automaticamente ao calendário, sem aviso. Isso substitui a recomendação do Codex de manter o modo indisponível e não deve ser novamente tratado como pergunta em aberto.
+
+**D39 — posição dos grupos, esclarecida por Gabriel:** somente calendário/salário/cartão ficam em coluna ao lado do card de saldo; a expansão do intervalo fica à direita do botão ativo. Ações de importar/banco/moeda permanecem juntas, lado a lado, no canto anterior; não vão para a linha do título. Preservar posição e largura do saldo, com o aumento discreto de altura e fundo uniforme pedidos em D36. A referência a duas colunas foi esclarecida, não aprovada. Em janela estreita, reacomodar o período sem esmagar saldo/intervalo ou mover as ações para o título.
+
+**D40 — calendário recolhível, solicitado por Gabriel:** retirar a linha de datas do calendário, deixando mês/ano e navegação alinhados à altura do botão (44 px). Selecionar Calendário não abre imediatamente o seletor: aparece um pequeno retângulo com seta à direita, que expande/recolhe a seleção do mês. Recolher preserva o mês/contexto, sem alterar fatos ou preferências. Outros modos mantêm os intervalos salvos já acordados; não ampliar essa alteração sem solicitação. As datas do calendário continuam disponíveis na descrição acessível, sem linha visível.
+
+**D41 — expansão dos três períodos, revisão solicitada por Gabriel:** aba menor somente na largura (20 px), mantendo 44 px de altura tanto fechada quanto aberta. A seta acompanha a extremidade direita durante a expansão/retração e, aberta, fica em botão separado do seletor por 8 px. Calendário, salário e cartão iniciam recolhidos e compartilham o comportamento; nenhum mostra a linha de datas. Intervalos completos permanecem no contexto e na descrição acessível. Escape recolhe com retorno de foco, sem alterar o período. Ícone salarial passa a cofrinho recebendo moeda. Remover a linha divisória entre submenus e conteúdo, preservando a indicação do submenu ativo. Sem alteração financeira ou dos demais grupos do cabeçalho.
+
 ## Escolhas de implementação dentro da arquitetura estabelecida
 
 Não são novas decisões de produto nem uma troca de stack. Detalhes em [ARCHITECTURE.md](ARCHITECTURE.md) e [ADR 0001](adr/0001-base-desktop.md).
@@ -76,7 +100,7 @@ Não são novas decisões de produto nem uma troca de stack. Detalhes em [ARCHIT
 
 - SQLite/API/worker e diretório confirmados em D23/D25/D26. F01c.2 implementa o armazenamento mínimo. Escolha técnica: agregado financeiro v1 em JSON canônico validado dentro de SQLite, separado das preferências; evita antecipar tabelas por entidade e mantém a transação dos vínculos. Normalização futura exige migração versionada. Detalhes em DATA_MODEL e ADR 0002.
 - A base visual será mantida com conteúdo enxuto, conforme D12. Os estudos A/B são históricos; a logo original agora está aplicada conforme D10. Ver [DESIGN_SYSTEM.md](DESIGN_SYSTEM.md).
-- Próxima entrega proposta após revisar F01c.3: F02, estrutura de Finanças/cabeçalho/submenus e levantamento das políticas de conta/ciclos ainda abertas. D28/D29 encerram as escolhas da seção de demonstração, sem aprovar automaticamente as telas financeiras.
+- F02a concretiza contexto/cabeçalho; D34–D39 revisam a interação e autorizam a primeira fatia de ciclos sobre datas salvas. Próxima proposta: configuração de fontes/recorrências e preferência de período, discutindo as pendências restantes em PERIODOS. As regras já respondidas não voltam ao estado de pergunta em aberto.
 
 ## Pesquisas realizadas e manutenção
 
@@ -104,4 +128,4 @@ Angular/PrimeNG e barra nativa continuam confirmados em D07/D08. A limpeza de co
 
 **Respondidas na F01c:** API incluída com worker (D25), diretório LocalAppData (D26) e restauração de dados demo preservando preferências/layout (D27). Não repetir essas escolhas sem novas evidências.
 
-Continuam para as entregas correspondentes: esquema/migrações e formatos de preferências, composição da restauração na interface, regras de ciclos, parâmetros de detecção/variáveis/alertas, metodologias restantes de indicadores/simulador, arquivos de importação, cobertura/termos de integrações e empacotamento. Não há aprovação implícita dessas escolhas. Precisão/datas da F01b aprovadas ao autorizar a próxima entrega.
+Continuam para as entregas correspondentes: formatos adicionais de dados/layout, regras de ciclos, parâmetros de detecção/variáveis/alertas, metodologias restantes de indicadores/simulador, arquivos de importação, cobertura/termos de integrações e empacotamento. Armazenamento mínimo, restauração e contexto calendário foram concretizados nas fatias F01c/F02a, com alcance delimitado. Não há aprovação implícita das escolhas futuras. Precisão/datas da F01b aprovadas ao autorizar a próxima entrega.

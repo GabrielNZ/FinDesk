@@ -9,5 +9,5 @@
     "lib": ["ES2022"],
     "sourceMap": true
   },
-  "include": ["domain/**/*.ts", "fixtures/**/*.ts"]
+  "include": ["domain/**/*.ts", "fixtures/**/*.ts", "application/**/*.ts"]
 }

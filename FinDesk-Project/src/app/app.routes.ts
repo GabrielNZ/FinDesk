@@ -10,16 +10,35 @@ export const routes: Routes = [
   {
     path: 'financas',
     title: 'Finanças · FinDesk',
-    data: {
-      title: 'Finanças',
-      icon: 'pi-wallet',
-      description: 'Contas, movimentações e cartão de crédito.',
-      areas: ['Contas e movimentações', 'Cartão e faturas', 'Compras e parcelas'],
-      emptyTitle: 'Nenhuma movimentação',
-      emptyDescription: 'Dados fictícios ainda não adicionados.',
-    },
-    loadComponent: () =>
-      import('./features/planned-area/planned-area.page').then((m) => m.PlannedAreaPage),
+    loadComponent: () => import('./features/finance/finance.page').then((m) => m.FinancePage),
+    children: [
+      { path: '', pathMatch: 'full', redirectTo: 'geral' },
+      ...[
+        { path: 'geral', label: 'Geral', pending: 'Resumo financeiro ainda não implementado.' },
+        {
+          path: 'movimentacoes',
+          label: 'Movimentações',
+          pending: 'Extrato ainda não implementado.',
+        },
+        { path: 'cartao', label: 'Cartão', pending: 'Faturas e compras ainda não implementadas.' },
+        {
+          path: 'compromissos',
+          label: 'Compromissos',
+          pending: 'Agenda de compromissos ainda não implementada.',
+        },
+        {
+          path: 'assinaturas',
+          label: 'Assinaturas',
+          pending: 'Gestão de assinaturas ainda não implementada.',
+        },
+      ].map((page) => ({
+        path: page.path,
+        title: `${page.label} · Finanças · FinDesk`,
+        data: { section: page.path, label: page.label, pending: page.pending },
+        loadComponent: () =>
+          import('./features/finance/finance-subpage').then((m) => m.FinanceSubpage),
+      })),
+    ],
   },
   {
     path: 'investimentos',

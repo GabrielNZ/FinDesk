@@ -1,0 +1,53 @@
+<button
+  #trigger
+  type="button"
+  class="choice-button picker-trigger"
+  [id]="pickerId() + '-trigger'"
+  [attr.popovertarget]="pickerId()"
+  [attr.aria-label]="label() + ': ' + (selected()?.label ?? 'Selecionar')"
+  aria-haspopup="listbox"
+  [attr.aria-expanded]="open()"
+  [attr.aria-controls]="pickerId()"
+  [attr.data-value]="value()"
+  [disabled]="unavailable()"
+  [style.--name-width.px]="nameWidth()"
+  (click)="place()"
+  (keydown)="onTriggerKeydown($event)"
+>
+  <span class="choice-name">{{ selected()?.label ?? 'Selecionar conta' }}</span>
+  <fd-choice-symbol [symbol]="selected()?.symbol ?? 'wallet'" />
+</button>
+
+<div
+  #panel
+  popover="auto"
+  class="choice-list"
+  [id]="pickerId()"
+  role="listbox"
+  tabindex="-1"
+  [attr.aria-label]="label()"
+  [style.top.px]="top()"
+  [style.left.px]="left()"
+  [style.--name-width.px]="nameWidth()"
+  (toggle)="onToggle($event)"
+  (keydown)="onListKeydown($event)"
+>
+  @for (option of choices(); track option.value; let i = $index) {
+    <div class="choice-row" [style.--choice-index]="i">
+      <button
+        type="button"
+        class="choice-button"
+        role="option"
+        [attr.aria-label]="option.label"
+        [attr.aria-selected]="option.value === value()"
+        [attr.data-value]="option.value"
+        [disabled]="option.disabled"
+        [tabIndex]="option.value === activeValue() ? 0 : -1"
+        (click)="choose(option)"
+      >
+        <span class="choice-name">{{ option.label }}</span>
+        <fd-choice-symbol [symbol]="option.symbol" />
+      </button>
+    </div>
+  }
+</div>

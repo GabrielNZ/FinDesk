@@ -10,6 +10,10 @@ Assinaturas mensais/anuais, compromissos, salário previsto, detecção assistid
 
 A F01b concretiza somente a base de domínio e os fatos fictícios prioritários, com cobertura delimitada no catálogo. A F01c foi subdividida em [PERSISTENCIA.md](financas/PERSISTENCIA.md): F01c.1 para avaliação/decisões; F01c.2 para armazenamento mínimo/testes; F01c.3 para acesso explícito na interface. D25–D27 registram as escolhas respondidas. A subdivisão mantém a persistência completa antes de as etapas seguintes dependerem dela; execução e autorização ficam no PROJECT_STATUS.
 
+A F02 segue em pequenas fatias, conforme D30–D33 e [ESTRUTURA.md](financas/ESTRUTURA.md): F02a para cabeçalho, conta/moeda, cinco destinos e calendário; F02b proposta para regras/ciclos e período padrão em Configurações, após levantamento. O conteúdo funcional dos submenus mantém suas etapas próprias; criar seus destinos não conclui F03–F19.
+
+D36–D39 antecipam a primeira fatia dos ciclos durante a revisão do cabeçalho, somente com datas salvas e regras respondidas em [PERIODOS.md](financas/PERIODOS.md). Restam configuração de fontes/recorrências e período padrão em Configurações, além das políticas de geração ainda abertas. Execução/aprovação ficam no PROJECT_STATUS.
+
 ## Etapa 0 — fundação e demonstração
 
 | Entrega                          | Escopo e critério central                                                                       | Situação                                               |

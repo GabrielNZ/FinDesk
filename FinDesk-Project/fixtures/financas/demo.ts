@@ -2,6 +2,17 @@ import { civilDate, dateRange, fixedClock, type Clock } from '../../domain/civil
 import { money, type ExchangeRate } from '../../domain/money';
 import type { CashMovement, FinanceFacts, Origin } from '../../domain/finance-facts';
 
+/** Referência imutável do cenário v1, confirmada em D33. Não é cotação de mercado. */
+export const DEMO_EXCHANGE_RATE: ExchangeRate = Object.freeze({
+  from: 'USD',
+  to: 'BRL',
+  numerator: 5,
+  denominator: 1,
+  on: civilDate('2026-10-29'),
+  source: 'cotacao-ficticia-v1',
+  nature: 'fictitious',
+});
+
 export interface DemoScenario {
   readonly id: string;
   readonly version: 1;
@@ -71,15 +82,7 @@ export function createDemoScenario(): DemoScenario {
     environment: 'demo',
     timezone: 'America/Sao_Paulo',
     clock: fixedClock(date('2026-10-29')),
-    exchangeRate: {
-      from: 'USD',
-      to: 'BRL',
-      numerator: 5,
-      denominator: 1,
-      on: date('2026-10-29'),
-      source: 'cotacao-ficticia-v1',
-      nature: 'fictitious',
-    },
+    exchangeRate: DEMO_EXCHANGE_RATE,
     facts: {
       accounts,
       movements: [

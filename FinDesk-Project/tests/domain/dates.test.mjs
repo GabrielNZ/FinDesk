@@ -10,6 +10,7 @@ const {
   containsDate,
   calendarMonth,
   fixedClock,
+  adjacentCivilDate,
 } = require('../../out/domain/civil-date.js');
 
 test('FIN-010/048 / C19/C31: calendário valida meses curtos e bissextos sem normalizar datas inválidas', () => {
@@ -53,6 +54,21 @@ test('FIN-010 / C01: intervalo fornecido inclui fronteiras, sem inferir ciclos b
     assert.equal(containsDate(range, civilDate(date)), true);
   assert.equal(containsDate(range, civilDate('2026-11-01')), false);
   assert.throws(() => dateRange(range.end, range.start), /posterior/);
+});
+
+test('FIN-010/048: dia vizinho atravessa meses/anos/bissexto e não extrapola o calendário', () => {
+  for (const [on, direction, expected] of [
+    ['2026-03-01', -1, '2026-02-28'],
+    ['2028-03-01', -1, '2028-02-29'],
+    ['2026-12-31', 1, '2027-01-01'],
+    ['2027-01-01', -1, '2026-12-31'],
+    ['2028-02-28', 1, '2028-02-29'],
+    ['2028-02-29', 1, '2028-03-01'],
+    ['0001-01-01', -1, null],
+    ['9999-12-31', 1, null],
+  ])
+    assert.equal(adjacentCivilDate(civilDate(on), direction), expected);
+  assert.throws(() => adjacentCivilDate(civilDate('2026-10-01'), 0));
 });
 
 test('FIN-048 / C19: data civil e relógio congelado conservam o dia em fusos diferentes', () => {

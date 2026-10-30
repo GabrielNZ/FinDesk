@@ -2,7 +2,7 @@
 
 Projeto pessoal de finanças e investimentos para Windows, previsto em Angular, Electron e TypeScript.
 
-Esta entrega contém a **casca navegável do aplicativo**, com tema escuro, logo original e barra nativa do Windows. Há domínio financeiro básico, persistência local fictícia e Configurações → Dados de demonstração com restauração explícita. As telas financeiras ainda serão desenvolvidas. Nenhuma instituição está conectada.
+Esta entrega contém a **casca navegável do aplicativo**, com tema escuro, logo original e barra nativa do Windows. Finanças tem saldo fictício, seletores de conta/moeda, cinco submenus e navegação por mês calendário. Há persistência local e Configurações → Dados de demonstração com restauração explícita. Conteúdo dos submenus e ciclos ainda serão desenvolvidos. Nenhuma instituição está conectada.
 
 ## Instalar e executar
 
@@ -41,7 +41,11 @@ O script inicia o Angular em `127.0.0.1:4200` e abre o Electron. Fechar a janela
 
 ## Conferir a entrega
 
-- Navegue por Visão geral, Finanças e Investimentos. As duas últimas apresentam estados de preparação, sem dados fictícios ainda.
+- Em Finanças, alterne contas/moedas e meses. O saldo mantém a referência fictícia de 29/10/2026; a cotação de conversão é fictícia e identificada. Todas as contas + Original mostra moedas separadas.
+- Conta/moeda são os círculos com marca/bandeira ao lado de importar. Clique para abrir as opções; hover/foco alonga a opção e revela seu nome. Setas/Home/End navegam, Enter seleciona e Escape fecha. O saldo aparece no card à esquerda.
+- Ao lado do saldo, os três botões em coluna alternam calendário, salário e cartão. Nos três modos, a pequena seta acompanha a expansão e fica separada do seletor aberto, sem linha de datas; recolher preserva a seleção. Salário/cartão usam datas salvas da conta selecionada, sem geração. Todas as contas ou falta de datas deixam esses modos indisponíveis; trocar para uma conta sem o ciclo ativo volta ao calendário sem aviso.
+- Troque entre Geral, Movimentações, Cartão, Compromissos e Assinaturas: contexto preservado, conteúdo ainda pendente. Ao reabrir, conta/moeda são lembradas e o calendário volta à referência da demonstração. Importação e configuração de recorrências continuam pendentes. O saldo mantém fundo uniforme e a largura anterior; só a altura foi aumentada discretamente.
+- Investimentos permanece em preparação. Reabra o aplicativo após esta atualização para carregar o contrato de preferências v2 e sua migração; a recarga da interface em desenvolvimento não reinicia o worker.
 - Abra a engrenagem para ver Configurações → Integrações.
 - Em Configurações, use **Ver logo** para consultar as versões branca e preta originais.
 - O botão de informação abre **Sobre esta versão**, com ambiente e versão real via ponte Electron.
@@ -58,7 +62,7 @@ O build da interface fica em `FinDesk-Project/dist/renderer/browser/`; o desktop
 
 Formatação da aplicação: `npm run format` e `npm run format:check`. Esses comandos ficam limitados a `FinDesk-Project/`; a documentação externa e os originais recebidos permanecem fora da formatação automática.
 
-`npm run test:domain` compila domínio/fixtures e executa os testes financeiros básicos sem abrir a interface. `npm test` inclui também os testes de segurança; `npm run check` verifica tipos, lint, formatação e esses testes. A F01b não implementa persistência ou indicadores na tela.
+`npm run test:domain` compila domínio/fixtures/aplicação e executa os testes do domínio financeiro sem abrir a interface. `npm test` inclui também segurança, aplicação e persistência; `npm run check` verifica tipos, lint, formatação e esses testes. O conteúdo funcional dos submenus financeiros ainda está pendente.
 
 Na execução normal, o armazenamento usa `%LOCALAPPDATA%\FinDesk\data\demo.sqlite` e `preferences.sqlite`. O seed só inicializa base nova; reabrir preserva alterações. Em Configurações → Dados de demonstração, Restaurar dados pede confirmação na própria seção e repõe apenas fatos fictícios, preservando preferências/layout. Não há banco pessoal criado nem backup independente implementado.
 

@@ -8,7 +8,7 @@ A [especificação de Finanças v1.0](docs/FINANCAS_SPEC.md), recebida em 29/10/
 
 SQLite/API/worker, LocalAppData e restauração demo preservando preferências/layout foram confirmados em D23/D25–D27. F01c.2 implementa armazenamento mínimo de fatos fictícios e preferências, com migração, seed idempotente e ponte restrita. F01c.3 apresenta o estado e a restauração em Configurações, entre Integrações e Identidade, com confirmação na própria seção (D28/D29). Plano e critérios em [persistência local](docs/financas/PERSISTENCIA.md). Parcelas por fatura são o padrão dos gastos (D24), mantendo a visão pelo total contratado.
 
-Rastreabilidade e catálogo preparados em F01a: [requisitos por ID](docs/financas/REQUISITOS.md) e [cenários fictícios](docs/financas/CENARIOS.md). F01b concretiza domínio e fixtures; F01c.2 persiste a base fictícia. Somente a cobertura indicada no catálogo é executável; fluxos financeiros ainda não aparecem nas telas.
+Rastreabilidade e catálogo preparados em F01a: [requisitos por ID](docs/financas/REQUISITOS.md) e [cenários fictícios](docs/financas/CENARIOS.md). F01b concretiza domínio e fixtures; F01c.2 persiste a base fictícia. F02a acrescenta saldo, seletores, submenus e mês calendário, com última conta lembrada e câmbio fictício identificado (D30–D33). Critérios em [estrutura de Finanças](docs/financas/ESTRUTURA.md). Conteúdo dos submenus e ciclos ainda têm entregas próprias; não são funções concluídas.
 
 ## Produto e decisões confirmadas
 
@@ -19,6 +19,12 @@ Stack definida: Angular, Electron e TypeScript. Sem servidor separado necessári
 A navegação principal contém **Visão geral**, **Finanças** e **Investimentos**. O simulador pertence a Investimentos. Uma engrenagem abre Configurações, que contém uma seção Integrações; os fluxos dessa seção com dados reais ainda precisam de levantamento.
 
 Tema escuro primeiro, tokens semânticos e preparação para tema claro posterior. Uso pontual de PrimeNG, com composição visual própria, controles consistentes e recursos gratuitos. Gabriel confirmou **Angular 21 + PrimeNG 21 Community MIT** e **barra nativa do Windows**. Na revisão da casca, escolheu manter a base visual e enxugar o conteúdo, sem frases de efeito. A **logo original fornecida**, com moedas e seta ascendente, está preservada em `FinDesk-Project/public/brand/logo-original.png` e aplicada no lugar do F. Versões, histórico e justificativas em [docs/DECISIONS.md](docs/DECISIONS.md).
+
+## Interações da interface
+
+Direção de interação reforçada na revisão da F02a (D34/D35): saldo em card com carteira no canto, sem parágrafos redundantes de conta/data; conta/moeda em círculos com marcas/bandeiras, opções descendo sem painel e nomes revelados pela expansão lateral da opção no hover/foco. Aplicar composições próprias desde o protótipo, sem adiar essa direção para o fim. Contexto financeiro e persistência permanecem os já definidos.
+
+D36–D39 confirmam saldo sem degradê, um pouco mais alto e com largura preservada; somente os períodos ficam em coluna ao lado, com expansão do intervalo à direita. Importar/banco/moeda permanecem juntos no canto anterior. Opção selecionada não se repete na lista. Modos de salário/cartão usam datas salvas da conta, sem geração; troca de conta incompatível retorna ao calendário sem aviso. Limites em [períodos salvos](docs/financas/PERIODOS.md); configuração de fontes/recorrências ainda pendente.
 
 ## Escolha de armazenamento
 

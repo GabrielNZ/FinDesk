@@ -7,3 +7,6 @@ coverage/
 test-results/
 playwright-report/
 package-lock.json
+# Assets de terceiros preservados byte a byte; origem/licença em docs/ASSETS.md.
+public/flags/
+public/institutions/

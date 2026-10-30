@@ -7,9 +7,10 @@ import { parsePreferences, parseStoredJson, StorageFailure, validateSnapshot } f
 import { DEMO_MIGRATIONS, migrate, PREFERENCE_MIGRATIONS } from './migrations';
 
 export const DEFAULT_PREFERENCES: FinancePreferences = Object.freeze({
-  version: 1,
+  version: 2,
   currencyMode: 'original',
   periodMode: 'calendar-month',
+  lastAccountId: null,
 });
 
 function freshDemo(): DemoSnapshot {
@@ -72,14 +73,14 @@ export class DemoStore {
       });
       transaction(this.preferences, () => {
         const row = this.preferences!.prepare(
-          "SELECT payload FROM preferences WHERE key = 'finance.v1'",
+          "SELECT payload FROM preferences WHERE key = 'finance.v2'",
         ).get();
         const initialized = this.preferences!.prepare(
           'SELECT initialized FROM storage_identity',
         ).get()?.['initialized'];
         if (initialized === 0 && !row) {
           this.preferences!.prepare('INSERT INTO preferences VALUES (?, ?)').run(
-            'finance.v1',
+            'finance.v2',
             JSON.stringify(DEFAULT_PREFERENCES),
           );
           this.preferences!.exec('UPDATE storage_identity SET initialized = 1');
@@ -131,7 +132,7 @@ export class DemoStore {
   readPreferences(): FinancePreferences {
     const [, preferences] = this.requireOpen();
     const row = preferences
-      .prepare("SELECT payload FROM preferences WHERE key = 'finance.v1'")
+      .prepare("SELECT payload FROM preferences WHERE key = 'finance.v2'")
       .get();
     if (!row) throw new StorageFailure('corrupt');
     try {
@@ -147,7 +148,7 @@ export class DemoStore {
     transaction(preferences, () => {
       const result = preferences
         .prepare('UPDATE preferences SET payload = ? WHERE key = ?')
-        .run(JSON.stringify(checked), 'finance.v1');
+        .run(JSON.stringify(checked), 'finance.v2');
       if (Number(result.changes) !== 1) throw new StorageFailure('corrupt');
     });
     return this.readPreferences();

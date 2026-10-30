@@ -1,9 +1,10 @@
 import { DatabaseSync } from 'node:sqlite';
-import { StorageFailure } from './contracts';
+import { parseStoredJson, StorageFailure, upgradePreferencesV1 } from './contracts';
 
 export interface Migration {
   readonly version: number;
   readonly sql: string;
+  readonly apply?: (database: DatabaseSync) => void;
 }
 export const DEMO_MIGRATIONS: readonly Migration[] = [
   {
@@ -29,6 +30,29 @@ export const PREFERENCE_MIGRATIONS: readonly Migration[] = [
     payload TEXT NOT NULL CHECK (json_valid(payload))
   ) STRICT;
 `,
+  },
+  {
+    version: 2,
+    sql: '',
+    apply(database) {
+      const initialized = database.prepare('SELECT initialized FROM storage_identity').get()?.[
+        'initialized'
+      ];
+      const row = database
+        .prepare("SELECT payload FROM preferences WHERE key = 'finance.v1'")
+        .get();
+      if (initialized === 0 && !row) return;
+      if (initialized !== 1 || !row) throw new StorageFailure('corrupt');
+      let upgraded;
+      try {
+        upgraded = upgradePreferencesV1(parseStoredJson(row['payload']));
+      } catch {
+        throw new StorageFailure('corrupt');
+      }
+      database
+        .prepare('UPDATE preferences SET key = ?, payload = ? WHERE key = ?')
+        .run('finance.v2', JSON.stringify(upgraded), 'finance.v1');
+    },
   },
 ];
 
@@ -63,6 +87,7 @@ export function migrate(
         if (!Number.isSafeInteger(migration.version) || migration.version < 1)
           throw new StorageFailure('incompatible');
         database.exec(migration.sql);
+        migration.apply?.(database);
         database.exec(`PRAGMA user_version = ${migration.version}`);
       }
     }

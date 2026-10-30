@@ -1,0 +1,114 @@
+<div class="finance-title">
+  <h1>Finanças<span class="heading-dot">.</span></h1>
+  <span class="outline-tag">Demonstração</span>
+</div>
+
+@switch (context.state()) {
+  @case ('loading') {
+    <p class="finance-notice" role="status">Carregando dados…</p>
+  }
+  @case ('browser') {
+    <p class="finance-notice" role="status">Dados locais disponíveis no aplicativo desktop.</p>
+  }
+  @case ('failed') {
+    <div class="finance-notice">
+      <p role="alert">{{ context.error() }}</p>
+      <button type="button" class="text-action" (click)="context.load()">Tentar novamente</button>
+    </div>
+  }
+  @case ('ready') {
+    <section class="finance-header" aria-label="Contexto financeiro">
+      <div
+        class="balance-block"
+        role="group"
+        [attr.aria-label]="'Saldo de ' + context.accountLabel()"
+        [attr.aria-description]="'Referência fictícia: ' + context.snapshot()?.asOf"
+        aria-live="polite"
+      >
+        <i class="pi pi-wallet balance-icon" aria-hidden="true"></i>
+        @if (context.balance(); as balance) {
+          @if (!balance.unavailable) {
+            <div class="balance-amounts">
+              @for (value of balance.values; track value.currency) {
+                <span class="balance-value">{{ money(value) }}</span>
+              }
+            </div>
+          } @else {
+            <p class="balance-unavailable">Cotação indisponível</p>
+          }
+          @if (balance.converted) {
+            <p class="conversion-note">Cotação fictícia · 1 USD = 5 BRL · 29/10/2026</p>
+          }
+          @if (balance.converted || context.accountId() === 'all') {
+            <details class="original-balances">
+              <summary>Valores originais por conta</summary>
+              <dl>
+                @for (original of balance.originals; track original.accountId) {
+                  <div>
+                    <dt>{{ original.accountName }}</dt>
+                    <dd>{{ money(original.value) }}</dd>
+                  </div>
+                }
+              </dl>
+            </details>
+          }
+        } @else {
+          <p class="balance-unavailable">
+            {{ context.hasSelection() ? 'Saldo indisponível' : 'Selecione uma conta' }}
+          </p>
+        }
+      </div>
+
+      <fd-period-control />
+      <div class="finance-filters">
+        <span class="import-control" title="Importar dados — disponível em etapa futura">
+          <button
+            class="icon-button"
+            type="button"
+            aria-label="Importar dados"
+            aria-describedby="import-unavailable"
+            disabled
+          >
+            <i class="pi pi-upload" aria-hidden="true"></i>
+          </button>
+          <span id="import-unavailable" class="visually-hidden"
+            >Importação ainda não disponível.</span
+          >
+        </span>
+        <fd-circle-selector
+          pickerId="finance-account-picker"
+          label="Conta"
+          [options]="accountChoices()"
+          [value]="context.hasSelection() ? context.accountId() : ''"
+          (chosen)="context.selectAccount($event)"
+        />
+        <fd-circle-selector
+          pickerId="finance-currency-picker"
+          label="Moeda"
+          [options]="currencyChoices"
+          [value]="context.currencyMode()"
+          (chosen)="context.selectCurrency($event)"
+        />
+      </div>
+    </section>
+    @if (context.saveError()) {
+      <p class="preference-status" role="alert">{{ context.saveError() }}</p>
+    } @else if (context.saving()) {
+      <p class="preference-status" role="status">Salvando seleção…</p>
+    }
+
+    <nav class="finance-submenus" aria-label="Submenus de Finanças">
+      @for (submenu of submenus; track submenu.path) {
+        <a [routerLink]="submenu.path" routerLinkActive="active" ariaCurrentWhenActive="page">{{
+          submenu.label
+        }}</a>
+      }
+    </nav>
+
+    @if (!context.hasSelection()) {
+      <p class="finance-notice">Selecione uma conta para continuar.</p>
+    } @else {
+      <router-outlet />
+    }
+  }
+}

@@ -58,7 +58,8 @@ test('Configurações: confirmação inline cancela por clique/Escape e restaura
     const initial = await page.evaluate(() => window.finDesk!.storage.getDemo());
     await page.evaluate(() =>
       window.finDesk!.storage.savePreferences({
-        version: 1,
+        version: 2,
+        lastAccountId: 'demo-u',
         currencyMode: 'USD',
         periodMode: 'calendar-month',
       }),
@@ -110,7 +111,12 @@ test('Configurações: confirmação inline cancela por clique/Escape e restaura
       expect(await page.evaluate(() => window.finDesk!.storage.getDemo())).toEqual(initial);
       expect(await page.evaluate(() => window.finDesk!.storage.getPreferences())).toEqual({
         ok: true,
-        value: { version: 1, currencyMode: 'USD', periodMode: 'calendar-month' },
+        value: {
+          version: 2,
+          lastAccountId: 'demo-u',
+          currencyMode: 'USD',
+          periodMode: 'calendar-month',
+        },
       });
       expect(db.prepare('SELECT COUNT(*) AS count FROM restore_audit').get()!['count']).toBe(1);
       await application.evaluate(({ BrowserWindow }) =>

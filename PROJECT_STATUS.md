@@ -1,12 +1,63 @@
 # Estado do FinDesk
 
-Atualizado em **29/10/2026** (America/Sao_Paulo).
+Atualizado em **30/10/2026** (America/Sao_Paulo).
 
 ## Situação atual
 
-**F01c.3 aprovada; F02 autorizada para levantamento.** “Vamos para a próxima” aprova a seção de demonstração apresentada, autoriza seu commit/push e o início da próxima pequena entrega. Configurações apresenta a disponibilidade do armazenamento e a restauração explícita dos dados fictícios conforme D28/D29. Escolhas abertas da F02 serão discutidas antes da implementação dependente.
+### Aprovação e continuidade — 30/10/2026
 
-## F01c.3 — última entrega aprovada
+- **Entrega aprovada:** “Vamos para a próxima” aprova a F02a acumulada e os ajustes D34–D41, incluindo os ciclos básicos sobre datas salvas. Commit local e push para `origin/master` autorizados pela política vigente; registro em preparação nesta rodada.
+- **Próxima entrega proposta — F02b.2:** preferência de período em Configurações → Finanças, sem alterar ainda recorrências, dias úteis ou referências entre múltiplos cartões. Manter as regras D37/D38; escolhas na tela de Finanças continuam temporárias.
+- **Proposta do Codex:** três botões com ícone/nome, salvamento automático; aplicar o padrão na próxima abertura, preservando a consulta atual. Conta incompatível usa calendário sem aviso e preserva a preferência salva.
+- **Perguntas aguardando resposta:** composição/salvamento da preferência e momento de aplicação. Não implementar as partes dependentes antes das respostas. Sem pesquisa técnica pendente para essas escolhas; contrato de preferências já comporta o campo e a ponte existente permite salvá-lo.
+
+### Revisão mais recente — D41
+
+- **Confirmado/implementado:** aba menor somente horizontalmente (20 px), altura mantida em 44 px nos três modos. Seta acompanha a extremidade direita e fica separada do seletor aberto por 8 px. Calendário/salário/cartão começam recolhidos; removidas todas as linhas visíveis de intervalo, preservando datas no contexto e descrição acessível. Cofrinho recebendo moeda no salário e remoção da divisória abaixo dos submenus. Saldo e ações mantidos.
+- **Escopo:** revisão visual e de expansão; sem mudança de regras financeiras, persistência ou IPC. Aprovação e continuidade atualizadas no início deste arquivo; último envio anterior `18d5fd9`.
+- **Verificação:** build web/templates, lint dos arquivos envolvidos e tipos dos testes passaram. Cenário Electron D41 passou nos três modos, conferindo altura, movimento/separação da seta, datas acessíveis sem linha visível, teclado/Escape, preservação do contexto e layout compacto. Captura ampla conferida. Os 41 testes Node anteriores permanecem válidos para a lógica inalterada; não foram repetidos.
+
+**Histórico anterior à aprovação:** cabeçalho revisado conforme D36–D40, com a primeira fatia dos ciclos autorizada. A apresentação de D40 foi substituída por D41 acima. Saldo e demais grupos permanecem na composição de D39. F01c.3 enviada em `18d5fd9`.
+
+### Revisão atual — D40
+
+- **Confirmado/implementado:** Calendário selecionado mostra apenas um pequeno retângulo com seta à direita. Clique ou Enter abre/recolhe a seleção; painel de mês/ano com 44 px, alinhado ao botão, sem linha visível “01/10/2026 – 31/10/2026”. Datas permanecem no contexto e na descrição acessível. Selecionar novamente Calendário inicia recolhido; mudar modo não carrega a expansão anterior. Recolher não altera o mês. Escape fecha e devolve foco à seta.
+- **Escopo:** somente apresentação/estado local do calendário; sem mudança de regra financeira, banco, IPC, preferência persistida ou posição dos demais controles. Os 41 testes Node anteriores continuam válidos; não repetir essa suíte por esta revisão.
+- **Verificação:** lint, tipos dos testes e build web/templates passaram. Fluxo Electron focado aprovado: início recolhido, abertura por Enter, ausência da linha de datas, altura/alinhamento de 44 px, Escape com retorno de foco, seleção mensal preservada e retorno ao calendário recolhido após trocar de modo. Conferidas capturas recolhida/aberta e adaptação compacta. Testes existentes abrem explicitamente o calendário quando precisam navegar; não foram repetidos os 41 testes Node ou toda a suíte desktop.
+- **Autorização:** ajuste solicitado, sem aprovação final/commit/push da entrega acumulada. Demais pendências e próxima entrega continuam abaixo.
+
+### Entrega atual — D36–D39 e períodos salvos
+
+- **Composição confirmada:** manter largura máxima de 520 px do saldo e sua posição, fundo uniforme e altura mínima de 156 px (antes 136). Apenas os três períodos ficam em coluna; intervalo abre à direita do ativo. Importar/banco/moeda permanecem lado a lado no canto anterior, sem subir para o título. Em janela estreita, reacomodar período abaixo sem esmagar os demais. A disposição inicialmente implementada foi corrigida após esclarecimento de Gabriel; não é direção aprovada.
+- **Seletores:** omitem a opção atual; fechados mantêm somente hover, sem nome expandido. Opções abertas preservam movimento/expansão lateral e acesso por teclado. Primeiro foco vai para a primeira alternativa habilitada, pois o valor atual não está na lista.
+- **Ciclos:** [regras e limites](docs/financas/PERIODOS.md), [aplicação](FinDesk-Project/application/finance-periods.ts) e [controle](FinDesk-Project/src/app/features/finance/period-control.ts). Salário usa previsão até a véspera da próxima; cartão vai do dia seguinte ao fechamento anterior até o próximo, inclusivo. Dados da conta selecionada; sem gerar datas. Só navega em intervalos salvos. Troca incompatível de conta volta ao calendário sem aviso (D38). Mudanças não alteram saldo atual, fatos nem preferência padrão persistida.
+- **Verificações concluídas:** tipos/templates, lint, formatação e builds desktop/domínio/web passaram. Os 41 testes Node passaram (19 domínio, oito aplicação, dez persistência e quatro segurança), incluindo fronteiras dos ciclos, atraso/antecipação, dias civis vizinhos, bissexto, virada do ano e ausências. Sete cenários Electron aprovados entre rodada agrupada e repetições focadas: seis de Finanças e casca. Conferidos seleção exclusiva, intervalos preservados, limites da navegação, retorno silencioso, lista sem seleção atual, teclado, movimento reduzido e geometria dos grupos no layout amplo/compacto. Tooltip compacta corrigida para não ser cortada. Bancos temporários; sem testar falhas no banco normal.
+- **Limites:** somente datas fictícias já salvas e fontes existentes. Mais de um cartão não recebe referência arbitrária. Configuração de recorrência/fontes, geração em meses curtos/dias úteis, período padrão em Configurações e conteúdo dos submenus ainda pendentes. API/seed/lockfile/dependências sem alteração nesta revisão.
+- **Autorização e continuidade:** pedidos e quatro respostas de Gabriel autorizaram estes ajustes e os modos básicos; esclarecimento de posição em D39. Não repetir decisões respondidas. Sem commit/push desta entrega antes da aprovação final. Próxima proposta: concluir o levantamento da configuração de fontes/preferência de período antes das partes dependentes; F03 mantém escopo próprio.
+
+### Histórico da revisão visual e de interação — D34/D35
+
+- **Confirmado:** remover os textos visíveis de conta/referência abaixo do saldo; saldo em card com carteira no canto. Gatilhos circulares com marca da instituição/bandeira da moeda; Original usa globo. Ao abrir, opções descem em círculos soltos, sem caixa/fundo. Os nomes aparecem dentro das opções ao alongá-las lateralmente no hover/foco, com pontas arredondadas. Gatilhos do cabeçalho permanecem circulares para não cobrir o vizinho.
+- **Implementação:** seletor próprio com Popover API nativo, apenas como top layer transparente; opções, movimento, teclado e aparência próprios, sem dependência nova. Escape/seleção devolvem foco; clique fora, mudança de foco para outro controle e redimensionamento fecham. Abrir outro seletor fecha o anterior. Movimento reduzido respeitado. Contexto/data mantidos nos atributos acessíveis, sem os dois parágrafos visíveis; Demonstração e cotação fictícia continuam identificadas.
+- **Assets:** marcas obtidas nos sites oficiais, bandeiras locais com licença MIT preservada e ícones genéricos para conta auxiliar/Todas as contas. Procedência e hashes em [ASSETS.md](docs/ASSETS.md). Sem rede no uso do seletor nem mudança da logo FinDesk.
+- **Verificações desta revisão:** tipos/templates, lint e formatação; build web e conferência ampla/compacta. Seis cenários Electron aprovados entre rodadas agrupadas e repetições focadas: contexto/reabertura, conta ausente, falha de gravação, armazenamento indisponível, novo seletor e casca. No seletor, conferidos hover, alinhamento, clique, setas/Home/End/Enter, Escape/Tab, clique fora, troca de menu, imagens locais e movimento reduzido. Os 36 testes Node anteriores continuam válidos para aplicação/domínio/backend, que não mudaram nesta revisão; não foram repetidos.
+- **Correções durante a verificação:** foco entre gatilho/opção não deve fechar a lista antes do clique; usar relatedTarget em vez de activeElement transitório. Expansão lateral restrita às opções abertas para não bloquear o botão vizinho. Fluxos longos têm limite de 60 s no teste, sem espera fixa inserida no aplicativo.
+- **Autorizações:** solicitações e esclarecimentos de Gabriel autorizam esta correção; não representam aprovação final da F02a ou início da F02b.
+
+## F02a — base da entrega, antes de D36–D39
+
+- **Escopo confirmado:** [estrutura e critérios](docs/financas/ESTRUTURA.md), FIN-006–010 e C01/C02/C23/C27. Saldo atual à esquerda, filtros à direita, submenus e período abaixo; reacomodação em janela menor. Calendário primeiro, ciclos explicitamente indisponíveis. Primeira conta Nubank de demonstração, depois última seleção; câmbio fictício 1 USD = 5 BRL em 29/10/2026.
+- **Implementado:** [casos de uso](FinDesk-Project/application/finance-context.ts), [estado de apresentação](FinDesk-Project/src/app/features/finance/finance-context.service.ts) e [página](FinDesk-Project/src/app/features/finance/finance.page.ts), sem SQL no renderer nem nova operação IPC. Conta/moeda/mês mantidos entre submenus e ao retornar de outra área na mesma execução; conta/moeda lembradas ao reabrir, mês histórico não salvo.
+- **Saldo:** usa abertura + caixa até a referência fictícia de 29/10/2026, independente do período consultado. BRL/USD originais separados; consolidação só em moeda comum, com taxa fictícia/data e detalhes dos originais. Soma por moeda antes da conversão/arredondamento. Sem taxa compatível ou saldo calculável, mostra ausência, sem zero inventado. Valores originais não são alterados.
+- **Persistência:** preferências em finance.v2, esquema SQLite de preferências v2, conta nula inicialmente; migração transacional da v1 preserva moeda/período, fatos e outros namespaces. Agregado demo/esquema demo permanecem v1; cotação é referência imutável do cenário aprovado. Preferência de ciclo existente é preservada, com aviso de calendário temporário nesta etapa.
+- **Estados:** conta salva ausente exige escolha; conta sem cartão mostra vazio próprio no submenu Cartão. Erro de escrita informa que a seleção vale apenas na execução atual. Armazenamento incompatível e prévia sem ponte não mostram saldos ficticiamente disponíveis. Importar dados está desabilitado até F18. Conteúdo dos cinco submenus está explicitamente pendente, sem simular extrato/fatura/cards.
+- **Verificações efetivas:** tipos/templates, lint, formatação, build desktop/domínio/web; 36 testes Node passaram (18 domínio, quatro aplicação, quatro segurança e dez persistência). Dez cenários Electron passaram entre execução conjunta e repetição focada: quatro novos de Finanças, casca, três Configurações e dois storage. Falha inicial em uma asserção sobre option desabilitado foi corrigida para verificar a propriedade nativa; não exigiu mudança no produto. Layout amplo/compacto e teclado conferidos. Gestos da navbar não foram alterados nem repetidos integralmente.
+- **Isolamento e limites:** testes em perfis/bancos temporários, sem provocar falhas ou restaurar o banco normal. Nenhuma dependência/lockfile alterado, sem serviço de câmbio ou integração real. Reabrir o aplicativo ao conferir para carregar o contrato de preferências atualizado; recarga apenas do renderer não atualiza o worker.
+- **Perguntas aguardando resposta / pesquisa:** nenhuma da F02a; quatro respostas registradas em D30–D33. Políticas dos ciclos continuam abertas para levantamento da F02b, sem novas pesquisas antecipadas ou conclusões sobre provedores.
+- **Próxima entrega proposta — F02b:** discutir limites dos ciclos, dias 29–31/dias úteis, compra no dia do fechamento, ausência de salário/cartão e escolha entre cartões. Depois implementar períodos e a preferência em Configurações conforme as respostas. Cards continuam em F03.
+- **Autorização:** “vamos para a próxima” aprovou F01c.3 e autorizou iniciar F02; respostas aprovaram esta composição/escopo. F02a ainda sem aprovação final/commit/push. Aguardar revisão antes de iniciar a próxima fatia.
+
+## F01c.3 — histórico da última entrega aprovada
 
 - **Confirmado:** seção compacta Dados de demonstração entre Integrações e Identidade; confirmação na própria seção com Cancelar/Restaurar e o aviso de preservação de preferências/layout. Sem modal adicional. D27 continua definindo que somente fatos fictícios são repostos.
 - **Implementado:** [componente](FinDesk-Project/src/app/features/settings/demo-data-settings.component.ts) e estado local da seção via ponte existente, sem alteração do backend. Estados de verificação, disponível, restauração, falha e prévia sem ponte. Botão indisponível quando não há armazenamento acessível; erro sanitizado e Verificar novamente, sem disparar restauração implícita.
@@ -85,7 +136,7 @@ Atualizado em **29/10/2026** (America/Sao_Paulo).
 - **Dependências propostas:** F01b para regras comuns e fixtures executáveis após respostas pertinentes; F01c para persistência mínima após decisão conjunta, antes das preferências salvas de F02/F03. F02–F20 seguem a referência da especificação, com subdivisões quando necessário.
 - **Pesquisa de armazenamento:** comparação e escolha concluídas na F01a; driver e detalhes de persistência continuam pendentes. Integração real permanece para F20.
 - **Levantamento:** demais temas da seção 16 serão discutidos em pequenas rodadas antes da implementação dependente; não bloqueiam fatos/cálculos comuns independentes.
-- **Histórico de autorização:** casca/F00/reorganização em `6920552`; F01a em `4694ef9`; F01b em `34af7ad`; F01c.1 em `8abad2a`; F01c.2 em `0bc8b33`, todas aprovadas/enviadas. F01c.3 é a entrega atual; próxima proposta F02.
+- **Histórico de autorização:** casca/F00/reorganização em `6920552`; F01a em `4694ef9`; F01b em `34af7ad`; F01c.1 em `8abad2a`; F01c.2 em `0bc8b33`; F01c.3 em `18d5fd9`, todas aprovadas/enviadas. F02a é a entrega atual; próxima proposta F02b.
 
 ## Entrega atual
 
@@ -131,7 +182,8 @@ Esses resultados são históricos da casca. A F01b adicionou os testes de domín
 - F01a aprovada/enviada: `4694ef9` — `docs(financas): consolida requisitos e cenários da F01a`.
 - F01b aprovada/enviada: `34af7ad` — `feat(financas): adiciona domínio e fixtures da F01b`.
 - F01c.1 aprovada/enviada: `8abad2a` — `chore(persistencia): valida SQLite no Electron e registra decisões`.
-- **Último commit enviado antes desta entrega:** `0bc8b33` — `feat(persistencia): salva demonstração e preferências no SQLite`. F01c.3 aprovada para commit/push nesta rodada.
+- F01c.2 aprovada/enviada: `0bc8b33` — `feat(persistencia): salva demonstração e preferências no SQLite`.
+- **Última entrega aprovada e enviada:** `18d5fd9` — `feat(configuracoes): adiciona restauração dos dados de demonstração`. F02a é a entrega atual, ainda sem commit/push.
 - Política confirmada: **push após cada entrega aprovada**. Identidade Git existente preservada. Originais mantidos byte a byte no histórico após a configuração de atributos.
 
 ## Pendências e próxima entrega proposta
@@ -146,7 +198,7 @@ Esses resultados são históricos da casca. A F01b adicionou os testes de domín
 
 **Aprovação atual:** Gabriel aprovou expressamente as mudanças existentes e autorizou commit/push. Substitui a pendência anterior de revisão do conjunto.
 
-**Próximo passo vigente:** revisar F01c.3 e, mediante continuidade, registrar a entrega e iniciar F02 pelo levantamento dos requisitos abertos. Não executar F02–F20 automaticamente.
+**Próximo passo vigente:** revisar F02a e, mediante continuidade, registrar a entrega e iniciar o levantamento da F02b. Não executar o restante de F02–F20 automaticamente.
 
 **Espaçamento superior:** reduzidas a altura do cabeçalho e a margem interna superior do conteúdo após a remoção da linha divisória, conforme solicitado. Botão de informação preservado à direita. Ajuste apenas de CSS, revisado sem executar a suíte.
 

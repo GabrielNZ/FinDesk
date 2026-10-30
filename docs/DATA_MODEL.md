@@ -43,6 +43,10 @@ Restaurar substitui somente o agregado fictício numa transação; não altera p
 
 ## Representação de dinheiro, datas e contratos — F01a/F01b
 
+Evolução D37: datas salvas já presentes no agregado sustentam um catálogo de períodos em memória; nenhum campo de faturamento ou salário foi inventado/persistido. Chaves de intervalo são derivadas de modo/referência/início/fim. `adjacentCivilDate` fornece o dia civil anterior/seguinte com limites e bissexto; não gera recorrência ou decide dia útil. Seleção temporária não altera finance.v2, fatos, vínculos ou data de referência do saldo.
+
+Evolução F02a (D31): preferences.sqlite usa esquema v2 e chave finance.v2 com `{version: 2, currencyMode, periodMode, lastAccountId}`. Conta nula abre no Nubank fictício inicialmente; `all` representa Todas as contas; ID salvo ausente exige nova seleção. Migração transacional valida o formato anterior, preserva moeda/período e outros namespaces, acrescenta conta nula e atualiza somente a preferência financeira. Conteúdo inválido é recusado com rollback, sem defaults destrutivos. demo.sqlite e o agregado permanecem v1; schemaVersion de StorageInfo continua se referindo ao esquema demo. A cotação fictícia de D33 é referência imutável do cenário v1 em código, não uma atualização dos fatos salvos.
+
 As propostas da F01a foram aprovadas para concretização ao autorizar F01b. `FinDesk-Project/domain/` implementa as quantias, datas e os fatos básicos abaixo; isso não é esquema SQL, importador ou biblioteca de banco escolhida. Regras de negócio confirmadas ficam em DOMAIN_RULES; o detalhamento visual continua na especificação.
 
 | Conceito           | Representação proposta                                                                                                                                                  | Validação/implicação                                                                                                                                                                                                    |

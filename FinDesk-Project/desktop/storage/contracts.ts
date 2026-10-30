@@ -38,17 +38,35 @@ export function record(value: unknown): Record<string, unknown> {
 export function parsePreferences(value: unknown): FinancePreferences {
   const data = record(value);
   if (
-    Object.keys(data).sort().join(',') !== 'currencyMode,periodMode,version' ||
-    data['version'] !== 1 ||
+    Object.keys(data).sort().join(',') !== 'currencyMode,lastAccountId,periodMode,version' ||
+    data['version'] !== 2 ||
     !['original', 'BRL', 'USD'].includes(data['currencyMode'] as string) ||
-    !['calendar-month', 'salary-cycle', 'card-cycle'].includes(data['periodMode'] as string)
+    !['calendar-month', 'salary-cycle', 'card-cycle'].includes(data['periodMode'] as string) ||
+    !(
+      data['lastAccountId'] === null ||
+      (typeof data['lastAccountId'] === 'string' &&
+        data['lastAccountId'].trim().length > 0 &&
+        data['lastAccountId'].length <= 160)
+    )
   )
     throw new StorageFailure('invalid-request');
   return {
-    version: 1,
+    version: 2,
     currencyMode: data['currencyMode'] as FinancePreferences['currencyMode'],
     periodMode: data['periodMode'] as FinancePreferences['periodMode'],
+    lastAccountId: data['lastAccountId'] as string | null,
   };
+}
+
+/** Usado somente pela migração local; o IPC não aceita formatos antigos. */
+export function upgradePreferencesV1(value: unknown): FinancePreferences {
+  const data = record(value);
+  if (
+    Object.keys(data).sort().join(',') !== 'currencyMode,periodMode,version' ||
+    data['version'] !== 1
+  )
+    throw new StorageFailure('corrupt');
+  return parsePreferences({ ...data, version: 2, lastAccountId: null });
 }
 
 /** JSON escrito pela aplicação é canônico: recusar conversões silenciosas ao ler disco. */

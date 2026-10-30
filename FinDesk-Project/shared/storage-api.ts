@@ -11,9 +11,10 @@ export interface DemoSnapshot {
 }
 
 export interface FinancePreferences {
-  readonly version: 1;
+  readonly version: 2;
   readonly currencyMode: 'original' | 'BRL' | 'USD';
   readonly periodMode: 'calendar-month' | 'salary-cycle' | 'card-cycle';
+  readonly lastAccountId: string | null;
 }
 
 export type StorageErrorCode =

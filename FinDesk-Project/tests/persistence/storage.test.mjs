@@ -9,7 +9,11 @@ import { DatabaseSync } from 'node:sqlite';
 const require = createRequire(import.meta.url);
 const { DemoStore, DEFAULT_PREFERENCES } = require('../../out/desktop/storage/store.js');
 const { StorageClient } = require('../../out/desktop/storage/client.js');
-const { migrate, DEMO_MIGRATIONS } = require('../../out/desktop/storage/migrations.js');
+const {
+  migrate,
+  DEMO_MIGRATIONS,
+  PREFERENCE_MIGRATIONS,
+} = require('../../out/desktop/storage/migrations.js');
 const {
   parsePreferences,
   parseStoredJson,
@@ -43,7 +47,12 @@ test('FIN-047 / C30: seed idempotente, alterações persistidas e restauração 
       ),
     },
   };
-  const preferences = { version: 1, currencyMode: 'USD', periodMode: 'calendar-month' };
+  const preferences = {
+    version: 2,
+    currencyMode: 'USD',
+    periodMode: 'calendar-month',
+    lastAccountId: 'demo-u',
+  };
   try {
     store.saveDemo(changed);
     store.savePreferences(preferences);
@@ -205,13 +214,22 @@ test('FIN-047 / C30: falha de escrita reverte a operação e preserva os fatos a
 });
 
 test('FIN-047/051: contratos recusam SQL/caminho, extras e confirmação ausente; diretórios de teste isolados', () => {
-  const preferences = { version: 1, currencyMode: 'BRL', periodMode: 'calendar-month' };
+  const preferences = {
+    version: 2,
+    currencyMode: 'BRL',
+    periodMode: 'calendar-month',
+    lastAccountId: null,
+  };
   assert.deepEqual(parsePreferences(preferences), preferences);
   for (const bad of [
     null,
     { ...preferences, sql: 'DELETE FROM demo_state' },
     { ...preferences, periodMode: 'arbitrario' },
     { ...preferences, currencyMode: 'EUR' },
+    { ...preferences, lastAccountId: '' },
+    { ...preferences, lastAccountId: 7 },
+    { ...preferences, lastAccountId: 'x'.repeat(161) },
+    { version: 1, currencyMode: 'BRL', periodMode: 'calendar-month' },
   ])
     assert.throws(() => parsePreferences(bad));
   for (const bad of [
@@ -236,12 +254,18 @@ test('FIN-047: worker serializa gravações, responde validação inválida e en
     assert.equal((await client.getStatus()).ok, true);
     await Promise.all(
       ['USD', 'original', 'BRL'].map((currencyMode) =>
-        client.savePreferences({ version: 1, currencyMode, periodMode: 'calendar-month' }),
+        client.savePreferences({
+          version: 2,
+          currencyMode,
+          periodMode: 'calendar-month',
+          lastAccountId: 'demo-b',
+        }),
       ),
     );
     assert.equal((await client.getPreferences()).value.currencyMode, 'BRL');
     const invalid = await client.savePreferences({
-      version: 1,
+      version: 2,
+      lastAccountId: null,
       currencyMode: 'EUR',
       periodMode: 'calendar-month',
     });
@@ -258,5 +282,83 @@ test('FIN-047: worker serializa gravações, responde validação inválida e en
     assert.equal((await failed.getStatus()).ok, false);
   } finally {
     await failed.close();
+  }
+});
+
+test('FIN-010/047 / D31: migração v1 conserva moeda/ciclo, fatos e outros namespaces e reabre conta lembrada', async (t) => {
+  const root = await temporary(t);
+  let store = new DemoStore(root);
+  const changed = store.readDemo();
+  changed.facts.movements[0].description = 'Fato fictício preservado pela migração';
+  store.saveDemo(changed);
+  store.close();
+  const prefs = new DatabaseSync(join(root, 'preferences.sqlite'));
+  prefs.exec('DELETE FROM preferences; PRAGMA user_version = 1');
+  prefs
+    .prepare('INSERT INTO preferences VALUES (?, ?)')
+    .run(
+      'finance.v1',
+      JSON.stringify({ version: 1, currencyMode: 'USD', periodMode: 'salary-cycle' }),
+    );
+  prefs.prepare('INSERT INTO preferences VALUES (?, ?)').run('layout.future', '{"keep":true}');
+  prefs.close();
+  store = new DemoStore(root);
+  try {
+    assert.deepEqual(store.readDemo(), changed);
+    assert.deepEqual(store.readPreferences(), {
+      version: 2,
+      currencyMode: 'USD',
+      periodMode: 'salary-cycle',
+      lastAccountId: null,
+    });
+    store.savePreferences({ ...store.readPreferences(), lastAccountId: 'demo-u' });
+  } finally {
+    store.close();
+  }
+  store = new DemoStore(root);
+  try {
+    assert.equal(store.readPreferences().lastAccountId, 'demo-u');
+  } finally {
+    store.close();
+  }
+  const verified = new DatabaseSync(join(root, 'preferences.sqlite'));
+  try {
+    assert.equal(verified.prepare('PRAGMA user_version').get().user_version, 2);
+    assert.equal(
+      verified.prepare("SELECT payload FROM preferences WHERE key = 'layout.future'").get().payload,
+      '{"keep":true}',
+    );
+    assert.equal(
+      verified.prepare("SELECT COUNT(*) AS count FROM preferences WHERE key = 'finance.v1'").get()
+        .count,
+      0,
+    );
+  } finally {
+    verified.close();
+  }
+});
+
+test('FIN-047/048: migração recusa preferências antigas inválidas sem avançar versão ou perder seu conteúdo', () => {
+  const db = new DatabaseSync(':memory:');
+  try {
+    migrate(db, 'preferences', PREFERENCE_MIGRATIONS.slice(0, 1));
+    const payload = JSON.stringify({
+      version: 1,
+      currencyMode: 'EUR',
+      periodMode: 'calendar-month',
+    });
+    db.prepare('INSERT INTO preferences VALUES (?, ?)').run('finance.v1', payload);
+    db.exec('UPDATE storage_identity SET initialized = 1');
+    assert.throws(
+      () => migrate(db, 'preferences', PREFERENCE_MIGRATIONS),
+      (error) => error.code === 'corrupt',
+    );
+    assert.equal(db.prepare('PRAGMA user_version').get().user_version, 1);
+    assert.equal(
+      db.prepare("SELECT payload FROM preferences WHERE key = 'finance.v1'").get().payload,
+      payload,
+    );
+  } finally {
+    db.close();
   }
 });

@@ -1,0 +1,110 @@
+:host {
+  display: block;
+  position: relative;
+  width: 44px;
+  height: 44px;
+  flex: 0 0 44px;
+}
+.choice-button {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  position: absolute;
+  right: 0;
+  top: 0;
+  height: 44px;
+  min-width: 44px;
+  padding: 0;
+  border: 1px solid #424d48;
+  border-radius: 999px;
+  color: var(--fd-text);
+  background: var(--fd-surface);
+  box-shadow: 0 5px 12px #00000030;
+  cursor: pointer;
+  overflow: hidden;
+}
+.picker-trigger {
+  z-index: 1;
+  box-shadow: none;
+}
+.choice-button:hover,
+.choice-button:focus-visible {
+  background: #28372f;
+  border-color: var(--fd-accent);
+  z-index: 2;
+}
+.choice-button:focus-visible {
+  outline: 2px solid var(--fd-accent);
+  outline-offset: 4px;
+}
+.choice-button[aria-selected='true'] {
+  border-color: var(--fd-accent);
+  box-shadow: 0 0 0 2px #a9c8b540;
+}
+.choice-button:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+.choice-name {
+  max-width: 0;
+  opacity: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  padding: 0;
+  font-size: 12px;
+  transition:
+    max-width 180ms ease,
+    padding 180ms ease,
+    opacity 140ms ease;
+}
+.choice-row .choice-button:hover .choice-name,
+.choice-row .choice-button:focus-visible .choice-name {
+  max-width: var(--name-width, 220px);
+  padding: 0 14px 0 18px;
+  opacity: 1;
+}
+.choice-list {
+  position: fixed;
+  inset: auto;
+  margin: 0;
+  width: 44px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  overflow: visible;
+}
+.choice-list::backdrop {
+  background: transparent;
+}
+.choice-row {
+  position: relative;
+  width: 44px;
+  height: 44px;
+  margin-bottom: 12px;
+}
+.choice-row:last-child {
+  margin-bottom: 0;
+}
+.choice-list:popover-open .choice-row {
+  animation: unfold 240ms cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation-delay: calc(var(--choice-index) * 28ms);
+}
+@keyframes unfold {
+  from {
+    opacity: 0;
+    transform: translateY(calc(-1 * (var(--choice-index) + 1) * 56px)) scale(0.76);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .choice-name {
+    transition: none;
+  }
+  .choice-list:popover-open .choice-row {
+    animation: none;
+  }
+}

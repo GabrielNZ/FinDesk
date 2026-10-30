@@ -48,6 +48,35 @@ export function calendarMonth(date: CivilDate): DateRange {
   );
 }
 
+/** Dia civil vizinho; não ajusta dias úteis nem gera uma recorrência. */
+export function adjacentCivilDate(date: CivilDate, direction: -1 | 1): CivilDate | null {
+  civilDate(date);
+  if (direction !== -1 && direction !== 1) throw new RangeError('Direção de data inválida.');
+  let year = Number(date.slice(0, 4));
+  let month = Number(date.slice(5, 7));
+  let day = Number(date.slice(8, 10)) + direction;
+  if (day === 0) {
+    month--;
+    if (month === 0) {
+      month = 12;
+      year--;
+    }
+    if (year < 1) return null;
+    day = daysInMonth(year, month);
+  } else if (day > daysInMonth(year, month)) {
+    day = 1;
+    month++;
+    if (month === 13) {
+      month = 1;
+      year++;
+    }
+    if (year > 9999) return null;
+  }
+  return civilDate(
+    `${String(year).padStart(4, '0')}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`,
+  );
+}
+
 export interface Clock {
   today(): CivilDate;
 }
