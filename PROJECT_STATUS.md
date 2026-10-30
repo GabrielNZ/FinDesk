@@ -4,10 +4,26 @@ Atualizado em **30/10/2026** (America/Sao_Paulo).
 
 ## Situação atual
 
+### Etapa atual — F03a: padrão inicial de cards e modo de organização
+
+- **Autorização:** “Proxima etapa” aprova a revisão D53 da F02b.3, com D54 revertida, e autoriza iniciar a F03a. A solicitação anterior de adiar a F03a foi substituída por esta autorização.
+- **Confirmado pelas fontes:** cards organizáveis por alça/cabeçalho, redimensionamento e expansão onde aplicáveis; layout salvo por área e restauração explícita; filtros preservados no foco, alternativas por teclado e adaptação vertical em janela estreita. FIN-003–005 e §4.2 da especificação. Não significa concluir F03 inteira nesta fatia.
+- **Proposta do Codex:** experimentar no Geral com os cards previstos Categorias/Evolução/Próximos compromissos em estado de protótipo, sem antecipar cálculos; encaixe em grade e controles visíveis no modo Organizar.
+- **Perguntas aguardando resposta:** local da primeira experiência, grade versus posicionamento livre e modo Organizar versus controles sempre disponíveis. Antes de implementar, fechar também a apresentação da expansão/foco e os limites da primeira fatia, conforme as respostas.
+- **Diagnóstico técnico:** os submenus ainda usam seção provisória, sem componente reutilizável de card nem layout persistido implementado. O Angular CDK 21 já instalado oferece alça/ordenação, inclusive orientação mista; a ponte atual só grava preferências financeiras, sem contrato de layout. Não instalar outra biblioteca nem criar escrita genérica no renderer sem necessidade discutida.
+- **Implementação da F03a:** não iniciada; continuar levantamento enquanto as decisões estiverem abertas.
+
+### Revisão da F02b.3 — Botões de período (D53)
+
+- **Solicitado/implementado:** remover dica visual com o nome do modo; clicar no botão ativo abre/recolhe o seletor, como a setinha mantida. Trocar de modo continua iniciando recolhido. Rótulos acessíveis e explicações de indisponibilidade preservados. Sem mudança financeira, banco ou geometria.
+- **D54 revertida:** Gabriel rejeitou a última alteração visual; restaurados o tamanho anterior dos ícones, as bordas e o fundo dos botões. D53 permanece. Conferida igualdade dos dois arquivos de estilo/símbolo com a versão anterior; sem repetir build ou testes já válidos.
+- **Verificação:** build web/templates, lint dos arquivos envolvidos e tipos dos testes passaram. Fluxo Electron D53 passou nos três modos: botão ativo/setinha abrem e recolhem, nomes não aparecem no hover, Enter/espaço funcionam, intervalos e geometria preservados. Reutilizadas evidências financeiras/backend anteriores, sem repetir essas suítes. Perfil temporário de teste.
+- **Continuidade:** D53 aprovada por “Proxima etapa”, com D54 revertida. Commit/push autorizados nesta rodada pela política vigente; registro da revisão Git: `fix(financas): alterna seletor pelo botão de período`. Último envio anterior `efca7d3`. F03a autorizada pelo levantamento registrado acima.
+
 ### Última entrega aprovada — F02b.3: fontes e referências dos ciclos
 
 - **Aprovação atual:** Gabriel autorizou explicitamente commit/push da F02b.3 em 30/10/2026. Registro Git desta entrega: `feat(financas): configura referências e ciclos por conta`, em `master`, com destino `origin/master`. Evidências de validação abaixo permanecem válidas; sem alteração de código desde a apresentação.
-- **Próxima etapa adiada:** F03a — Padrão inicial de cards e modo de organização. Gabriel pediu para começá-la somente depois; não iniciar levantamento, pesquisa ou implementação até nova solicitação.
+- **Histórico de continuidade:** a F03a foi inicialmente adiada por Gabriel; a solicitação posterior “Proxima etapa” autorizou iniciá-la. Estado atual no início deste arquivo.
 
 - **Autorização:** “Vamo para a próxima” aprova a F02b.2 e autoriza seu commit/push, iniciando o levantamento da F02b.3. Informar identificador e nome das entregas na comunicação, conforme pedido de Gabriel.
 - **Confirmado:** D44/D45/D46: ajustes por conta em Configurações → Finanças, previsão salarial por conta/dia mensal e cartão de referência por conta independente do cartão consultado. Respostas recebidas; não repetir a primeira rodada. Fronteiras dos ciclos, retorno ao calendário sem aviso e preferência padrão permanecem D37/D38/D42/D43.

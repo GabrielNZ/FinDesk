@@ -42,6 +42,10 @@ export class PeriodControl {
 
   selectMode(mode: PeriodMode): void {
     if (this.context.periodUnavailableReason(mode)) return;
+    if (this.context.periodMode() === mode) {
+      this.toggleExpansion();
+      return;
+    }
     this.context.selectPeriodMode(mode);
     this.expanded.set(false);
   }

@@ -17,16 +17,21 @@
           class="mode-button"
           [attr.aria-label]="item.label"
           [attr.aria-pressed]="context.periodMode() === item.mode"
+          [attr.aria-expanded]="context.periodMode() === item.mode ? expanded() : null"
           [attr.aria-disabled]="!!context.periodUnavailableReason(item.mode)"
-          [attr.aria-describedby]="'period-help-' + item.mode"
+          [attr.aria-describedby]="
+            context.periodUnavailableReason(item.mode) ? 'period-help-' + item.mode : null
+          "
           aria-controls="finance-period-panel"
           (click)="selectMode(item.mode)"
         >
           <fd-period-symbol [mode]="item.mode" />
         </button>
-        <span role="tooltip" class="mode-help" [id]="'period-help-' + item.mode">{{
-          context.periodUnavailableReason(item.mode) ?? item.label
-        }}</span>
+        @if (context.periodUnavailableReason(item.mode); as reason) {
+          <span role="tooltip" class="mode-help" [id]="'period-help-' + item.mode">{{
+            reason
+          }}</span>
+        }
       </span>
     }
   </div>

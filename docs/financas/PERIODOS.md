@@ -4,6 +4,8 @@ Decisões confirmadas D36–D39, em [DECISIONS.md](../DECISIONS.md). Antecipaç�
 
 ## Regras confirmadas
 
+- **D53:** botão do modo já ativo alterna a expansão por clique ou teclado; setinha mantida. Trocar de modo começa recolhido. Sem tooltip que repete o nome; nomes acessíveis e motivos de indisponibilidade preservados. Essa regra substitui o recolhimento incondicional ao clicar novamente no modo, descrito na apresentação anterior.
+
 - **Evolução F02b.3 — D44–D52:** [ajustes por conta](CICLOS_CONFIGURAVEIS.md) permitem dia mensal salarial e cartão de referência, com salvamento automático/aplicação imediata. Dia inexistente usa fim do mês sem perder dia-base; sem ajuste de dias úteis. Datas previstas confirmadas prevalecem. Gerar somente pelo ciclo atual na ativação e futuros, sob demanda, sem criar receitas ou preencher histórico. Isso amplia a restrição inicial de D37 para salário explicitamente configurado; cartão continua usando fechamentos salvos.
 
 - **D41 substitui a apresentação de D40:** os três modos começam recolhidos; aba de 20 × 44 px expande horizontalmente, com seta acompanhando a extremidade direita. Aberta, seta e seletor são peças separadas por 8 px. Altura de 44 px preservada; nenhuma linha visível de datas, inclusive salário/cartão. Datas e seleção continuam no contexto e na descrição acessível. Escape recolhe e devolve foco.

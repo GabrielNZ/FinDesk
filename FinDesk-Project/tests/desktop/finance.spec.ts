@@ -478,7 +478,7 @@ async function clean(profile: string): Promise<void> {
   await rm(profile, { recursive: true, force: true, maxRetries: 5, retryDelay: 200 });
 }
 
-test('D41: expansão conserva altura e desloca seta separada nos três modos', async () => {
+test('D53: botão ativo e seta alternam expansão sem tooltip de nome nos três modos', async () => {
   test.setTimeout(60_000);
   const profile = await mkdtemp(join(tmpdir(), 'findesk-finance-'));
   let application: ElectronApplication | undefined;
@@ -496,16 +496,20 @@ test('D41: expansão conserva altura e desloca seta separada nos três modos', a
       ['Entre salários', '05/10/2026 – 04/11/2026'],
       ['Entre fechamentos', '03/10/2026 – 02/11/2026'],
     ] as const) {
-      await page.getByRole('button', { name, exact: true }).click();
+      const mode = page.getByRole('button', { name, exact: true });
+      if ((await mode.getAttribute('aria-pressed')) !== 'true') await mode.click();
       await expect(toggle).toHaveAttribute('aria-expanded', 'false');
       await expect(panel).toBeHidden();
+      await mode.hover();
+      await expect(page.locator('.period-modes [role="tooltip"]')).toHaveCount(0);
       const closed = await wrapper.boundingBox();
       const arrowBefore = await toggle.boundingBox();
       expect(closed && Math.round(closed.width) === 20 && Math.round(closed.height) === 44).toBe(
         true,
       );
-      await toggle.click();
+      await mode.click();
       await expect(toggle).toHaveAttribute('aria-expanded', 'true');
+      await expect(mode).toHaveAttribute('aria-expanded', 'true');
       await expect(panel).toBeVisible();
       await expect(panel).toHaveAttribute('aria-description', range);
       await expect(page.locator('.period-range')).toHaveCount(0);
@@ -529,6 +533,11 @@ test('D41: expansão conserva altura e desloca seta separada nos três modos', a
           (element) => element === document.querySelector('.period-expander'),
         ),
       ).toBe(true);
+      await mode.click();
+      await expect(panel).toBeHidden();
+      await expect(mode).toHaveAttribute('aria-expanded', 'false');
+      await toggle.click();
+      await expect(panel).toBeVisible();
       await toggle.click();
       await expect(panel).toBeHidden();
       await expect(panel).toHaveAttribute('aria-description', range);
@@ -563,6 +572,13 @@ test('D41: expansão conserva altura e desloca seta separada nos três modos', a
     ).toBe(true);
     await page.mouse.move(500, 90);
     await page.screenshot({ path: 'test-results/finance-periods-compact.png', fullPage: true });
+    const salary = page.getByRole('button', { name: 'Entre salários', exact: true });
+    await salary.focus();
+    await page.keyboard.press('Enter');
+    await expect(panel).toBeHidden();
+    await page.keyboard.press('Space');
+    await expect(panel).toBeVisible();
+    await expect(panel).toHaveAttribute('aria-description', '05/10/2026 – 04/11/2026');
   } finally {
     await application?.close();
     await clean(profile);
@@ -1090,11 +1106,7 @@ test('D36–D38: três modos exclusivos, ciclos salvos, navegação e retorno si
         .locator('.period-panel')
         .evaluate((element) => getComputedStyle(element).animationName),
     ).toBe('none');
-    const help = await page.locator('#period-help-card-cycle').boundingBox();
-    const mainBox = await page.getByRole('main').boundingBox();
-    expect(
-      help && mainBox && help.x >= mainBox.x && help.x + help.width <= mainBox.x + mainBox.width,
-    ).toBe(true);
+    await expect(page.locator('#period-help-card-cycle')).toHaveCount(0);
     await page.mouse.move(300, 90);
     await page.screenshot({ path: 'test-results/finance-periods-compact.png', fullPage: true });
     expect(await page.evaluate(() => window.finDesk!.storage.getDemo())).toEqual(before);

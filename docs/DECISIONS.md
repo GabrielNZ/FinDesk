@@ -105,6 +105,10 @@ Implementação vigente: captura de ponteiro mantém o arraste da alça; a barra
 
 **D52 — alcance da geração salarial, confirmado por Gabriel:** gerar a partir do ciclo que contém a referência atual e para os futuros; anteriores somente onde existirem datas confirmadas. Não preencher histórico ausente nem criar receitas/valores. Datas confirmadas continuam prioritárias conforme D49.
 
+**D53 — ajuste dos botões de período, solicitado por Gabriel:** retirar a dica visual que apenas mostra o nome do modo. Clicar no botão já selecionado alterna abrir/recolher o seletor; a setinha continua oferecendo a mesma ação. Escolher outro modo mantém a seleção exclusiva e o início recolhido. Nomes acessíveis permanecem; explicações de indisponibilidade continuam conforme D37. Sem alteração de dimensões, regra financeira ou preferência persistida.
+
+**D54 — alteração visual rejeitada e revertida por Gabriel:** a tentativa de aumentar os ícones e suavizar a moldura não foi aprovada. Restaurados tamanho, bordas e fundo anteriores. Interações D53 permanecem; não tratar a proposta visual rejeitada como direção aprovada.
+
 ## Escolhas de implementação dentro da arquitetura estabelecida
 
 Não são novas decisões de produto nem uma troca de stack. Detalhes em [ARCHITECTURE.md](ARCHITECTURE.md) e [ADR 0001](adr/0001-base-desktop.md).
