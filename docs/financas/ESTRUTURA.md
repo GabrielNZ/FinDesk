@@ -28,4 +28,6 @@ Casos de uso puros montam o contexto financeiro a partir do snapshot. Um serviç
 
 ## Próxima fatia e pendências
 
+F02b.3 implementa [referências por conta e geração salarial limitada](CICLOS_CONFIGURAVEIS.md), conforme D44–D52, substituindo as pendências dessa parte listadas no histórico abaixo. Sem geração de fechamentos, múltiplas fontes salariais ou alocação de compras; essas regras continuam nos escopos correspondentes. Próxima proposta: F03a — Padrão inicial de cards e modo de organização.
+
 F02b recebeu a primeira fatia sobre datas salvas conforme D37/D38 e a preferência em Configurações na [F02b.2](PERIODO_PADRAO.md), conforme D42/D43. Permanecem configuração de fontes/recorrências, dias úteis/meses curtos gerados, escolha entre vários cartões e alocação de compras sem vínculo observado. Fronteira do intervalo, retorno ao calendário e preferência já foram respondidos; não repetir o levantamento. Estado/autorização somente em [PROJECT_STATUS.md](../../PROJECT_STATUS.md).

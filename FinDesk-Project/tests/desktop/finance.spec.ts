@@ -73,6 +73,194 @@ async function openFinanceSettings(page: Page): Promise<void> {
   await expect(page.getByRole('group', { name: 'Período padrão' })).toBeVisible();
 }
 
+test('F02b.3: grade salva automaticamente, aplica agora, navega futuro e preserva dados ao reabrir', async () => {
+  test.setTimeout(90_000);
+  const profile = await mkdtemp(join(tmpdir(), 'findesk-finance-'));
+  let application: ElectronApplication | undefined;
+  try {
+    application = await launch(profile);
+    let page = await application.firstWindow();
+    await openFinance(page);
+    await choose(page, 'Conta', 'demo-b');
+    const before = await page.evaluate(() => window.finDesk!.storage.getDemo());
+    await openFinanceSettings(page);
+    const account = page.locator('.account-cycles').filter({ hasText: 'Conta auxiliar' });
+    await account.locator('summary').click();
+    const day = account.getByRole('button', { name: 'Dia 31', exact: true });
+    await day.focus();
+    await page.keyboard.press('Enter');
+    await expect(day).toHaveAttribute('aria-pressed', 'true');
+    await expect(day).toBeFocused();
+    await expect(account.getByText('Nenhum cartão nesta conta.', { exact: true })).toBeVisible();
+    await account.scrollIntoViewIfNeeded();
+    await page.screenshot({ path: 'test-results/cycle-settings-wide.png', fullPage: true });
+    await application.evaluate(({ BrowserWindow }) =>
+      BrowserWindow.getAllWindows()[0]?.setSize(960, 720),
+    );
+    await account.scrollIntoViewIfNeeded();
+    expect(
+      await page
+        .getByRole('main')
+        .evaluate((element) => element.scrollWidth <= element.clientWidth),
+    ).toBe(true);
+    await page.screenshot({ path: 'test-results/cycle-settings-compact.png', fullPage: true });
+    await openFinance(page);
+    await page.getByRole('button', { name: 'Entre salários', exact: true }).click();
+    await openCycleSelection(page, 'salário');
+    await expect(page.locator('.period-panel')).toHaveAttribute(
+      'aria-description',
+      '30/09/2026 – 30/10/2026',
+    );
+    await expect(page.getByRole('button', { name: 'Ciclo anterior', exact: true })).toBeDisabled();
+    await page.getByRole('button', { name: 'Próximo ciclo', exact: true }).click();
+    await expect(page.locator('.period-panel')).toHaveAttribute(
+      'aria-description',
+      '31/10/2026 – 29/11/2026',
+    );
+    await page.getByRole('button', { name: 'Próximo ciclo', exact: true }).click();
+    await expect(page.locator('.period-panel')).toHaveAttribute(
+      'aria-description',
+      '30/11/2026 – 30/12/2026',
+    );
+    await openFinanceSettings(page);
+    await page
+      .locator('.account-cycles')
+      .filter({ hasText: 'Conta auxiliar' })
+      .locator('summary')
+      .click();
+    await page.getByRole('button', { name: 'Dia 15', exact: true }).click();
+    await expect(page.getByRole('button', { name: 'Dia 15', exact: true })).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    );
+    await openFinance(page);
+    await openCycleSelection(page, 'salário');
+    await expect(page.locator('.period-panel')).toHaveAttribute(
+      'aria-description',
+      '15/10/2026 – 14/11/2026',
+    );
+    await choose(page, 'Moeda', 'USD');
+    expect(await page.evaluate(() => window.finDesk!.storage.getDemo())).toEqual(before);
+    await application.close();
+    application = await launch(profile);
+    page = await application.firstWindow();
+    await openFinanceSettings(page);
+    const reopened = page.locator('.account-cycles').filter({ hasText: 'Conta auxiliar' });
+    await reopened.locator('summary').click();
+    await expect(reopened.getByRole('button', { name: 'Dia 15', exact: true })).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    );
+    await openFinance(page);
+    await expect(picker(page, 'Moeda')).toHaveAttribute('data-value', 'USD');
+    await expect(picker(page, 'Conta')).toHaveAttribute('data-value', 'demo-b');
+    await page.getByRole('button', { name: 'Entre salários', exact: true }).click();
+    await openCycleSelection(page, 'salário');
+    await expect(page.locator('.period-panel')).toHaveAttribute(
+      'aria-description',
+      '15/10/2026 – 14/11/2026',
+    );
+  } finally {
+    await application?.close();
+    await clean(profile);
+  }
+});
+
+test('F02b.3: referência de cartão é explícita, aplica ao período e falha não altera ajustes', async () => {
+  test.setTimeout(90_000);
+  const profile = await mkdtemp(join(tmpdir(), 'findesk-finance-'));
+  let application: ElectronApplication | undefined;
+  try {
+    application = await launch(profile);
+    let page = await application.firstWindow();
+    await openFinance(page);
+    await expect(page.locator('.balance-value')).toHaveText(['R$ 2.500,20']);
+    await application.close();
+    const filename = join(profile, 'storage', 'demo.sqlite');
+    const db = new DatabaseSync(filename);
+    try {
+      const snapshot = JSON.parse(
+        db.prepare('SELECT payload FROM demo_state').get()!['payload'] as string,
+      );
+      snapshot.facts.cards.push({
+        ...snapshot.facts.cards[0],
+        id: 'card-extra',
+        lastDigits: '9999',
+      });
+      for (const [id, closesOn, dueOn] of [
+        ['extra-out', '2026-10-10', '2026-10-17'],
+        ['extra-nov', '2026-11-10', '2026-11-17'],
+      ])
+        snapshot.facts.invoices.push({
+          ...snapshot.facts.invoices[0],
+          id,
+          cardId: 'card-extra',
+          closesOn,
+          dueOn,
+          status: 'open',
+          confirmedTotal: null,
+          paidByMovementId: null,
+        });
+      db.prepare('UPDATE demo_state SET payload = ?').run(JSON.stringify(snapshot));
+    } finally {
+      db.close();
+    }
+    application = await launch(profile);
+    page = await application.firstWindow();
+    await openFinance(page);
+    const facts = await page.evaluate(() => window.finDesk!.storage.getDemo());
+    await expect(
+      page.getByRole('button', { name: 'Entre fechamentos', exact: true }),
+    ).toHaveAttribute('aria-disabled', 'true');
+    await openFinanceSettings(page);
+    const account = page.locator('.account-cycles').filter({ hasText: 'Nubank' });
+    await account.locator('summary').click();
+    await account.getByRole('button', { name: 'Cartão final 9999', exact: true }).click();
+    await expect(
+      account.getByRole('button', { name: 'Cartão final 9999', exact: true }),
+    ).toHaveAttribute('aria-pressed', 'true');
+    await openFinance(page);
+    await page.getByRole('button', { name: 'Entre fechamentos', exact: true }).click();
+    await openCycleSelection(page, 'cartão');
+    await expect(page.locator('.period-panel')).toHaveAttribute(
+      'aria-description',
+      '11/10/2026 – 10/11/2026',
+    );
+    await openFinanceSettings(page);
+    await account.locator('summary').click();
+    const prefsDb = new DatabaseSync(join(profile, 'storage', 'preferences.sqlite'));
+    try {
+      prefsDb.exec(
+        "CREATE TRIGGER reject_preferences BEFORE UPDATE ON preferences BEGIN SELECT RAISE(ABORT, 'SQL privado'); END",
+      );
+      await account.getByRole('button', { name: 'Cartão final 0000', exact: true }).click();
+      await expect(account.getByRole('alert')).toHaveText(
+        'Não foi possível salvar os ajustes. Tente novamente.',
+      );
+      await expect(
+        account.getByRole('button', { name: 'Cartão final 9999', exact: true }),
+      ).toHaveAttribute('aria-pressed', 'true');
+      prefsDb.exec('DROP TRIGGER reject_preferences');
+      await account.getByRole('button', { name: 'Cartão final 0000', exact: true }).click();
+      await expect(
+        account.getByRole('button', { name: 'Cartão final 0000', exact: true }),
+      ).toHaveAttribute('aria-pressed', 'true');
+    } finally {
+      prefsDb.close();
+    }
+    await openFinance(page);
+    await openCycleSelection(page, 'cartão');
+    await expect(page.locator('.period-panel')).toHaveAttribute(
+      'aria-description',
+      '03/10/2026 – 02/11/2026',
+    );
+    expect(await page.evaluate(() => window.finDesk!.storage.getDemo())).toEqual(facts);
+  } finally {
+    await application?.close();
+    await clean(profile);
+  }
+});
+
 test('F02b.2: padrão aplica na reabertura e não perde conta/moeda nem a consulta atual', async () => {
   test.setTimeout(90_000);
   const profile = await mkdtemp(join(tmpdir(), 'findesk-finance-'));
@@ -115,7 +303,8 @@ test('F02b.2: padrão aplica na reabertura e não perde conta/moeda nem a consul
       .toEqual({
         ok: true,
         value: {
-          version: 2,
+          version: 3,
+          cycleReferences: [],
           lastAccountId: 'demo-a',
           currencyMode: 'USD',
           periodMode: 'salary-cycle',
@@ -462,7 +651,8 @@ test('F02a: saldo atual, submenus e contexto persistido sem salvar mês históri
       .toEqual({
         ok: true,
         value: {
-          version: 2,
+          version: 3,
+          cycleReferences: [],
           currencyMode: 'USD',
           periodMode: 'calendar-month',
           lastAccountId: 'all',
@@ -493,7 +683,8 @@ test('F02a: conta salva ausente exige seleção e preferência de ciclo não é 
     const page = await application.firstWindow();
     await page.evaluate(() =>
       window.finDesk!.storage.savePreferences({
-        version: 2,
+        version: 3,
+        cycleReferences: [],
         currencyMode: 'original',
         periodMode: 'salary-cycle',
         lastAccountId: 'conta-ausente',
@@ -521,7 +712,8 @@ test('F02a: conta salva ausente exige seleção e preferência de ciclo não é 
       .toEqual({
         ok: true,
         value: {
-          version: 2,
+          version: 3,
+          cycleReferences: [],
           currencyMode: 'original',
           periodMode: 'salary-cycle',
           lastAccountId: 'demo-b',
@@ -566,7 +758,8 @@ test('F02a: falha ao salvar mantém contexto local, informa limite e não altera
         .toEqual({
           ok: true,
           value: {
-            version: 2,
+            version: 3,
+            cycleReferences: [],
             currencyMode: 'BRL',
             periodMode: 'calendar-month',
             lastAccountId: 'demo-u',

@@ -7,7 +7,8 @@ import { parsePreferences, parseStoredJson, StorageFailure, validateSnapshot } f
 import { DEMO_MIGRATIONS, migrate, PREFERENCE_MIGRATIONS } from './migrations';
 
 export const DEFAULT_PREFERENCES: FinancePreferences = Object.freeze({
-  version: 2,
+  version: 3,
+  cycleReferences: [],
   currencyMode: 'original',
   periodMode: 'calendar-month',
   lastAccountId: null,
@@ -73,14 +74,14 @@ export class DemoStore {
       });
       transaction(this.preferences, () => {
         const row = this.preferences!.prepare(
-          "SELECT payload FROM preferences WHERE key = 'finance.v2'",
+          "SELECT payload FROM preferences WHERE key = 'finance.v3'",
         ).get();
         const initialized = this.preferences!.prepare(
           'SELECT initialized FROM storage_identity',
         ).get()?.['initialized'];
         if (initialized === 0 && !row) {
           this.preferences!.prepare('INSERT INTO preferences VALUES (?, ?)').run(
-            'finance.v2',
+            'finance.v3',
             JSON.stringify(DEFAULT_PREFERENCES),
           );
           this.preferences!.exec('UPDATE storage_identity SET initialized = 1');
@@ -132,7 +133,7 @@ export class DemoStore {
   readPreferences(): FinancePreferences {
     const [, preferences] = this.requireOpen();
     const row = preferences
-      .prepare("SELECT payload FROM preferences WHERE key = 'finance.v2'")
+      .prepare("SELECT payload FROM preferences WHERE key = 'finance.v3'")
       .get();
     if (!row) throw new StorageFailure('corrupt');
     try {
@@ -144,11 +145,28 @@ export class DemoStore {
 
   savePreferences(value: unknown): FinancePreferences {
     const checked = parsePreferences(value);
+    const previous = this.readPreferences();
+    const snapshot = this.readDemo();
+    for (const rule of checked.cycleReferences) {
+      const before = previous.cycleReferences.find((item) => item.accountId === rule.accountId);
+      if (JSON.stringify(before) === JSON.stringify(rule)) continue;
+      if (
+        !snapshot.facts.accounts.some((account) => account.id === rule.accountId) ||
+        (rule.referenceCardId &&
+          !snapshot.facts.cards.some(
+            (card) => card.id === rule.referenceCardId && card.accountId === rule.accountId,
+          )) ||
+        (rule.salaryDay !== null &&
+          (rule.salaryDay !== before?.salaryDay || rule.salaryFrom !== before?.salaryFrom) &&
+          rule.salaryFrom !== snapshot.asOf)
+      )
+        throw new StorageFailure('invalid-request');
+    }
     const [, preferences] = this.requireOpen();
     transaction(preferences, () => {
       const result = preferences
         .prepare('UPDATE preferences SET payload = ? WHERE key = ?')
-        .run(JSON.stringify(checked), 'finance.v2');
+        .run(JSON.stringify(checked), 'finance.v3');
       if (Number(result.changes) !== 1) throw new StorageFailure('corrupt');
     });
     return this.readPreferences();

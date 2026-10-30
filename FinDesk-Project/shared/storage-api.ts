@@ -10,8 +10,16 @@ export interface DemoSnapshot {
   readonly facts: FinanceFacts;
 }
 
+export interface AccountCycleReference {
+  readonly accountId: string;
+  readonly salaryDay: number | null;
+  readonly salaryFrom: CivilDate | null;
+  readonly referenceCardId: string | null;
+}
+
 export interface FinancePreferences {
-  readonly version: 2;
+  readonly version: 3;
+  readonly cycleReferences: readonly AccountCycleReference[];
   readonly currencyMode: 'original' | 'BRL' | 'USD';
   readonly periodMode: 'calendar-month' | 'salary-cycle' | 'card-cycle';
   readonly lastAccountId: string | null;

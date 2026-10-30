@@ -48,7 +48,8 @@ test('FIN-047 / C30: seed idempotente, alterações persistidas e restauração 
     },
   };
   const preferences = {
-    version: 2,
+    version: 3,
+    cycleReferences: [],
     currencyMode: 'USD',
     periodMode: 'calendar-month',
     lastAccountId: 'demo-u',
@@ -100,7 +101,8 @@ test('FIN-047 / C30: migração inicial e rollback de uma migração que falha p
       migrate(db, 'demo', [
         ...DEMO_MIGRATIONS,
         {
-          version: 2,
+          version: 3,
+          cycleReferences: [],
           sql: 'ALTER TABLE demo_state ADD COLUMN temporary_value TEXT; DELETE FROM demo_state; INSERT INTO missing_table VALUES (1);',
         },
       ]),
@@ -215,7 +217,8 @@ test('FIN-047 / C30: falha de escrita reverte a operação e preserva os fatos a
 
 test('FIN-047/051: contratos recusam SQL/caminho, extras e confirmação ausente; diretórios de teste isolados', () => {
   const preferences = {
-    version: 2,
+    version: 3,
+    cycleReferences: [],
     currencyMode: 'BRL',
     periodMode: 'calendar-month',
     lastAccountId: null,
@@ -255,7 +258,8 @@ test('FIN-047: worker serializa gravações, responde validação inválida e en
     await Promise.all(
       ['USD', 'original', 'BRL'].map((currencyMode) =>
         client.savePreferences({
-          version: 2,
+          version: 3,
+          cycleReferences: [],
           currencyMode,
           periodMode: 'calendar-month',
           lastAccountId: 'demo-b',
@@ -264,7 +268,8 @@ test('FIN-047: worker serializa gravações, responde validação inválida e en
     );
     assert.equal((await client.getPreferences()).value.currencyMode, 'BRL');
     const invalid = await client.savePreferences({
-      version: 2,
+      version: 3,
+      cycleReferences: [],
       lastAccountId: null,
       currencyMode: 'EUR',
       periodMode: 'calendar-month',
@@ -306,7 +311,8 @@ test('FIN-010/047 / D31: migração v1 conserva moeda/ciclo, fatos e outros name
   try {
     assert.deepEqual(store.readDemo(), changed);
     assert.deepEqual(store.readPreferences(), {
-      version: 2,
+      version: 3,
+      cycleReferences: [],
       currencyMode: 'USD',
       periodMode: 'salary-cycle',
       lastAccountId: null,
@@ -323,7 +329,7 @@ test('FIN-010/047 / D31: migração v1 conserva moeda/ciclo, fatos e outros name
   }
   const verified = new DatabaseSync(join(root, 'preferences.sqlite'));
   try {
-    assert.equal(verified.prepare('PRAGMA user_version').get().user_version, 2);
+    assert.equal(verified.prepare('PRAGMA user_version').get().user_version, 3);
     assert.equal(
       verified.prepare("SELECT payload FROM preferences WHERE key = 'layout.future'").get().payload,
       '{"keep":true}',
@@ -335,6 +341,112 @@ test('FIN-010/047 / D31: migração v1 conserva moeda/ciclo, fatos e outros name
     );
   } finally {
     verified.close();
+  }
+});
+
+test('F02b.3: migração v2 e referências preservam preferências/fatos na reabertura e restauração', async (t) => {
+  const root = await temporary(t);
+  let store = new DemoStore(root);
+  const facts = store.readDemo();
+  store.close();
+  const db = new DatabaseSync(join(root, 'preferences.sqlite'));
+  db.exec('DELETE FROM preferences; PRAGMA user_version = 2');
+  db.prepare('INSERT INTO preferences VALUES (?, ?)').run(
+    'finance.v2',
+    JSON.stringify({
+      version: 2,
+      currencyMode: 'USD',
+      periodMode: 'salary-cycle',
+      lastAccountId: 'demo-u',
+    }),
+  );
+  db.prepare('INSERT INTO preferences VALUES (?, ?)').run('layout.future', '{"keep":true}');
+  db.close();
+  store = new DemoStore(root);
+  const rule = {
+    accountId: 'demo-a',
+    salaryDay: 31,
+    salaryFrom: facts.asOf,
+    referenceCardId: facts.facts.cards[0].id,
+  };
+  try {
+    assert.deepEqual(store.readPreferences(), {
+      version: 3,
+      cycleReferences: [],
+      currencyMode: 'USD',
+      periodMode: 'salary-cycle',
+      lastAccountId: 'demo-u',
+    });
+    store.savePreferences({ ...store.readPreferences(), cycleReferences: [rule] });
+    store.restoreDemo();
+    assert.deepEqual(store.readPreferences().cycleReferences, [rule]);
+    assert.deepEqual(store.readDemo(), facts);
+  } finally {
+    store.close();
+  }
+  store = new DemoStore(root);
+  try {
+    assert.deepEqual(store.readPreferences().cycleReferences, [rule]);
+  } finally {
+    store.close();
+  }
+  const verified = new DatabaseSync(join(root, 'preferences.sqlite'));
+  try {
+    assert.equal(verified.prepare('PRAGMA user_version').get().user_version, 3);
+    assert.equal(
+      verified.prepare("SELECT payload FROM preferences WHERE key = 'layout.future'").get().payload,
+      '{"keep":true}',
+    );
+  } finally {
+    verified.close();
+  }
+});
+
+test('F02b.3: contrato e backend recusam referência de outra conta, datas/dias inválidos e extras', async (t) => {
+  const root = await temporary(t);
+  const store = new DemoStore(root);
+  try {
+    const prefs = store.readPreferences();
+    const facts = store.readDemo();
+    const rule = {
+      accountId: 'demo-a',
+      salaryDay: 5,
+      salaryFrom: facts.asOf,
+      referenceCardId: facts.facts.cards[0].id,
+    };
+    for (const invalid of [
+      { ...rule, salaryDay: 32 },
+      { ...rule, salaryDay: 1.5 },
+      { ...rule, salaryFrom: '2026-02-31' },
+      { ...rule, salaryDay: null },
+      { ...rule, salaryFrom: null },
+      { ...rule, sql: 'privado' },
+    ])
+      assert.throws(() => parsePreferences({ ...prefs, cycleReferences: [invalid] }));
+    assert.throws(() => parsePreferences({ ...prefs, cycleReferences: [rule, rule] }));
+    for (const invalid of [
+      { ...rule, accountId: 'demo-u' },
+      { ...rule, accountId: 'ausente' },
+      { ...rule, salaryFrom: '2025-01-01' },
+    ])
+      assert.throws(() => store.savePreferences({ ...prefs, cycleReferences: [invalid] }));
+    assert.deepEqual(store.readPreferences(), prefs);
+    store.savePreferences({ ...prefs, cycleReferences: [rule] });
+    const db = new DatabaseSync(join(root, 'preferences.sqlite'));
+    try {
+      db.exec(
+        "CREATE TRIGGER reject_preferences BEFORE UPDATE ON preferences BEGIN SELECT RAISE(ABORT, 'privado'); END",
+      );
+      assert.throws(() =>
+        store.savePreferences({ ...prefs, cycleReferences: [{ ...rule, salaryDay: 10 }] }),
+      );
+      assert.deepEqual(store.readPreferences().cycleReferences, [rule]);
+    } finally {
+      db.close();
+    }
+    assert.deepEqual(store.readDemo(), facts);
+  } finally {
+    store.close();
   }
 });
 

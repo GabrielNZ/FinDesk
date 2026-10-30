@@ -1,0 +1,87 @@
+<details class="account-cycles">
+  <summary>
+    <fd-choice-symbol [symbol]="symbol()" />
+    <span>{{ name() }}</span>
+    @if (rule().salaryDay; as day) {
+      <span class="account-hint">Dia {{ day }}</span>
+    }
+    <i class="pi pi-chevron-down" aria-hidden="true"></i>
+  </summary>
+  <div
+    class="account-adjustments"
+    [attr.aria-label]="'Ciclos de ' + name()"
+    role="group"
+    [attr.aria-busy]="preferences.saving()"
+  >
+    <h4 [id]="'salary-day-' + account().id">Dia do salário</h4>
+    <div
+      class="day-grid"
+      role="group"
+      [attr.aria-labelledby]="'salary-day-' + account().id"
+      tabindex="-1"
+      (keydown)="moveDayFocus($event)"
+    >
+      @for (day of days; track day) {
+        <button
+          type="button"
+          [attr.aria-label]="'Dia ' + day"
+          [attr.aria-pressed]="rule().salaryDay === day"
+          [attr.aria-disabled]="preferences.saving()"
+          [tabIndex]="day === (rule().salaryDay ?? 1) ? 0 : -1"
+          (click)="selectDay(day)"
+        >
+          {{ day }}
+        </button>
+      }
+    </div>
+    <button
+      class="reset-day"
+      type="button"
+      [attr.aria-pressed]="rule().salaryDay === null"
+      [attr.aria-disabled]="preferences.saving()"
+      (click)="selectDay(null)"
+    >
+      Somente datas confirmadas
+    </button>
+    <h4 [id]="'reference-card-' + account().id">Cartão de referência</h4>
+    @if (ownCards().length) {
+      <div
+        class="card-choices"
+        role="group"
+        [attr.aria-labelledby]="'reference-card-' + account().id"
+      >
+        <button
+          type="button"
+          [attr.aria-pressed]="rule().referenceCardId === null"
+          [attr.aria-disabled]="preferences.saving()"
+          (click)="selectCard(null)"
+        >
+          {{ ownCards().length === 1 ? 'Automático · único cartão' : 'Sem referência' }}
+        </button>
+        @for (card of ownCards(); track card.id) {
+          <button
+            type="button"
+            [attr.aria-label]="'Cartão final ' + card.lastDigits"
+            [attr.aria-pressed]="rule().referenceCardId === card.id"
+            [attr.aria-disabled]="preferences.saving()"
+            (click)="selectCard(card.id)"
+          >
+            <i class="pi pi-credit-card" aria-hidden="true"></i> Final {{ card.lastDigits }}
+          </button>
+        }
+      </div>
+      @if (missingReference()) {
+        <p>Cartão de referência indisponível. Selecione outro cartão.</p>
+      }
+    } @else {
+      <p>Nenhum cartão nesta conta.</p>
+    }
+    <div class="cycle-feedback" aria-live="polite">
+      @if (feedback() === 'failed') {
+        <span role="alert">Não foi possível salvar os ajustes. Tente novamente.</span>
+      } @else if (feedback() === 'saved') {
+        <span role="status">Ajustes salvos.</span>
+      }
+    </div>
+  </div>
+</details>

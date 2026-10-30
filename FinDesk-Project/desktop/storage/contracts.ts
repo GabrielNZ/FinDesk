@@ -3,6 +3,7 @@ import { validateFacts } from '../../domain/finance';
 import { snapshotShape } from './snapshot-shape';
 import type {
   DemoSnapshot,
+  AccountCycleReference,
   FinancePreferences,
   StorageErrorCode,
   StorageResult,
@@ -35,7 +36,11 @@ export function record(value: unknown): Record<string, unknown> {
   return value as Record<string, unknown>;
 }
 
-export function parsePreferences(value: unknown): FinancePreferences {
+type PreferencesV2 = Omit<FinancePreferences, 'version' | 'cycleReferences'> & {
+  readonly version: 2;
+};
+
+function parsePreferencesV2(value: unknown): PreferencesV2 {
   const data = record(value);
   if (
     Object.keys(data).sort().join(',') !== 'currencyMode,lastAccountId,periodMode,version' ||
@@ -59,14 +64,71 @@ export function parsePreferences(value: unknown): FinancePreferences {
 }
 
 /** Usado somente pela migração local; o IPC não aceita formatos antigos. */
-export function upgradePreferencesV1(value: unknown): FinancePreferences {
+export function upgradePreferencesV1(value: unknown): PreferencesV2 {
   const data = record(value);
   if (
     Object.keys(data).sort().join(',') !== 'currencyMode,periodMode,version' ||
     data['version'] !== 1
   )
     throw new StorageFailure('corrupt');
-  return parsePreferences({ ...data, version: 2, lastAccountId: null });
+  return parsePreferencesV2({ ...data, version: 2, lastAccountId: null });
+}
+
+export function upgradePreferencesV2(value: unknown): FinancePreferences {
+  return { ...parsePreferencesV2(value), version: 3, cycleReferences: [] };
+}
+
+export function parsePreferences(value: unknown): FinancePreferences {
+  const data = record(value);
+  if (
+    Object.keys(data).sort().join(',') !==
+      'currencyMode,cycleReferences,lastAccountId,periodMode,version' ||
+    data['version'] !== 3
+  )
+    throw new StorageFailure('invalid-request');
+  const base = parsePreferencesV2({
+    version: 2,
+    currencyMode: data['currencyMode'],
+    lastAccountId: data['lastAccountId'],
+    periodMode: data['periodMode'],
+  });
+  if (!Array.isArray(data['cycleReferences']) || data['cycleReferences'].length > 1000)
+    throw new StorageFailure('invalid-request');
+  const seen = new Set<string>();
+  const identifier = (id: unknown): id is string =>
+    typeof id === 'string' && id.trim().length > 0 && id.length <= 160;
+  const cycleReferences = data['cycleReferences'].map((value: unknown): AccountCycleReference => {
+    const entry = record(value);
+    if (
+      Object.keys(entry).sort().join(',') !== 'accountId,referenceCardId,salaryDay,salaryFrom' ||
+      !identifier(entry['accountId']) ||
+      seen.has(entry['accountId']) ||
+      !(entry['referenceCardId'] === null || identifier(entry['referenceCardId'])) ||
+      !(
+        entry['salaryDay'] === null ||
+        (Number.isInteger(entry['salaryDay']) &&
+          Number(entry['salaryDay']) >= 1 &&
+          Number(entry['salaryDay']) <= 31)
+      )
+    )
+      throw new StorageFailure('invalid-request');
+    seen.add(entry['accountId']);
+    let salaryFrom = null;
+    try {
+      if (entry['salaryDay'] === null) {
+        if (entry['salaryFrom'] !== null) throw new Error();
+      } else salaryFrom = civilDate(entry['salaryFrom'] as string);
+    } catch {
+      throw new StorageFailure('invalid-request');
+    }
+    return {
+      accountId: entry['accountId'],
+      salaryDay: entry['salaryDay'] as number | null,
+      salaryFrom,
+      referenceCardId: entry['referenceCardId'] as string | null,
+    };
+  });
+  return { ...base, version: 3, cycleReferences };
 }
 
 /** JSON escrito pela aplicação é canônico: recusar conversões silenciosas ao ler disco. */

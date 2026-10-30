@@ -28,6 +28,8 @@ D36–D39 confirmam saldo sem degradê, um pouco mais alto e com largura preserv
 
 ## Escolha de armazenamento
 
+F02b.3 (D44–D52): ajustes expansíveis por conta em Configurações → Finanças, com grade de dias salariais e cartão de referência. Salvamento automático e aplicação imediata. Mês curto usa último dia; sem ajuste de dias úteis; datas confirmadas prevalecem. Geração somente pelo ciclo atual na ativação e futuros, sem criar receitas/valores ou preencher histórico ausente. Critérios em [CICLOS_CONFIGURAVEIS.md](docs/financas/CICLOS_CONFIGURAVEIS.md).
+
 F02b.2 (D42/D43): Configurações → Finanças → Período padrão permite escolher Calendário, Salário ou Cartão com salvamento automático, aplicando somente na próxima abertura. Consulta atual permanece intacta; conta incompatível usa calendário sem aviso e mantém o padrão salvo. Critérios em [PERIODO_PADRAO.md](docs/financas/PERIODO_PADRAO.md). Fontes, recorrências e escolha entre vários cartões continuam pendentes.
 
 SQLite passou de proposta nas fontes a escolha confirmada pelo proprietário na F01a. A comparação, a resposta e os limites estão no [ADR 0002](docs/adr/0002-sqlite-local-proposto.md). Isso não transforma banco, driver, esquema ou persistência em implementação concluída.

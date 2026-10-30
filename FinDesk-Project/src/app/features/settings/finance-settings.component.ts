@@ -2,10 +2,11 @@ import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/cor
 import { FinancePreferencesStore } from '../finance/finance-preferences.service';
 import { PeriodSymbol } from '../finance/period-symbol';
 import type { FinancePreferences } from '../../../../shared/storage-api';
+import { CycleSettings } from './cycle-settings.component';
 
 @Component({
   selector: 'fd-finance-settings',
-  imports: [PeriodSymbol],
+  imports: [PeriodSymbol, CycleSettings],
   templateUrl: './finance-settings.component.html',
   styleUrl: './finance-settings.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

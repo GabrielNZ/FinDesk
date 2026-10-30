@@ -1,5 +1,5 @@
 import { computed, Injectable, signal } from '@angular/core';
-import type { FinancePreferences } from '../../../../shared/storage-api';
+import type { AccountCycleReference, FinancePreferences } from '../../../../shared/storage-api';
 
 type PreferenceChanges = Partial<
   Pick<FinancePreferences, 'currencyMode' | 'lastAccountId' | 'periodMode'>
@@ -55,6 +55,20 @@ export class FinancePreferencesStore {
   }
 
   update(changes: PreferenceChanges): Promise<boolean> {
+    return this.enqueue((current) => ({ ...current, ...changes }));
+  }
+
+  updateCycle(rule: AccountCycleReference): Promise<boolean> {
+    return this.enqueue((current) => ({
+      ...current,
+      cycleReferences: [
+        ...current.cycleReferences.filter((item) => item.accountId !== rule.accountId),
+        rule,
+      ],
+    }));
+  }
+
+  private enqueue(merge: (current: FinancePreferences) => FinancePreferences): Promise<boolean> {
     this.pending.update((count) => count + 1);
     const operation = this.writeQueue.then(async () => {
       try {
@@ -62,7 +76,7 @@ export class FinancePreferencesStore {
         const current = this.value();
         const api = window.finDesk?.storage;
         if (!current || !api) return false;
-        const result = await api.savePreferences({ ...current, ...changes });
+        const result = await api.savePreferences(merge(current));
         if (!result.ok) return false;
         this.value.set(result.value);
         return true;

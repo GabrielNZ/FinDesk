@@ -35,7 +35,8 @@ test('SQLite no Electron reabre preferências e restaura só a demonstração, c
     expect(
       await page.evaluate(() =>
         window.finDesk!.storage.savePreferences({
-          version: 2,
+          version: 3,
+          cycleReferences: [],
           lastAccountId: 'demo-u',
           currencyMode: 'USD',
           periodMode: 'calendar-month',
@@ -44,7 +45,8 @@ test('SQLite no Electron reabre preferências e restaura só a demonstração, c
     ).toEqual({
       ok: true,
       value: {
-        version: 2,
+        version: 3,
+        cycleReferences: [],
         lastAccountId: 'demo-u',
         currencyMode: 'USD',
         periodMode: 'calendar-month',
@@ -52,7 +54,8 @@ test('SQLite no Electron reabre preferências e restaura só a demonstração, c
     });
     const invalid = await page.evaluate(() =>
       window.finDesk!.storage.savePreferences({
-        version: 2,
+        version: 3,
+        cycleReferences: [],
         lastAccountId: 'demo-u',
         currencyMode: 'USD',
         periodMode: 'calendar-month',

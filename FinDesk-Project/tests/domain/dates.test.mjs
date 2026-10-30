@@ -11,6 +11,7 @@ const {
   calendarMonth,
   fixedClock,
   adjacentCivilDate,
+  monthlyCivilDate,
 } = require('../../out/domain/civil-date.js');
 
 test('FIN-010/048 / C19/C31: calendário valida meses curtos e bissextos sem normalizar datas inválidas', () => {
@@ -54,6 +55,25 @@ test('FIN-010 / C01: intervalo fornecido inclui fronteiras, sem inferir ciclos b
     assert.equal(containsDate(range, civilDate(date)), true);
   assert.equal(containsDate(range, civilDate('2026-11-01')), false);
   assert.throws(() => dateRange(range.end, range.start), /posterior/);
+});
+
+test('D47/D48: dia-base mensal usa fim do mês, recupera dia-base e mantém fins de semana', () => {
+  for (const [month, day, expected] of [
+    ['2026-01-01', 31, '2026-01-31'],
+    ['2026-02-01', 31, '2026-02-28'],
+    ['2026-03-01', 31, '2026-03-31'],
+    ['2026-04-01', 31, '2026-04-30'],
+    ['2028-02-01', 30, '2028-02-29'],
+    ['2028-03-01', 30, '2028-03-30'],
+    ['2100-02-01', 29, '2100-02-28'],
+    ['2000-02-01', 29, '2000-02-29'],
+    ['2026-11-01', 1, '2026-11-01'],
+    ['0001-01-01', 1, '0001-01-01'],
+    ['9999-12-01', 31, '9999-12-31'],
+  ])
+    assert.equal(monthlyCivilDate(civilDate(month), day), expected);
+  for (const day of [0, 32, 1.5, NaN, Infinity, '5', null])
+    assert.throws(() => monthlyCivilDate(civilDate('2026-02-01'), day), RangeError);
 });
 
 test('FIN-010/048: dia vizinho atravessa meses/anos/bissexto e não extrapola o calendário', () => {

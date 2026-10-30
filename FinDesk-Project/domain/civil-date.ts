@@ -48,6 +48,15 @@ export function calendarMonth(date: CivilDate): DateRange {
   );
 }
 
+/** D47/D48: dia-base mensal limitado ao fim do mês, sem ajuste de dias úteis. */
+export function monthlyCivilDate(month: CivilDate, day: number): CivilDate {
+  civilDate(month);
+  if (!Number.isInteger(day) || day < 1 || day > 31)
+    throw new RangeError('Dia mensal deve estar entre 1 e 31.');
+  const last = daysInMonth(Number(month.slice(0, 4)), Number(month.slice(5, 7)));
+  return civilDate(`${month.slice(0, 7)}-${String(Math.min(day, last)).padStart(2, '0')}`);
+}
+
 /** Dia civil vizinho; não ajusta dias úteis nem gera uma recorrência. */
 export function adjacentCivilDate(date: CivilDate, direction: -1 | 1): CivilDate | null {
   civilDate(date);

@@ -1,4 +1,4 @@
-import { computed, inject, Injectable, signal } from '@angular/core';
+import { computed, effect, inject, Injectable, signal, untracked } from '@angular/core';
 import { calendarMonth, type CivilDate } from '../../../../domain/civil-date';
 import {
   ALL_ACCOUNTS,
@@ -7,7 +7,11 @@ import {
 } from '../../../../application/finance-context';
 import { DEMO_EXCHANGE_RATE } from '../../../../fixtures/financas/demo';
 import type { DemoSnapshot, FinancePreferences } from '../../../../shared/storage-api';
-import { savedCyclePeriods, type CycleMode } from '../../../../application/finance-periods';
+import {
+  configuredSalaryPeriods,
+  savedCyclePeriods,
+  type CycleMode,
+} from '../../../../application/finance-periods';
 import { FinancePreferencesStore } from './finance-preferences.service';
 
 export type PeriodMode = FinancePreferences['periodMode'];
@@ -21,6 +25,7 @@ export class FinanceContext {
   readonly month = signal<CivilDate | null>(null);
   readonly periodMode = signal<PeriodMode>('calendar-month');
   private readonly cycleKeys = signal<Partial<Record<CycleMode, string>>>({});
+  private readonly salaryThrough = signal<CivilDate | null>(null);
   readonly error = signal<string | null>(null);
   readonly saving = signal(false);
   readonly saveError = signal<string | null>(null);
@@ -28,6 +33,15 @@ export class FinanceContext {
   private loading = false;
   private hasContext = false;
   private revision = 0;
+
+  constructor() {
+    effect(() => {
+      this.preferences.value();
+      untracked(() => {
+        if (this.snapshot()) this.ensureAvailablePeriod();
+      });
+    });
+  }
 
   readonly account = computed(() =>
     this.snapshot()?.facts.accounts.find((account) => account.id === this.accountId()),
@@ -179,12 +193,26 @@ export class FinanceContext {
     const index =
       catalogue?.periods.findIndex((period) => period.key === this.savedPeriod()?.key) ?? -1;
     const next = catalogue?.periods[index + offset];
-    if (next) this.cycleKeys.update((keys) => ({ ...keys, [mode]: next.key }));
+    if (next) {
+      this.cycleKeys.update((keys) => ({ ...keys, [mode]: next.key }));
+      if (mode === 'salary-cycle') this.salaryThrough.set(next.range.start);
+    }
   }
 
   private cycleCatalogue(mode: CycleMode) {
     const snapshot = this.snapshot();
-    return snapshot ? savedCyclePeriods(snapshot, this.accountId(), mode) : null;
+    if (!snapshot) return null;
+    const rule = this.preferences
+      .value()
+      ?.cycleReferences.find((item) => item.accountId === this.accountId());
+    return mode === 'salary-cycle' && rule?.salaryDay !== null && rule?.salaryDay !== undefined
+      ? configuredSalaryPeriods(
+          snapshot,
+          this.accountId(),
+          rule,
+          this.salaryThrough() ?? snapshot.asOf,
+        )
+      : savedCyclePeriods(snapshot, this.accountId(), mode, rule?.referenceCardId ?? null);
   }
 
   private ensureAvailablePeriod(): void {

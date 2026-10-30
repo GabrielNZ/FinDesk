@@ -87,6 +87,24 @@ Implementação vigente: captura de ponteiro mantém o arraste da alça; a barra
 
 **D43 — aplicação da preferência, confirmada por Gabriel:** aplicar somente na próxima abertura do FinDesk, preservando modo/intervalo da consulta atual. Conta incompatível abre no calendário sem aviso e conserva a preferência salva. Trocas temporárias em Finanças não alteram o padrão. A escolha não gera datas nem configura fontes/recorrências.
 
+**D44 — local dos ajustes de ciclos, confirmado por Gabriel:** ampliar Configurações → Finanças com uma área por conta, que abre os ajustes de salário e cartão ao clicar. Preservar o cabeçalho financeiro enxuto.
+
+**D45 — referência salarial mensal, confirmada por Gabriel:** configurar conta de recebimento e dia fixo mensal, mantendo separado o recebimento efetivo. Meses curtos e dias úteis ainda dependem de respostas antes de gerar datas.
+
+**D46 — cartão de referência, confirmado por Gabriel:** escolher um cartão de referência por conta para o período global. Consultar outro cartão no submenu não muda essa referência nem o período global. Nenhum cartão adicional pode ser escolhido arbitrariamente.
+
+**D47 — mês curto na regra salarial, confirmado por Gabriel:** usar o último dia disponível quando o dia-base 29–31 não existir; manter o dia-base nos meses seguintes.
+
+**D48 — dias não úteis, confirmado por Gabriel:** manter o dia civil configurado sem ajuste automático de sábados, domingos ou feriados nesta fatia. Não introduzir serviço de feriados.
+
+**D49 — prioridade das datas salariais, confirmada por Gabriel:** uma data prevista explicitamente confirmada prevalece no mês correspondente; gerar pela regra mensal apenas onde faltar data, sem apagar ou substituir datas existentes. Recebimento efetivo continua independente.
+
+**D50 — controles e gravação dos ciclos, confirmados por Gabriel:** grade de dias 1–31 para salário e botões com finais dos cartões, dentro da área por conta. Salvamento automático ao selecionar; não adicionar Salvar ajustes.
+
+**D51 — aplicação dos ajustes de ciclo, confirmada por Gabriel:** dia salarial e cartão de referência passam a valer imediatamente após salvar com sucesso. Isso não altera D43: a preferência de modo padrão continua sendo aplicada na próxima abertura.
+
+**D52 — alcance da geração salarial, confirmado por Gabriel:** gerar a partir do ciclo que contém a referência atual e para os futuros; anteriores somente onde existirem datas confirmadas. Não preencher histórico ausente nem criar receitas/valores. Datas confirmadas continuam prioritárias conforme D49.
+
 ## Escolhas de implementação dentro da arquitetura estabelecida
 
 Não são novas decisões de produto nem uma troca de stack. Detalhes em [ARCHITECTURE.md](ARCHITECTURE.md) e [ADR 0001](adr/0001-base-desktop.md).

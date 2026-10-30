@@ -4,6 +4,8 @@ Gabriel confirmou manter a base visual da casca e enxugar o conteúdo. Tema escu
 
 ## Base visual
 
+F02b.3 (D44–D52): Ciclos por conta expande a linha com marca/nome da instituição. Grade de dias 1–31 tem foco por setas/Home/End e seleção por Enter/espaço; botão Somente datas confirmadas desativa a regra. Cartões aparecem em botões por final; referência automática é válida só com um cartão. Salvamento automático e retorno de falha junto dos ajustes. Consulta recebe alterações após sucesso; modo padrão continua com aplicação na próxima abertura.
+
 F02b.2 (D42/D43): Configurações → Finanças → Período padrão usa três botões com ícone e nome, seleção exclusiva e salvamento automático. Estados de salvamento/falha objetivos; aplicação na próxima abertura indicada em uma linha. Botões reacomodam em janela estreita; foco e teclado preservados. Ícones de período são os mesmos do cabeçalho.
 
 Tokens em `FinDesk-Project/src/styles.scss`: fundo grafite, superfícies discretas, texto claro, bordas suaves e acento verde dessaturado. A paleta é uma proposta substituível, não identidade definitiva. Tipografia do sistema, sem fontes remotas. Navegação lateral compacta, poucos painéis, hierarquia de títulos e espaço para leitura.

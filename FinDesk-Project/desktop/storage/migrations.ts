@@ -1,5 +1,10 @@
 import { DatabaseSync } from 'node:sqlite';
-import { parseStoredJson, StorageFailure, upgradePreferencesV1 } from './contracts';
+import {
+  parseStoredJson,
+  StorageFailure,
+  upgradePreferencesV1,
+  upgradePreferencesV2,
+} from './contracts';
 
 export interface Migration {
   readonly version: number;
@@ -52,6 +57,28 @@ export const PREFERENCE_MIGRATIONS: readonly Migration[] = [
       database
         .prepare('UPDATE preferences SET key = ?, payload = ? WHERE key = ?')
         .run('finance.v2', JSON.stringify(upgraded), 'finance.v1');
+    },
+  },
+  {
+    version: 3,
+    sql: '',
+    apply(database) {
+      const initialized = database.prepare('SELECT initialized FROM storage_identity').get()?.[
+        'initialized'
+      ];
+      const row = database
+        .prepare("SELECT payload FROM preferences WHERE key = 'finance.v2'")
+        .get();
+      if (initialized === 0 && !row) return;
+      if (initialized !== 1 || !row) throw new StorageFailure('corrupt');
+      try {
+        const upgraded = upgradePreferencesV2(parseStoredJson(row['payload']));
+        database
+          .prepare('UPDATE preferences SET key = ?, payload = ? WHERE key = ?')
+          .run('finance.v3', JSON.stringify(upgraded), 'finance.v2');
+      } catch {
+        throw new StorageFailure('corrupt');
+      }
     },
   },
 ];
