@@ -88,3 +88,5 @@ Cada fixture futura deve declarar ID/versionamento, relógio, fontes/cobertura, 
 ## Cobertura efetiva da F01b
 
 Implementados como fatos/cálculos comuns: C02–C07, C09/C10, equivalente de C12, separação previsto/recebido em C17/C18, conversão fictícia C23 e precisão/datas de C31. C01/C19 têm cobertura apenas dos intervalos/calendário/fusos, sem tela/ciclo. C11 cobre rejeição de identidade repetida, sem parser ou deduplicação de arquivos. C22 cobre validade dos instantes, sem política de cobertura para médias/inativação. Testes em `FinDesk-Project/tests/domain/`; resultados de execução e autorização no PROJECT_STATUS.
+
+F01c.2 concretiza C30 no backend e na ponte Electron: reabertura/alterações, seed idempotente, migração/rollback, versão futura/estrutura inválida, restauração preservando preferências e sentinelas de outros dados. O namespace fictício de layout prova isolamento da restauração; organização real de cards continua em F03. A ação de restauração pela interface fica para F01c.3.

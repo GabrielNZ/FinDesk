@@ -1,8 +1,22 @@
-import { app, BrowserWindow, ipcMain, Menu, nativeTheme, net, protocol, session } from 'electron';
+import {
+  app,
+  BrowserWindow,
+  ipcMain,
+  Menu,
+  nativeTheme,
+  net,
+  protocol,
+  session,
+  type IpcMainInvokeEvent,
+} from 'electron';
 import { join } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { RUNTIME_INFO_CHANNEL, type DesktopRuntimeInfo } from '../shared/desktop-api';
 import { PRODUCT } from '../shared/product';
+import { STORAGE_CHANNELS } from '../shared/storage-api';
+import { StorageClient } from './storage/client';
+import { failure, parsePreferences, StorageFailure } from './storage/contracts';
+import { storageDirectory } from './storage/paths';
 import {
   APP_PAGE,
   DEVELOPMENT_ORIGIN,
@@ -18,6 +32,16 @@ protocol.registerSchemesAsPrivileged([
 const development = !app.isPackaged && process.argv.includes('--dev');
 const smokeTest = !app.isPackaged && process.env['FINDESK_TEST_MODE'] === '1';
 let mainWindow: BrowserWindow | null = null;
+let storage: StorageClient | undefined;
+
+function trustedSender(event: IpcMainInvokeEvent): boolean {
+  return (
+    !!mainWindow &&
+    event.sender === mainWindow.webContents &&
+    event.senderFrame === event.sender.mainFrame &&
+    isTrustedPageUrl(event.senderFrame.url, development)
+  );
+}
 
 async function createWindow(): Promise<void> {
   const window = new BrowserWindow({
@@ -69,6 +93,48 @@ async function createWindow(): Promise<void> {
 async function start(): Promise<void> {
   nativeTheme.themeSource = 'dark';
   Menu.setApplicationMenu(null);
+  try {
+    storage = new StorageClient(
+      storageDirectory(smokeTest, app.getPath('userData'), process.env['LOCALAPPDATA']),
+    );
+    void storage.ready.then((result) => {
+      if (!result.ok) console.error(result.error.message);
+    });
+  } catch {
+    console.error(
+      'Não foi possível iniciar o armazenamento local. Os arquivos existentes foram preservados.',
+    );
+  }
+
+  const readOperations = {
+    [STORAGE_CHANNELS.status]: () => storage?.getStatus(),
+    [STORAGE_CHANNELS.readDemo]: () => storage?.getDemo(),
+    [STORAGE_CHANNELS.readPreferences]: () => storage?.getPreferences(),
+  };
+  for (const [channel, operation] of Object.entries(readOperations)) {
+    ipcMain.handle(channel, (event, ...args: unknown[]) => {
+      if (!trustedSender(event) || args.length !== 0)
+        return failure(new StorageFailure('invalid-request'));
+      return operation() ?? failure(new StorageFailure('unavailable'));
+    });
+  }
+  ipcMain.handle(STORAGE_CHANNELS.savePreferences, (event, ...args: unknown[]) => {
+    if (!trustedSender(event) || args.length !== 1)
+      return failure(new StorageFailure('invalid-request'));
+    try {
+      return (
+        storage?.savePreferences(parsePreferences(args[0])) ??
+        failure(new StorageFailure('unavailable'))
+      );
+    } catch (error) {
+      return failure(error);
+    }
+  });
+  ipcMain.handle(STORAGE_CHANNELS.restoreDemo, (event, ...args: unknown[]) => {
+    if (!trustedSender(event) || args.length !== 1 || args[0] !== 'restore-demo-data')
+      return failure(new StorageFailure('invalid-request'));
+    return storage?.restoreDemoData() ?? failure(new StorageFailure('unavailable'));
+  });
   session.defaultSession.setPermissionRequestHandler((_contents, _permission, callback) => {
     callback(false);
   });
@@ -100,13 +166,7 @@ async function start(): Promise<void> {
   });
 
   ipcMain.handle(RUNTIME_INFO_CHANNEL, (event, ...args: unknown[]): DesktopRuntimeInfo => {
-    if (
-      !mainWindow ||
-      event.sender !== mainWindow.webContents ||
-      event.senderFrame !== event.sender.mainFrame ||
-      !isTrustedPageUrl(event.senderFrame.url, development) ||
-      args.length !== 0
-    ) {
+    if (!trustedSender(event) || args.length !== 0) {
       throw new Error('Solicitação não autorizada');
     }
 
@@ -133,4 +193,12 @@ app
 
 app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') app.quit();
+});
+
+let closingStorage = false;
+app.on('before-quit', (event) => {
+  if (!storage || closingStorage) return;
+  event.preventDefault();
+  closingStorage = true;
+  void storage.close().finally(() => app.quit());
 });

@@ -46,6 +46,7 @@ test('casca abre o build local com ponte isolada, navega e responde em janela me
     expect(sandboxed).toBe(true);
     expect(await page.evaluate(() => Object.keys(window.finDesk ?? {}))).toEqual([
       'getRuntimeInfo',
+      'storage',
     ]);
     const info = await page.evaluate(() => window.finDesk?.getRuntimeInfo());
     expect(info?.appVersion).toBe('0.1.0');

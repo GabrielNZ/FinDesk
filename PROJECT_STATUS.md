@@ -4,9 +4,23 @@ Atualizado em **29/10/2026** (America/Sao_Paulo).
 
 ## Situação atual
 
-**F01c.1 aprovada; F01c.2 autorizada em 29/10/2026.** Registrar a avaliação aprovada com commit/push e implementar o armazenamento mínimo/testes conforme o plano. D25–D27 já confirmam API/worker, LocalAppData e restauração demo preservando preferências/layout; não repetir essas perguntas. A interface de restauração permanece para F01c.3.
+**F01c.2 aprovada; F01c.3 autorizada para levantamento e composição acordada da interface.** Registrar o backend aprovado com commit/push e discutir posição/textos/confirmação em Configurações antes de implementar a parte dependente. D25–D27 continuam confirmadas.
 
-## F01c.1 — entrega atual
+## F01c.2 — entrega atual
+
+- **Implementado:** [serviço/worker/store](FinDesk-Project/desktop/storage/store.ts) e [contratos da ponte](FinDesk-Project/shared/storage-api.ts), com demo.sqlite e preferences.sqlite em `%LOCALAPPDATA%\FinDesk\data`. Apenas fatos fictícios, sem criar banco pessoal. Inicialização assíncrona em relação à janela; encerramento fecha o serviço/worker.
+- **Esquema:** v1 com identidade/marcador, agregado financeiro JSON canônico e preferências tipadas. Estrutura, precisão, datas e vínculos verificados na leitura. Migração transacional; versão futura, arquivo desconhecido, corrupção ou snapshot removido não provocam recriação/seed automático. Racional em DATA_MODEL; ainda não são tabelas por entidade.
+- **Persistência:** alterações e preferências sobrevivem à reabertura; seed não substitui dados existentes. Restaurar só substitui o agregado demo numa transação. Preferências e outros arquivos preservados. Namespace de layout em teste é sentinela, não implementação dos cards de F03.
+- **Preferências iniciais:** moeda Original/BRL/USD e modo calendário/salário/cartão, versão 1; padrões Original/calendário. Nenhuma regra de ciclo, seleção histórica inicial ou preferência de navbar inferida.
+- **Segurança:** cinco operações específicas de storage, sem SQL/caminho/escrita genérica de fatos no renderer. Validação de remetente/frame/origem/argumentos no principal e mensagens no worker; confirmação literal para restaurar; falhas sem caminhos/SQL. Outra janela com a mesma URL é recusada.
+- **Verificações:** tipos/templates, lint, formatação, build web/desktop passaram. Passaram 30 testes Node (18 domínio + quatro segurança + oito persistência) e três Playwright no Electron (casca + dois storage). Cobertura: reabertura, seed, migração/rollback, falha de escrita, estrutura inválida, versão futura, isolamento e contratos. Ajuste na identificação de tabelas internas SQLite validado com teste focado; não repetidos os gestos da navbar, cujo código não mudou.
+- **Isolamento:** testes apenas em perfis temporários validados; não gravaram nos bancos normais de LocalAppData. Nenhuma dependência adicionada; lockfile preservado. test:persistence reproduz backend; npm test inclui os 30 testes Node.
+- **Limites:** telas ainda não consomem dados/preferências e não há botão visual de restauração. Falha inicial mantém a casca acessível e informa erro pela API; apresentação será concluída em F01c.3. Sem integração, importação, backup independente, recuperação de corrupção, mudança de múltiplas instâncias ou validação de instalador/ASAR.
+- **Perguntas aguardando resposta:** nenhuma para concluir este backend. Composição da seção de dados/estado/confirmação será levantada na próxima fatia. D25–D27 continuam confirmadas.
+- **Próxima entrega proposta — F01c.3:** definir com Gabriel uma seção enxuta em Configurações, apresentação de disponibilidade/falhas e confirmação explícita da restauração preservando preferências. Implementar a composição acordada e validar o fluxo real antes de F02.
+- **Autorização:** “vamos para a próxima”, após a apresentação, aprova F01c.2, autoriza commit/push e inicia F01c.3 pelo levantamento visual/comportamental. A composição ainda aberta será discutida antes da implementação dependente.
+
+## F01c.1 — histórico da entrega aprovada
 
 - **Concluído:** pesquisa oficial, [prova reproduzível](FinDesk-Project/scripts/probe-sqlite.mjs), três respostas registradas em DECISIONS/ADR e [plano de persistência](docs/financas/PERSISTENCIA.md). A F01c foi subdividida para separar esta avaliação, a implementação mínima (F01c.2) e o acesso explícito na interface (F01c.3), mantendo o escopo completo antes de F02 depender de dados/preferências salvos.
 - **Confirmado:** node:sqlite em worker Node privilegiado, fora da thread principal; `%LOCALAPPDATA%\FinDesk\data`; restauração somente dos fatos fictícios, preservando preferências/layout. Não repetir essas perguntas sem novas evidências.
@@ -59,7 +73,7 @@ Atualizado em **29/10/2026** (America/Sao_Paulo).
 - **Dependências propostas:** F01b para regras comuns e fixtures executáveis após respostas pertinentes; F01c para persistência mínima após decisão conjunta, antes das preferências salvas de F02/F03. F02–F20 seguem a referência da especificação, com subdivisões quando necessário.
 - **Pesquisa de armazenamento:** comparação e escolha concluídas na F01a; driver e detalhes de persistência continuam pendentes. Integração real permanece para F20.
 - **Levantamento:** demais temas da seção 16 serão discutidos em pequenas rodadas antes da implementação dependente; não bloqueiam fatos/cálculos comuns independentes.
-- **Histórico de autorização:** casca/F00/reorganização em `6920552`; F01a em `4694ef9`; F01b em `34af7ad`, todas aprovadas/enviadas. F01c.1 é a entrega atual; próxima proposta F01c.2.
+- **Histórico de autorização:** casca/F00/reorganização em `6920552`; F01a em `4694ef9`; F01b em `34af7ad`; F01c.1 em `8abad2a`, todas aprovadas/enviadas. F01c.2 é a entrega atual; próxima proposta F01c.3.
 
 ## Entrega atual
 
@@ -79,7 +93,7 @@ Atualizado em **29/10/2026** (America/Sao_Paulo).
 4. **Manter a base visual e enxugar o conteúdo**, resposta explícita na revisão; sem adensar ou redesenhar o layout nesta rodada.
 5. **Participação antes de decisões relevantes de design/desenvolvimento** e **verificações agrupadas por conjunto de mudanças**, sem testes repetitivos de cada ajuste simples.
 
-Detalhes e fontes em [docs/DECISIONS.md](docs/DECISIONS.md). Revisar a base antes do fim previsto do LTS do Angular 21 em junho/2027. SQLite e acesso pelo módulo incluído/worker estão confirmados, com capacidade avaliada. Ainda não há banco integrado à aplicação.
+Detalhes em [docs/DECISIONS.md](docs/DECISIONS.md). Revisar a base antes do fim previsto do LTS do Angular 21 em junho/2027. SQLite/worker integrados à demonstração em F01c.2, testados em perfis fictícios. Dados reais/distribuição continuam fora desta entrega.
 
 ## Verificações da base anterior à limpeza de conteúdo
 
@@ -103,7 +117,8 @@ Esses resultados são históricos da casca. A F01b adicionou os testes de domín
 - Preparação Git aprovada e enviada: `f6a250d` — `chore(git): configura exclusões e preservação dos documentos`.
 - Casca/F00/reorganização aprovadas e enviadas: `6920552` — `feat(base): adiciona casca desktop e organiza projeto`.
 - F01a aprovada/enviada: `4694ef9` — `docs(financas): consolida requisitos e cenários da F01a`.
-- **Última entrega aprovada e enviada:** `34af7ad` — `feat(financas): adiciona domínio e fixtures da F01b`. F01c.1 é a entrega atual, ainda sem commit/push.
+- F01b aprovada/enviada: `34af7ad` — `feat(financas): adiciona domínio e fixtures da F01b`.
+- **Última entrega aprovada e enviada:** `8abad2a` — `chore(persistencia): valida SQLite no Electron e registra decisões`. F01c.2 é a entrega atual, ainda sem commit/push.
 - Política confirmada: **push após cada entrega aprovada**. Identidade Git existente preservada. Originais mantidos byte a byte no histórico após a configuração de atributos.
 
 ## Pendências e próxima entrega proposta
@@ -118,7 +133,7 @@ Esses resultados são históricos da casca. A F01b adicionou os testes de domín
 
 **Aprovação atual:** Gabriel aprovou expressamente as mudanças existentes e autorizou commit/push. Substitui a pendência anterior de revisão do conjunto.
 
-**Próximo passo vigente:** revisar F01c.1 e, mediante continuidade, registrar a entrega conforme a política Git e iniciar F01c.2 conforme o bloco atual e o plano. F01c.3 e F02–F20 continuam em pequenas entregas.
+**Próximo passo vigente:** revisar F01c.2 e, mediante continuidade, registrar a entrega e iniciar o levantamento da F01c.3. Não implementar a interface ou F02–F20 automaticamente.
 
 **Espaçamento superior:** reduzidas a altura do cabeçalho e a margem interna superior do conteúdo após a remoção da linha divisória, conforme solicitado. Botão de informação preservado à direita. Ajuste apenas de CSS, revisado sem executar a suíte.
 

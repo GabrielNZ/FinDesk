@@ -1,6 +1,6 @@
 # Finanças — persistência local
 
-Requisitos FIN-003/010/047 e cenário C30 em [REQUISITOS.md](REQUISITOS.md) e [CENARIOS.md](CENARIOS.md). A execução/autorização fica somente em [PROJECT_STATUS.md](../../PROJECT_STATUS.md). Esta página descreve as decisões e os critérios das próximas fatias; não declara banco de aplicação já implementado.
+Requisitos FIN-003/010/047 e cenário C30 em [REQUISITOS.md](REQUISITOS.md) e [CENARIOS.md](CENARIOS.md). Execução/autorização somente em [PROJECT_STATUS.md](../../PROJECT_STATUS.md). F01c.2 concretiza armazenamento mínimo no backend; a interface de restauração continua em F01c.3.
 
 ## Decisões confirmadas na F01c
 
@@ -34,11 +34,11 @@ Essa prova não valida ainda o esquema financeiro, seed, migrações da aplicaç
 
 ### F01c.1 — avaliação e decisões
 
-Pesquisa oficial, prova isolada e D25–D27. É a rodada atual, sem persistência na execução normal da aplicação. A subdivisão não elimina os requisitos da F01c.
+Primeira fatia: pesquisa oficial, prova isolada e D25–D27, sem persistência normal naquela rodada. A implementação seguinte está descrita abaixo; a subdivisão não elimina requisitos.
 
 ### F01c.2 — armazenamento mínimo e testes
 
-Proposta do Codex, a revisar antes de implementar:
+Escopo aprovado para esta fatia, implementado em `FinDesk-Project/desktop/storage/`. Critérios:
 
 - Criar o serviço de armazenamento com worker dedicado e operações sequenciais. Somente o processo privilegiado escolhe diretórios; se a pasta do Windows estiver indisponível, informar erro e preservar arquivos existentes, sem fallback silencioso para o repositório.
 - Usar arquivo de demonstração separado e um armazenamento de preferências independente da restauração dos fatos. Nomes de arquivos e organização interna são detalhes técnicos; não criar banco pessoal vazio sem necessidade.
@@ -49,7 +49,11 @@ Proposta do Codex, a revisar antes de implementar:
 - Disponibilizar operação interna explícita de restauração somente do ambiente demo, transacional, com preferências preservadas. A ação da interface será desenhada na fatia seguinte, sem criar controle falsamente ativo.
 - Validar perfis temporários, reabertura, seed idempotente, migração/rollback, alteração persistida, versão futura recusada sem apagamento, preservação de preferências ao restaurar e falhas de acesso/escrita. Validar a execução no Electron, sem repetir testes visuais que não forem afetados.
 
-Esses itens são critérios propostos de implementação, não escolhas de produto adicionais já respondidas. Validação/schemas e recuperação precisam ser avaliados com a implementação concreta; a prova de capacidade não substitui esses testes.
+Implementação: demo.sqlite contém o agregado versionado da F01b em JSON canônico validado; preferences.sqlite contém preferências por chave, finance.v1 com moeda e período padrão. Identidade/marcador e PRAGMA user_version impedem usar arquivo desconhecido ou repetir seed. A transação de migração aplica todas as etapas pendentes ou reverte tudo. Schema/limites em [DATA_MODEL.md](../DATA_MODEL.md).
+
+A ponte expõe somente status, leitura demo, leitura/gravação tipada de preferências e restauração com confirmação literal. Não há escrita pública de fatos, SQL ou caminhos. Status indica disponibilidade do serviço; falhas de operação retornam resultado próprio. Na falha inicial, a casca continua abrindo e a ponte informa erro sanitizado, sem apagar dados. A apresentação dessa situação será completada em F01c.3.
+
+Testes do backend cobrem reabertura/alterações, seed, restauração preservando preferências e namespace sentinela de layout, migração/rollback, versão futura, estrutura inválida, falha de escrita, arquivo desconhecido e contratos. No Electron real, dois cenários verificam reabertura/restauração/ponte e falha de versão futura com casca acessível. Bancos/perfis são fictícios e temporários; os testes não usam o LocalAppData financeiro normal. Layout real continua em F03, sem formato antecipado.
 
 ### F01c.3 — acesso explícito na interface
 

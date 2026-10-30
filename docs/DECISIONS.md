@@ -62,7 +62,7 @@ Não são novas decisões de produto nem uma troca de stack. Detalhes em [ARCHIT
 - Um repositório e um pacote npm privado, sem monorepo de pacotes ou backend HTTP local de aplicação.
 - Componentes Angular standalone, detecção OnPush e signals para o pequeno estado de apresentação; sem biblioteca adicional de estado global.
 - Rotas carregadas sob demanda e localização por hash para recarregar páginas do build local.
-- Contrato `FinDesk-Project/shared/desktop-api.ts`; uma operação de leitura de versão, sem IPC genérico ou acesso a arquivos.
+- Contratos `shared/desktop-api.ts` e `shared/storage-api.ts`: versão e operações específicas de armazenamento, sem IPC/SQL/caminhos genéricos. Revalidação no principal e worker; dados demo/preferências em arquivos separados.
 - Electron isolado e com sandbox; conteúdo de produção por protocolo local restrito, sem `file://` como origem da interface.
 - Tokens semânticos e preset da versão MIT de PrimeUIX para PrimeNG pontual. Fontes do sistema, sem downloads de fontes, analytics ou telemetria do app.
 - npm e lockfile; TypeScript estrito, ESLint, Prettier, testes de segurança e teste de navegação no Electron.
@@ -70,9 +70,9 @@ Não são novas decisões de produto nem uma troca de stack. Detalhes em [ARCHIT
 
 ## Propostas do Codex
 
-- SQLite está confirmado em D23; driver, esquema e persistência continuam sem implementação. As alternativas e a pesquisa estão no [ADR 0002](adr/0002-sqlite-local-proposto.md).
+- SQLite/API/worker e diretório confirmados em D23/D25/D26. F01c.2 implementa o armazenamento mínimo. Escolha técnica: agregado financeiro v1 em JSON canônico validado dentro de SQLite, separado das preferências; evita antecipar tabelas por entidade e mantém a transação dos vínculos. Normalização futura exige migração versionada. Detalhes em DATA_MODEL e ADR 0002.
 - A base visual será mantida com conteúdo enxuto, conforme D12. Os estudos A/B são históricos; a logo original agora está aplicada conforme D10. Ver [DESIGN_SYSTEM.md](DESIGN_SYSTEM.md).
-- A F01c começou pelo levantamento e prova isolada, documentados como F01c.1 em [PERSISTENCIA.md](financas/PERSISTENCIA.md). Próxima fatia proposta: F01c.2, armazenamento mínimo e testes com as decisões D25–D27; F01c.3 para o acesso explícito da restauração na interface, com composição discutida antes de implementar.
+- Próxima fatia proposta após revisar F01c.2: F01c.3, definir com Gabriel a seção de dados em Configurações, a apresentação de falhas e a confirmação da restauração antes de implementar a interface.
 
 ## Pesquisas realizadas e manutenção
 

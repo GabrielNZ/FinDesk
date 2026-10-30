@@ -1,18 +1,18 @@
 # Modelo de dados
 
-**Ainda não existe banco ou esquema financeiro implementado.** A casca não deve ser confundida com o MVP local.
+**F01c.2 implementa armazenamento da demonstração e preferências.** É a base local fictícia, não o MVP financeiro completo nem um banco de dados pessoais.
 
 ## Ampliação de requisitos de Finanças
 
 A [especificação de Finanças](FINANCAS_SPEC.md) exige ainda categorias/estabelecimentos e regras manuais, compromissos avulsos e séries recorrentes com ocorrências, assinaturas mensais/anuais e histórico, salário previsto confirmado, vínculos de pagamento/conciliação, cobertura temporal da fonte, sugestões confirmáveis, orçamentos/alertas e preferências de período/layout por área. São conceitos requeridos, sem esquema ou entidades de código adotados nesta F00.
 
-Preservar a distinção entre origem e personalização, previsão e fato, cobrança no cartão e desembolso da fatura. Catálogo e fixtures da F01b estão vinculados abaixo. SQLite foi confirmado em D23; D25–D27 confirmam API incluída/worker, diretório LocalAppData e restauração demo preservando preferências/layout. Esquema/migrações e contratos de armazenamento ainda não implementados. Ver [ADR 0002](adr/0002-sqlite-local-proposto.md) e [plano de persistência](financas/PERSISTENCIA.md).
+Preservar a distinção entre origem e personalização, previsão e fato, cobrança no cartão e desembolso da fatura. D23/D25–D27 confirmam SQLite/worker, LocalAppData e restauração demo preservando preferências/layout. Esquema v1, migração inicial e contratos estão implementados conforme a seção de armazenamento abaixo. Ver [ADR 0002](adr/0002-sqlite-local-proposto.md) e [plano de persistência](financas/PERSISTENCIA.md).
 
 ## Contrato existente
 
-`FinDesk-Project/shared/desktop-api.ts` define uma operação sem argumentos, `getRuntimeInfo()`, que retorna `appVersion` e `platform`, ambos strings. É um DTO de ambiente, sem valores financeiros, identificadores pessoais, caminhos de arquivo ou credenciais. O preload expõe somente essa operação. O processo principal valida origem, frame, remetente e argumentos.
+`FinDesk-Project/shared/desktop-api.ts` preserva `getRuntimeInfo()` e acrescenta o grupo `storage` definido em `shared/storage-api.ts`: status, leitura da demonstração, leitura/gravação de preferências e restauração explícita. Resultados distinguem sucesso e falha com código/mensagem sanitizados, sem caminhos ou objetos de banco. Principal e worker validam solicitações.
 
-`FinDesk-Project/shared/product.ts` centraliza nome, descrição, etapa textual e referência ao símbolo escolhido. A decisão de identidade está registrada na documentação e no código; não há seletor de logo ou persistência de preferências nesta versão.
+`FinDesk-Project/shared/product.ts` centraliza identidade; não há seletor de logo. A persistência inicial de preferências financeiras existe no backend, ainda sem controles na interface.
 
 ## Entidades futuras já exigidas pelas fontes
 
@@ -26,7 +26,20 @@ Preservar a distinção entre origem e personalização, previsão e fato, cobra
 
 Precisão monetária, quantidades fracionárias, datas civis, chaves de idempotência, migrações e retenção serão definidos junto dos casos de uso. Não usar `number` financeiro sem uma política explícita de precisão/limites; não converter desconhecido em zero.
 
-Na próxima entrega de persistência, revisar o [ADR SQLite](adr/0002-sqlite-local-proposto.md), discutir os comportamentos de dados e registrar critérios antes de criar esquema e seed. Fixtures fictícias reproduzíveis serão versionadas; bancos pessoais não.
+Fixtures fictícias reproduzíveis são versionadas; bancos pessoais e arquivos SQLite locais não são. Dados reais, retenção e novas entidades devem ser levantados nas entregas pertinentes.
+
+## Armazenamento v1 — F01c.2
+
+`desktop/storage/` mantém dois arquivos em `%LOCALAPPDATA%\FinDesk\data`:
+
+- `demo.sqlite`: identidade demo, marcador de inicialização e uma linha demo_state com o agregado financeiro versionado (formato, seed ID/versão, data/fuso e fatos).
+- `preferences.sqlite`: identidade preferences, marcador e tabela por chave. finance.v1 contém versão 1, moeda Original/BRL/USD e modo de período calendário/salário/cartão; padrões Original e mês calendário. Não há intervalo histórico salvo como preferência inicial, formato de layout ou preferência de navbar adicionados.
+
+Escolha técnica desta fatia: agregado da F01b como JSON canônico validado dentro de SQLite, com tabelas STRICT, CHECK de JSON, identidade e PRAGMA user_version. Não são ainda tabelas relacionais por entidade. Isso mantém a unidade transacional dos vínculos do conjunto pequeno, sem antecipar o esquema de cadastros/consultas futuros; normalização ou novos formatos exigirão migração versionada quando o caso de uso pedir. Vínculos internos são verificados pelo domínio, não por chaves estrangeiras SQL do agregado.
+
+Centavos permanecem inteiros seguros na serialização. Leitura recusa representação não canônica que alteraria números, verifica a estrutura completa e valida dinheiro/datas/vínculos no domínio. Versão futura, identidade errada, dados inválidos ou snapshot ausente após inicialização produzem erro, sem recriação/seed automático. Seed e marcador são gravados na mesma transação, apenas na inicialização da base nova.
+
+Restaurar substitui somente o agregado fictício numa transação; não altera preferências. Namespace de layout futuro foi sentinela em teste, sem implementar antecipadamente editor/formato de layout. A porta interna saveDemo testa alterações preservadas e prepara casos de uso; não é exposta ao renderer. Não há banco pessoal criado no fluxo normal.
 
 ## Representação de dinheiro, datas e contratos — F01a/F01b
 

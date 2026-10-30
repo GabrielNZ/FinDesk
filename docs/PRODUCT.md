@@ -23,6 +23,8 @@ A logo original enviada por Gabriel foi aplicada no lugar do F e pode ser consul
 - Duas propostas de símbolo avaliáveis com FinDesk, em fundo escuro, claro e tamanho pequeno.
 - Limites, decisões respondidas, verificações e próxima entrega registrados.
 
-## Fora desta fatia
+## Fora da casca inicial
+
+A lista abaixo descreve os limites da casca original. F01b acrescentou domínio/fixtures e F01c.2 implementou persistência fictícia/preferências no backend, conforme DATA_MODEL e PROJECT_STATUS. As telas financeiras completas permanecem nas entregas futuras.
 
 Banco SQLite, seed, migrações, dados financeiros, filtros sobre movimentações, faturas, simulador, preferências persistidas e integrações reais. Permanecem requisitos do roadmap, a executar em pequenas entregas. Instalador, distribuição e sincronização móvel também não fazem parte desta casca.

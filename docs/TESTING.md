@@ -32,7 +32,7 @@ Os demais comandos desta página pressupõem o diretório `FinDesk-Project/`. N�
 - `typecheck`: TypeScript estrito de desktop, domínio/fixtures, templates Angular e testes/configuração.
 - `lint`: ESLint e regras Angular de código, templates e acessibilidade; scripts Node incluídos.
 - `format:check`: Prettier; originais em `docs/references/` e arquivos gerados estão excluídos intencionalmente.
-- `test`: compila desktop/domínio e executa quatro testes de segurança e 18 testes de domínio. `test:domain` compila e executa somente os 18 testes de domínio, sem abrir Electron.
+- `test`: compila desktop/domínio e executa 30 testes Node: quatro segurança, 18 domínio e oito persistência. test:domain executa somente domínio; test:persistence compila desktop e verifica o backend/worker sem abrir janela.
 - `tests/domain/`: IDs FIN e cenários C nos nomes dos testes. Cobre centavos/limites/ausência/moedas, taxas exatas e arredondamento, calendário/bissextos/quatro fusos, caixa separado de cartão e previsão, parcelas observadas/centavos/ano, transferências, pagamento integral, Sem categoria, IDs de origem e instantes de coleta. Nenhuma regra de ciclo é inferida desses testes.
 - `probe:sqlite`: avaliação isolada no Electron real e worker Node, sem janela ou banco pessoal; seis grupos de capacidade (parâmetros, rollback, referências, inteiros, reabertura/integridade e cópia consistente). Usa perfil/bancos temporários exclusivos com limpeza delimitada. Não substitui testes futuros de esquema, migração, seed, restauração do produto ou IPC. Protocolo e limites em [PERSISTENCIA.md](financas/PERSISTENCIA.md).
 - `test:desktop`: build completo e teste Playwright no Electron real; protocolo local, versão pela ponte, ausência de Node no renderer, sandbox no Windows, navegação/recarga, Configurações/Integrações, propostas SVG, diálogo PrimeNG, Escape, janela menor e ausência de erros capturados no console.
@@ -42,6 +42,8 @@ Os demais comandos desta página pressupõem o diretório `FinDesk-Project/`. N�
 O suporte de Electron no Playwright é [experimental](https://playwright.dev/docs/api/class-electron). Não usa um navegador externo instalado: automatiza o executável Electron do projeto. Os testes usam perfis temporários exclusivos e validam o caminho antes de removê-los. Para verificar gestos e transições reais no Windows, mostram temporariamente a janela; o modo de teste também evita a redução de frames ao fundo. A execução normal preserva o comportamento padrão do Electron. Capturas e traces ficam em `FinDesk-Project/test-results/`, ignorados pelo Git.
 
 ## Verificação manual
+
+F01c.2: passaram tipos/templates, lint, formatação, build web/desktop, os 30 testes Node e três testes Electron (casca e dois de armazenamento). Os quatro testes de gestos da navbar não foram repetidos, pois a mecânica não mudou. Testes adicionais validam origem de outra janela, argumentos extras, token de restauração inválido, reabertura, preferências preservadas e falha de versão futura com dados intactos. Janela de teste usa armazenamento temporário; execução normal usa o diretório D26. A ação visual de restauração ainda será desenvolvida em F01c.3.
 
 1. `npm start` abre o build com barra nativa Windows.
 2. Percorrer as três áreas; atualizar a página pelo teste ou DevTools somente em desenvolvimento.

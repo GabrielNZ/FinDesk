@@ -1,6 +1,6 @@
 # ADR 0002 — SQLite local
 
-**Decisões confirmadas: D23 — SQLite local; D25 — API incluída node:sqlite em worker privilegiado; D26/D27 — localização e restauração.** Capacidade técnica avaliada, sem persistência na execução normal ainda. Caminho deste ADR mantido para preservar os links históricos.
+**Decisões confirmadas: D23 — SQLite local; D25 — API incluída em worker; D26/D27 — localização e restauração.** F01c.2 integra persistência da demonstração/preferências à execução normal. Caminho do ADR mantido para preservar links históricos.
 
 ## Contexto e histórico
 
@@ -42,6 +42,8 @@ Fontes adicionais: [Node worker_threads](https://nodejs.org/api/worker_threads.h
 **D26/D27 confirmadas:** `%LOCALAPPDATA%\FinDesk\data`; demonstração em arquivo separado dos dados pessoais futuros; restauração repõe fatos fictícios preservando preferências/layout, com ação de layout distinta. Critérios e subdivisão proposta da implementação em [PERSISTENCIA.md](../financas/PERSISTENCIA.md).
 
 ## Critérios restantes de implementação
+
+F01c.2 concretiza estes critérios no backend, conforme [modelo v1](../DATA_MODEL.md) e [plano](../financas/PERSISTENCIA.md). Acesso pela interface permanece para F01c.3. Testes de aplicação no Electron não substituem a futura validação de distribuição/ASAR ou recuperação após queda abrupta.
 
 - Aplicar a localização D26 e a separação/restauração D27; definir formatos das preferências pertinentes, migrações versionadas e seed idempotente, sem apagar ao abrir.
 - Implementar restauração explícita somente da demonstração, preservando preferências/layout; propor sua composição na interface. Dados locais não substituem backup independente.

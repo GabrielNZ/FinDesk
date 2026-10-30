@@ -17,7 +17,7 @@ A F01b concretiza somente a base de domínio e os fatos fictícios prioritários
 | Revisão documental               | Fontes preservadas, requisitos consolidados e precedência definida                              | Aprovada e enviada                                     |
 | Preparação do Git                | Remoto, histórico, exclusões, preservação das fontes e política de push                         | Aprovada e enviada                                     |
 | Base desktop                     | Janela, navegação provisória, PrimeNG pontual, contrato IPC, decisões e propostas de identidade | Aprovada em 29/10/2026, com os ajustes e reorganização |
-| Persistência da demonstração     | SQLite confirmado; driver/migrações, seed idempotente, separação e restauração a detalhar       | F01c: levantar comportamentos antes de implementar     |
+| Persistência da demonstração     | SQLite/worker, migrações, seed idempotente, arquivos demo/preferências separados                | Backend F01c.2; acesso pela interface em F01c.3        |
 | Demonstração de uma área por vez | Totais coerentes, navegação, filtros e expansões com dados fictícios                            | Não iniciada; acordar prioridade e metodologia         |
 | Cartão demonstrativo             | Faturas, parcelas, centavos, estornos e alternância de metodologias                             | Não iniciada                                           |
 | Carteira demonstrativa           | BRL/USD, instituições, detalhes e movimentações                                                 | Não iniciada                                           |

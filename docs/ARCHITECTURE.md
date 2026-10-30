@@ -9,7 +9,8 @@ flowchart LR
   PRE --> IPC[IPC validado no processo principal]
   IPC --> MAIN[Electron: operações locais]
   APP[Aplicação: casos de uso futuros] --> DOMAIN[Domínio TypeScript puro]
-  MAIN -. persistência futura .-> SQLITE[SQLite local confirmado, não implementado]
+  MAIN --> WORKER[Worker Node: armazenamento]
+  WORKER --> SQLITE[SQLite: demo e preferências]
 ```
 
 ## Código existente
@@ -30,7 +31,7 @@ Por solicitação de Gabriel em 29/10/2026, toda a aplicação e suas ferramenta
 
 A F01b acrescenta `FinDesk-Project/domain/` com dinheiro, datas civis, contratos de fatos e validação de vínculos/saldos/subtotais. É TypeScript puro, sem Angular, Electron, arquivos ou rede. `FinDesk-Project/fixtures/financas/demo.ts` contém somente fatos inventados e relógio fixo, com fábricas independentes para as variantes. Não é seed, banco ou fonte pessoal.
 
-`tsconfig.domain.json` verifica/compila domínio e fixtures para testes Node em `out/`. A interface ainda não consome esses fatos; a ponte desktop continua expondo somente versão. Casos de uso financeiros, infraestrutura de dados e persistência permanecem futuros. Angular não executa SQL nem recebe credenciais. Não houve nova dependência ou mudança na fronteira de segurança.
+`tsconfig.domain.json` verifica/compila domínio e fixtures para testes Node em `out/`. F01c.2 acrescenta `desktop/storage/`: serviço no principal → worker Node → SQLite da demonstração e preferências. A interface ainda não renderiza fatos financeiros; a ponte ganhou operações específicas de armazenamento. Angular não executa SQL nem recebe credenciais. Nenhuma dependência externa foi adicionada.
 
 ## Estado e gestos da navegação
 
@@ -47,8 +48,8 @@ A F01b acrescenta `FinDesk-Project/domain/` com dinheiro, datas civis, contratos
 ## Fronteira de segurança
 
 - `nodeIntegration: false`, `contextIsolation: true`, `sandbox: true`, `webSecurity: true` e `webviewTag: false`.
-- Ponte com apenas `getRuntimeInfo()`. O renderer não recebe `ipcRenderer`, nomes arbitrários de canais, caminhos locais ou funções de execução.
-- Processo principal verifica remetente, frame principal, URL exata e ausência de argumentos antes de responder. O preload importa contratos apenas como tipos, pois seu sandbox não deve carregar módulos locais.
+- Ponte com getRuntimeInfo e grupo restrito storage (status, leitura demo, preferências e restauração explícita). Renderer não recebe ipcRenderer, SQL, caminhos ou execução genérica. Gravação de fatos completos é somente interna.
+- Principal verifica remetente, frame principal, URL exata e quantidade/formato dos argumentos. Preferências rejeitam extras; restauração exige token literal. Worker valida a mensagem novamente. Preload importa contratos apenas como tipos, pois o sandbox não carrega módulos locais.
 - Protocolo restrito ao diretório do build, com validação de host, credenciais, decodificação e travessia de diretórios.
 - CSP de produção sem scripts inline/eval, frames, formulários ou conexões externas. Estilos inline são permitidos para a renderização suportada de Angular/PrimeNG; isso não libera scripts inline.
 - Novas janelas, navegação externa, downloads e permissões são bloqueados. Links externos não são abertos automaticamente.
@@ -60,6 +61,8 @@ O isolamento não dispensa validação das futuras operações de dados. Fuses, 
 
 SQLite foi confirmado na F01a; [ADR 0002](adr/0002-sqlite-local-proposto.md) registra comparação, prova e limites. Na F01c.1, node:sqlite foi avaliado no Electron real em worker Node dedicado, com arquivos/perfil temporários e sem renderer. Não é worker privilegiado da interface; a segurança da janela não mudou. D25 confirma essa arquitetura para a próxima implementação; não há novo serviço persistente integrado ao aplicativo ainda.
 
-D26/D27 confirmam diretório LocalAppData e restauração demo preservando preferências/layout. A implementação será subdividida conforme [PERSISTENCIA.md](financas/PERSISTENCIA.md). A prova não define esquema financeiro, migrações ou novo contrato IPC nem comprova distribuição. Não confundir o Node de desenvolvimento com o embarcado.
+D26/D27 confirmam LocalAppData e restauração demo preservando preferências/layout. F01c.2 implementa esquema agregado v1, migrações transacionais, seed idempotente, worker e IPC restrito. Inicialização do banco é assíncrona em relação à abertura da janela; falha mantém a casca acessível e retorna erro sanitizado pela ponte. Antes de sair, o principal fecha o serviço e encerra o worker.
+
+Testes usam somente storage sob perfis temporários findesk-*, validados no modo de teste; perfil inadequado falha sem cair no LocalAppData real. Execução normal usa LOCALAPPDATA e falha se indisponível, sem fallback para o repositório. Interface fica para F01c.3. Distribuição/ASAR, recuperação de corrupção e múltiplas instâncias não foram validados ou redefinidos. Não confundir Node de desenvolvimento com o embarcado.
 
 Domínio e casos de uso devem permanecer independentes do transporte desktop sempre que possível. Essa separação prepara a evolução sem implementar antecipadamente uma plataforma móvel.
