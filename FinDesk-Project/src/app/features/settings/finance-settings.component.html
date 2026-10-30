@@ -1,0 +1,52 @@
+<section class="settings-section" aria-labelledby="finance-settings-title">
+  <div class="settings-section-icon"><i class="pi pi-wallet" aria-hidden="true"></i></div>
+  <div class="finance-settings-body">
+    <h2 id="finance-settings-title">Finanças</h2>
+    @switch (preferences.state()) {
+      @case ('ready') {
+        <h3 id="default-period-title">Período padrão</h3>
+        <div
+          class="period-choices"
+          role="group"
+          aria-labelledby="default-period-title"
+          aria-describedby="default-period-help"
+          [attr.aria-busy]="preferences.saving()"
+        >
+          @for (mode of modes; track mode.value) {
+            <button
+              type="button"
+              [attr.aria-pressed]="preferences.value()?.periodMode === mode.value"
+              [attr.aria-disabled]="preferences.saving()"
+              (click)="select(mode.value)"
+            >
+              <fd-period-symbol [mode]="mode.value" />
+              <span>{{ mode.label }}</span>
+            </button>
+          }
+        </div>
+        <p id="default-period-help" class="period-help">Aplicado na próxima abertura do FinDesk.</p>
+        <div class="preference-feedback" aria-live="polite">
+          @if (preferences.saving()) {
+            <span role="status">Salvando…</span>
+          } @else if (feedback() === 'saved') {
+            <span role="status">Preferência salva.</span>
+          } @else if (feedback() === 'failed') {
+            <span role="alert">Não foi possível salvar. Selecione novamente para tentar.</span>
+          }
+        </div>
+      }
+      @case ('browser') {
+        <p>Preferências disponíveis no aplicativo desktop.</p>
+      }
+      @case ('failed') {
+        <p role="alert">{{ preferences.error() }}</p>
+        <button type="button" class="retry-button" (click)="preferences.load()">
+          Tentar novamente
+        </button>
+      }
+      @default {
+        <p role="status">Carregando preferências…</p>
+      }
+    }
+  </div>
+</section>

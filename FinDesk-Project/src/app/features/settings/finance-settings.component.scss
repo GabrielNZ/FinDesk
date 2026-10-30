@@ -1,0 +1,69 @@
+:host {
+  display: block;
+}
+.finance-settings-body {
+  min-width: 0;
+}
+h3 {
+  font-size: 14px;
+  font-weight: 500;
+  margin-bottom: 14px;
+}
+.period-choices {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.period-choices button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  min-height: 48px;
+  padding: 10px 18px;
+  border: 1px solid var(--fd-border);
+  border-radius: 12px;
+  color: var(--fd-muted);
+  background: transparent;
+  transition:
+    color 160ms ease,
+    background 160ms ease,
+    border-color 160ms ease;
+}
+.period-choices button:hover {
+  color: var(--fd-text);
+  background: var(--fd-surface-hover);
+}
+.period-choices button[aria-pressed='true'] {
+  color: var(--fd-accent);
+  background: var(--fd-accent-surface);
+  border-color: var(--fd-accent);
+}
+.period-choices button[aria-disabled='true'] {
+  cursor: wait;
+}
+.period-help {
+  margin-top: 12px;
+}
+.preference-feedback {
+  min-height: 24px;
+  margin-top: 6px;
+  font-size: 12px;
+  color: var(--fd-muted);
+}
+.preference-feedback [role='alert'] {
+  color: var(--fd-text);
+}
+.retry-button {
+  margin-top: 12px;
+  padding: 8px 12px;
+  border: 1px solid var(--fd-border);
+  border-radius: 8px;
+  background: transparent;
+  color: var(--fd-text);
+}
+@media (prefers-reduced-motion: reduce) {
+  .period-choices button {
+    transition: none;
+  }
+}

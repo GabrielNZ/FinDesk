@@ -1,4 +1,4 @@
-import { computed, Injectable, signal } from '@angular/core';
+import { computed, inject, Injectable, signal } from '@angular/core';
 import { calendarMonth, type CivilDate } from '../../../../domain/civil-date';
 import {
   ALL_ACCOUNTS,
@@ -8,6 +8,7 @@ import {
 import { DEMO_EXCHANGE_RATE } from '../../../../fixtures/financas/demo';
 import type { DemoSnapshot, FinancePreferences } from '../../../../shared/storage-api';
 import { savedCyclePeriods, type CycleMode } from '../../../../application/finance-periods';
+import { FinancePreferencesStore } from './finance-preferences.service';
 
 export type PeriodMode = FinancePreferences['periodMode'];
 
@@ -23,10 +24,9 @@ export class FinanceContext {
   readonly error = signal<string | null>(null);
   readonly saving = signal(false);
   readonly saveError = signal<string | null>(null);
-  private readonly preferences = signal<FinancePreferences | null>(null);
+  private readonly preferences = inject(FinancePreferencesStore);
   private loading = false;
   private hasContext = false;
-  private writeQueue: Promise<void> = Promise.resolve();
   private revision = 0;
 
   readonly account = computed(() =>
@@ -92,22 +92,22 @@ export class FinanceContext {
     this.state.set('loading');
     this.error.set(null);
     try {
-      await this.writeQueue;
-      const [demo, prefs] = await Promise.all([api.getDemo(), api.getPreferences()]);
-      if (!demo.ok || !prefs.ok) {
-        this.error.set(!demo.ok ? demo.error.message : !prefs.ok ? prefs.error.message : null);
+      const [demo, loaded] = await Promise.all([api.getDemo(), this.preferences.load()]);
+      const prefs = this.preferences.value();
+      if (!demo.ok || !loaded || !prefs) {
+        this.error.set(!demo.ok ? demo.error.message : this.preferences.error());
         this.state.set('failed');
         return;
       }
       this.snapshot.set(demo.value);
-      this.preferences.set(prefs.value);
       if (!this.hasContext) {
         this.accountId.set(
-          prefs.value.lastAccountId ??
+          prefs.lastAccountId ??
             (demo.value.facts.accounts.some((account) => account.id === 'demo-a') ? 'demo-a' : ''),
         );
-        this.currencyMode.set(prefs.value.currencyMode);
+        this.currencyMode.set(prefs.currencyMode);
         this.month.set(calendarMonth(demo.value.asOf).start);
+        this.periodMode.set(this.preferences.startupPeriod);
         this.hasContext = true;
       }
       this.ensureAvailablePeriod();
@@ -192,34 +192,19 @@ export class FinanceContext {
   }
 
   private save(): void {
-    const api = window.finDesk?.storage;
-    const preferences = this.preferences();
-    if (!api || !preferences) return;
-    const payload: FinancePreferences = {
-      ...preferences,
+    const changes = {
       lastAccountId: this.accountId() || null,
       currencyMode: this.currencyMode(),
     };
     const revision = ++this.revision;
     this.saving.set(true);
     this.saveError.set(null);
-    this.writeQueue = this.writeQueue.then(async () => {
-      try {
-        const result = await api.savePreferences(payload);
-        if (revision === this.revision) {
-          if (result.ok) {
-            this.preferences.set(result.value);
-            this.saveError.set(null);
-          } else
-            this.saveError.set(
-              'Não foi possível salvar a seleção. Ela vale apenas nesta execução.',
-            );
-        }
-      } catch {
-        if (revision === this.revision)
+    void this.preferences.update(changes).then((saved) => {
+      if (revision === this.revision) {
+        if (saved) this.saveError.set(null);
+        else
           this.saveError.set('Não foi possível salvar a seleção. Ela vale apenas nesta execução.');
-      } finally {
-        if (revision === this.revision) this.saving.set(false);
+        this.saving.set(false);
       }
     });
   }

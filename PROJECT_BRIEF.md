@@ -28,6 +28,8 @@ D36–D39 confirmam saldo sem degradê, um pouco mais alto e com largura preserv
 
 ## Escolha de armazenamento
 
+F02b.2 (D42/D43): Configurações → Finanças → Período padrão permite escolher Calendário, Salário ou Cartão com salvamento automático, aplicando somente na próxima abertura. Consulta atual permanece intacta; conta incompatível usa calendário sem aviso e mantém o padrão salvo. Critérios em [PERIODO_PADRAO.md](docs/financas/PERIODO_PADRAO.md). Fontes, recorrências e escolha entre vários cartões continuam pendentes.
+
 SQLite passou de proposta nas fontes a escolha confirmada pelo proprietário na F01a. A comparação, a resposta e os limites estão no [ADR 0002](docs/adr/0002-sqlite-local-proposto.md). Isso não transforma banco, driver, esquema ou persistência em implementação concluída.
 
 Arquitetura prevista: interface Angular para apresentação; aplicação para casos de uso; domínio independente de frameworks sempre que possível; infraestrutura para persistência, importação e integrações; operações privilegiadas no processo principal do Electron, com preload pequeno e tipado e IPC validado. Não colocar SQL, segredos ou cálculos financeiros centrais nos componentes.

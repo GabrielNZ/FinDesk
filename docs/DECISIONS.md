@@ -83,6 +83,10 @@ Implementação vigente: captura de ponteiro mantém o arraste da alça; a barra
 
 **D41 — expansão dos três períodos, revisão solicitada por Gabriel:** aba menor somente na largura (20 px), mantendo 44 px de altura tanto fechada quanto aberta. A seta acompanha a extremidade direita durante a expansão/retração e, aberta, fica em botão separado do seletor por 8 px. Calendário, salário e cartão iniciam recolhidos e compartilham o comportamento; nenhum mostra a linha de datas. Intervalos completos permanecem no contexto e na descrição acessível. Escape recolhe com retorno de foco, sem alterar o período. Ícone salarial passa a cofrinho recebendo moeda. Remover a linha divisória entre submenus e conteúdo, preservando a indicação do submenu ativo. Sem alteração financeira ou dos demais grupos do cabeçalho.
 
+**D42 — preferência de período, confirmada por Gabriel:** Configurações → Finanças → Período padrão oferece três botões com ícone e nome (Calendário, Salário e Cartão), salvando ao selecionar. Sem botão Salvar.
+
+**D43 — aplicação da preferência, confirmada por Gabriel:** aplicar somente na próxima abertura do FinDesk, preservando modo/intervalo da consulta atual. Conta incompatível abre no calendário sem aviso e conserva a preferência salva. Trocas temporárias em Finanças não alteram o padrão. A escolha não gera datas nem configura fontes/recorrências.
+
 ## Escolhas de implementação dentro da arquitetura estabelecida
 
 Não são novas decisões de produto nem uma troca de stack. Detalhes em [ARCHITECTURE.md](ARCHITECTURE.md) e [ADR 0001](adr/0001-base-desktop.md).

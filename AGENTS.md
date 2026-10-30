@@ -20,6 +20,7 @@ A ordem de leitura das fontes é: documento mestre → complemento de identidade
 - Discuta escolhas relevantes ainda abertas: integrações, dados acessados e armazenamento, autorização/desconexão, sincronização/conflitos, exclusão/substituição, metodologias financeiras, comportamentos importantes, navegação/identidade, custos/privacidade e mudanças estruturais.
 - Registre respostas e critérios de aceitação antes de implementar a parte dependente. Continue tarefas independentes enquanto aguarda. Não transforme proposta em decisão confirmada.
 - Ao concluir uma pequena entrega significativa, valide, atualize o estado, apresente um resultado verificável e proponha a próxima. Aguarde a resposta antes de iniciar outro conjunto de funcionalidades.
+- Ao apresentar uma entrega ou sua continuidade, informe sempre o identificador e o nome, por exemplo **F02b.2 — Período padrão em Configurações**. Preferência reforçada por Gabriel em 30/10/2026.
 - “Pode ir para a próxima” aprova o trabalho apresentado e autoriza a próxima pequena entrega proposta; decisões importantes ainda abertas continuam exigindo levantamento.
 - Não repita perguntas já respondidas, salvo novas evidências. O primeiro conjunto limitado descrito nas fontes já está autorizado; não peça permissão novamente apenas para iniciá-lo.
 

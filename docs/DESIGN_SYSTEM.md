@@ -4,6 +4,8 @@ Gabriel confirmou manter a base visual da casca e enxugar o conteúdo. Tema escu
 
 ## Base visual
 
+F02b.2 (D42/D43): Configurações → Finanças → Período padrão usa três botões com ícone e nome, seleção exclusiva e salvamento automático. Estados de salvamento/falha objetivos; aplicação na próxima abertura indicada em uma linha. Botões reacomodam em janela estreita; foco e teclado preservados. Ícones de período são os mesmos do cabeçalho.
+
 Tokens em `FinDesk-Project/src/styles.scss`: fundo grafite, superfícies discretas, texto claro, bordas suaves e acento verde dessaturado. A paleta é uma proposta substituível, não identidade definitiva. Tipografia do sistema, sem fontes remotas. Navegação lateral compacta, poucos painéis, hierarquia de títulos e espaço para leitura.
 
 O preset PrimeNG usa a API pública de temas com `@primeuix/themes` 2.0.3 MIT. Button e Dialog são usados pontualmente. PrimeIcons 7.0.0 compõe os ícones. Não há Angular Material, template pago, wrapper por controle ou sobrescritas dependentes da estrutura interna dos componentes.

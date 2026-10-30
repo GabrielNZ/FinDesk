@@ -43,6 +43,8 @@ O suporte de Electron no Playwright é [experimental](https://playwright.dev/doc
 
 ## Verificação manual
 
+F02b.2: tipos/templates, lint e build web passaram. Quatro cenários Electron passaram: três novos e o existente de falha de gravação do contexto. Cobrem salvamento por teclado, preservação da consulta, reabertura em salário/cartão, Configurações antes de visitar Finanças, conta incompatível com padrão preservado, ausência da ponte, erro de gravação com seleção anterior/foco mantidos, nova tentativa e versão futura sem alteração do arquivo. Conta/moeda não apagam o padrão; fatos preservados. Capturas ampla/compacta conferidas. Perfis temporários; 41 testes Node reutilizados porque domínio/backend não mudaram.
+
 D41: build web/templates, lint dos arquivos envolvidos e tipos dos testes passaram. Cenário Electron focado passou nos três modos: aba de 20 × 44 px, seletor aberto com altura preservada, seta deslocada e separada por 8 px, nenhuma linha visível de datas, intervalo acessível preservado, teclado/Escape, contexto e layout compacto. Conferida captura ampla. Reutilizados os 41 testes Node anteriores para lógica inalterada. Antes do commit, format:check passou em toda a aplicação; não houve repetição de builds ou suítes já válidos.
 
 D40: build web/templates, lint e tipos dos testes aprovados; um fluxo Electron existente foi ampliado e passou com início recolhido, abertura por teclado, painel mensal de 44 px sem linha visível de datas, Escape/foco e preservação do mês/ciclos. Capturas recolhida/aberta conferidas. Helpers dos outros testes abrem explicitamente o mês quando necessário. Reutilizados os 41 testes Node e demais cenários já válidos, sem repetição integral por alteração de apresentação/estado local.

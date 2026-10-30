@@ -4,12 +4,27 @@ Atualizado em **30/10/2026** (America/Sao_Paulo).
 
 ## Situação atual
 
-### Aprovação e continuidade — 30/10/2026
+### Etapa atual — F02b.3: fontes e referências dos ciclos
 
-- **Entrega aprovada:** “Vamos para a próxima” aprova a F02a acumulada e os ajustes D34–D41, incluindo os ciclos básicos sobre datas salvas. Commit local e push para `origin/master` autorizados pela política vigente; registro em preparação nesta rodada.
-- **Próxima entrega proposta — F02b.2:** preferência de período em Configurações → Finanças, sem alterar ainda recorrências, dias úteis ou referências entre múltiplos cartões. Manter as regras D37/D38; escolhas na tela de Finanças continuam temporárias.
-- **Proposta do Codex:** três botões com ícone/nome, salvamento automático; aplicar o padrão na próxima abertura, preservando a consulta atual. Conta incompatível usa calendário sem aviso e preserva a preferência salva.
-- **Perguntas aguardando resposta:** composição/salvamento da preferência e momento de aplicação. Não implementar as partes dependentes antes das respostas. Sem pesquisa técnica pendente para essas escolhas; contrato de preferências já comporta o campo e a ponte existente permite salvá-lo.
+- **Autorização:** “Vamo para a próxima” aprova a F02b.2 e autoriza seu commit/push, iniciando o levantamento da F02b.3. Informar identificador e nome das entregas na comunicação, conforme pedido de Gabriel.
+- **Confirmado:** fronteiras dos ciclos, retorno ao calendário sem aviso e preferência padrão permanecem D37/D38/D42/D43. Sem nova regra financeira presumida.
+- **Proposta do Codex:** ajustes por conta em Configurações → Finanças, previsão salarial por conta/dia mensal e cartão de referência por conta. As propostas não estão aprovadas.
+- **Perguntas aguardando resposta:** local/composição dos ajustes, dia salarial mensal versus datas explícitas e referência fixa de cartão versus acompanhar o cartão consultado. Se for escolhido dia mensal, ainda discutir meses curtos/dias úteis antes de gerar datas.
+- **Pesquisa técnica:** modelo atual conferido; datas salariais têm conta, data e valor, sem cadastro de fonte recorrente. Faturas já têm cartão e fechamento explícito. Nenhuma nova dependência/API necessária foi escolhida ou pesquisada para esta rodada.
+- **Implementação:** não iniciada a parte dependente das respostas. Não alterar dados ou inventar recorrências.
+
+### Última entrega aprovada — F02b.2: período padrão em Configurações
+
+- **Decisões confirmadas:** D42/D43; três botões com ícone/nome e salvamento automático em Configurações → Finanças → Período padrão. Aplicar na próxima abertura; preservar consulta atual. Conta incompatível usa calendário sem aviso e conserva o padrão salvo. Respostas recebidas, sem perguntas pendentes desta fatia. Critérios em [PERIODO_PADRAO.md](docs/financas/PERIODO_PADRAO.md).
+- **Implementado:** seção de preferência e serviço compartilhado de leitura/fila de gravação no renderer. Mesclar campos por operação evita sobrescrever período ao mudar conta/moeda. Capturar padrão inicial mantém o comportamento mesmo ao visitar Configurações antes de Finanças. Ícones de período reutilizados sem mudar sua aparência.
+- **Validação:** tipos/templates, lint e build web passaram. Quatro cenários Electron aprovados: três novos da F02b.2 e o existente de falha de gravação da seleção financeira. Conferidos reabertura, consulta preservada, Configurações antes de Finanças, fallback, ausência da ponte, falha e nova tentativa, com fatos intactos. Capturas ampla/compacta conferidas, sem corte horizontal. Perfis temporários; nenhuma escrita de teste no banco normal. Reutilizados os 41 testes Node para regras financeiras/backend inalterados.
+- **Limites:** nenhuma mudança no esquema, IPC, dependências ou metodologia financeira. Geração de recorrência/dias úteis e referências entre vários cartões continuam pendentes. Entrega aprovada para commit/push nesta rodada; verificações anteriores permanecem válidas.
+- **Próxima proposta:** levantamento de fontes e referências dos ciclos, em pequena rodada, antes de gerar datas ou escolher entre vários cartões. F03 permanece uma entrega própria.
+
+### Histórico de aprovação — 30/10/2026
+
+- **Entrega aprovada e enviada:** “Vamos para a próxima” aprovou a F02a acumulada e os ajustes D34–D41, incluindo os ciclos básicos sobre datas salvas. Commit `be472f1` (`feat(financas): adiciona cabeçalho e navegação por períodos`) enviado a `origin/master`, com referência remota conferida. Sem código pendente dessa entrega; esta atualização de continuidade acompanha o levantamento seguinte.
+- **Continuidade autorizada:** respostas confirmaram a proposta da F02b.2 em D42/D43; implementação e limites no início deste arquivo. Sem pesquisa técnica pendente desta fatia: o contrato e a ponte existentes já comportam a preferência.
 
 ### Revisão mais recente — D41
 

@@ -67,6 +67,8 @@ Testes usam somente storage sob perfis temporários findesk-*, validados no modo
 
 Domínio e casos de uso devem permanecer independentes do transporte desktop sempre que possível. Essa separação prepara a evolução sem implementar antecipadamente uma plataforma móvel.
 
+F02b.2: `FinancePreferencesStore` compartilha leitura e fila de atualizações do renderer entre o contexto e Configurações. Cada operação mescla seus campos sobre o último valor confirmado, preservando os demais; falhas não substituem o estado salvo. Captura do padrão inicial mantém a aplicação na próxima abertura mesmo quando Configurações é visitada primeiro. Ponte, esquema e validações privilegiadas permanecem iguais.
+
 F02a: `application/finance-context.ts` contém apresentação pura do saldo/intervalo e formatação exata; reutiliza o domínio sem acessar Angular, Electron ou SQLite. FinanceContext mantém estado de tela por execução e lê/grava pela ponte existente. Rotas filhas próprias preservam o cabeçalho entre os cinco submenus; a página provisória de Investimentos permanece independente. Preferências v2 têm migração local transacional; não há transporte genérico adicional.
 
 D37/D38: `application/finance-periods.ts` monta intervalos a partir das previsões/fechamentos explícitos; `adjacentCivilDate` é aritmética gregoriana sem fuso ou dia útil. O contexto mantém modo e intervalo temporários, navega só no catálogo salvo e aplica retorno ao calendário por conta incompatível. `PeriodControl` apresenta botões/expansão e aciona o contexto; não calcula consumo nem grava preferência padrão. API, esquema e fatos não foram ampliados por essa revisão.

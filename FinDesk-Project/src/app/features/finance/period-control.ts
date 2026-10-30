@@ -9,9 +9,11 @@ import {
 } from '@angular/core';
 import { formatCivilDate } from '../../../../application/finance-context';
 import { FinanceContext, type PeriodMode } from './finance-context.service';
+import { PeriodSymbol } from './period-symbol';
 
 @Component({
   selector: 'fd-period-control',
+  imports: [PeriodSymbol],
   templateUrl: './period-control.html',
   styleUrl: './period-control.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -21,10 +23,10 @@ export class PeriodControl {
   readonly date = formatCivilDate;
   readonly expanded = signal(false);
   private readonly expansionToggle = viewChild<ElementRef<HTMLButtonElement>>('expansionToggle');
-  readonly modes: readonly { mode: PeriodMode; label: string; icon: string }[] = [
-    { mode: 'calendar-month', label: 'Mês calendário', icon: 'pi-calendar' },
-    { mode: 'salary-cycle', label: 'Entre salários', icon: '' },
-    { mode: 'card-cycle', label: 'Entre fechamentos', icon: 'pi-credit-card' },
+  readonly modes: readonly { mode: PeriodMode; label: string }[] = [
+    { mode: 'calendar-month', label: 'Mês calendário' },
+    { mode: 'salary-cycle', label: 'Entre salários' },
+    { mode: 'card-cycle', label: 'Entre fechamentos' },
   ];
 
   constructor() {

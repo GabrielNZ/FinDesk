@@ -1,10 +1,11 @@
 import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { DemoDataSettings } from './demo-data-settings.component';
+import { FinanceSettings } from './finance-settings.component';
 
 @Component({
   selector: 'fd-settings-page',
-  imports: [RouterLink, DemoDataSettings],
+  imports: [RouterLink, DemoDataSettings, FinanceSettings],
   template: `
     <div class="page-heading">
       <div>
@@ -27,6 +28,7 @@ import { DemoDataSettings } from './demo-data-settings.component';
       </div>
     </section>
     <fd-demo-data-settings />
+    <fd-finance-settings />
     <section class="settings-section" aria-labelledby="identity-title">
       <div class="settings-section-icon"><i class="pi pi-palette" aria-hidden="true"></i></div>
       <div>

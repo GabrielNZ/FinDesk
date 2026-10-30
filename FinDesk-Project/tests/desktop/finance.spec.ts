@@ -67,6 +67,219 @@ async function expectCalendarRange(page: Page, range: string): Promise<void> {
   await expect(page.locator('.calendar-panel')).toHaveAttribute('aria-description', range);
 }
 
+async function openFinanceSettings(page: Page): Promise<void> {
+  await page.getByRole('link', { name: 'Configurações', exact: true }).click();
+  await expect(page.getByRole('region', { name: 'Finanças', exact: true })).toBeVisible();
+  await expect(page.getByRole('group', { name: 'Período padrão' })).toBeVisible();
+}
+
+test('F02b.2: padrão aplica na reabertura e não perde conta/moeda nem a consulta atual', async () => {
+  test.setTimeout(90_000);
+  const profile = await mkdtemp(join(tmpdir(), 'findesk-finance-'));
+  let application: ElectronApplication | undefined;
+  try {
+    application = await launch(profile);
+    let page = await application.firstWindow();
+    await openFinance(page);
+    const initial = await page.evaluate(() => window.finDesk!.storage.getDemo());
+    await openCalendarSelection(page);
+    await page.getByRole('button', { name: 'Mês anterior', exact: true }).click();
+    await openFinanceSettings(page);
+    const group = page.getByRole('group', { name: 'Período padrão' });
+    await group.getByRole('button', { name: 'Salário', exact: true }).focus();
+    await page.keyboard.press('Enter');
+    await expect(group.getByRole('button', { name: 'Salário', exact: true })).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    );
+    await expect(page.getByText('Preferência salva.', { exact: true })).toBeVisible();
+    await page.screenshot({ path: 'test-results/finance-default-period-wide.png', fullPage: true });
+    await application.evaluate(({ BrowserWindow }) =>
+      BrowserWindow.getAllWindows()[0]?.setSize(960, 720),
+    );
+    await group.scrollIntoViewIfNeeded();
+    expect(
+      await page
+        .getByRole('main')
+        .evaluate((element) => element.scrollWidth <= element.clientWidth),
+    ).toBe(true);
+    await page.screenshot({
+      path: 'test-results/finance-default-period-compact.png',
+      fullPage: true,
+    });
+    await openFinance(page);
+    await expectCalendarRange(page, '01/09/2026 – 30/09/2026');
+    await choose(page, 'Moeda', 'USD');
+    await expect
+      .poll(async () => await page.evaluate(() => window.finDesk!.storage.getPreferences()))
+      .toEqual({
+        ok: true,
+        value: {
+          version: 2,
+          lastAccountId: 'demo-a',
+          currencyMode: 'USD',
+          periodMode: 'salary-cycle',
+        },
+      });
+    await openFinanceSettings(page);
+    await expect(page.getByRole('button', { name: 'Salário', exact: true })).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    );
+    expect(await page.evaluate(() => window.finDesk!.storage.getDemo())).toEqual(initial);
+    await application.close();
+    application = await launch(profile);
+    page = await application.firstWindow();
+    await openFinance(page);
+    await expect(page.getByRole('button', { name: 'Entre salários', exact: true })).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    );
+    await openCycleSelection(page, 'salário');
+    await expect(page.locator('.period-panel')).toHaveAttribute(
+      'aria-description',
+      '05/10/2026 – 04/11/2026',
+    );
+    await expect(picker(page, 'Moeda')).toHaveAttribute('data-value', 'USD');
+    await page.getByRole('button', { name: 'Entre fechamentos', exact: true }).click();
+    const prefs = await page.evaluate(() => window.finDesk!.storage.getPreferences());
+    expect(prefs.ok && prefs.value.periodMode).toBe('salary-cycle');
+  } finally {
+    await application?.close();
+    await clean(profile);
+  }
+});
+
+test('F02b.2: Configurações antes de Finanças e conta incompatível preservam o padrão salvo', async () => {
+  test.setTimeout(90_000);
+  const profile = await mkdtemp(join(tmpdir(), 'findesk-finance-'));
+  let application: ElectronApplication | undefined;
+  try {
+    application = await launch(profile);
+    let page = await application.firstWindow();
+    await page.emulateMedia({ reducedMotion: 'reduce' });
+    await openFinanceSettings(page);
+    await page.getByRole('button', { name: 'Cartão', exact: true }).click();
+    await expect(page.getByRole('button', { name: 'Cartão', exact: true })).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    );
+    await openFinance(page);
+    await expect(page.getByRole('button', { name: 'Mês calendário', exact: true })).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    );
+    await application.close();
+    application = await launch(profile);
+    page = await application.firstWindow();
+    await openFinance(page);
+    await expect(
+      page.getByRole('button', { name: 'Entre fechamentos', exact: true }),
+    ).toHaveAttribute('aria-pressed', 'true');
+    await choose(page, 'Conta', 'demo-u');
+    await expect(page.getByRole('button', { name: 'Mês calendário', exact: true })).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    );
+    await expect(page.getByRole('alert')).toHaveCount(0);
+    await expect
+      .poll(async () => {
+        const result = await page.evaluate(() => window.finDesk!.storage.getPreferences());
+        return result.ok ? [result.value.periodMode, result.value.lastAccountId] : null;
+      })
+      .toEqual(['card-cycle', 'demo-u']);
+    await application.close();
+    application = await launch(profile);
+    page = await application.firstWindow();
+    await openFinance(page);
+    await expect(page.getByRole('button', { name: 'Mês calendário', exact: true })).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    );
+    await openFinanceSettings(page);
+    await expect(page.getByRole('button', { name: 'Cartão', exact: true })).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    );
+    await page.getByRole('button', { name: 'Calendário', exact: true }).click();
+    await expect(page.getByRole('button', { name: 'Calendário', exact: true })).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    );
+  } finally {
+    await application?.close();
+    await clean(profile);
+  }
+});
+
+test('F02b.2: falha de gravação mantém escolha salva, permite tentar novamente e trata indisponibilidade', async () => {
+  test.setTimeout(60_000);
+  const profile = await mkdtemp(join(tmpdir(), 'findesk-finance-'));
+  let application: ElectronApplication | undefined;
+  try {
+    application = await launch(profile);
+    let page = await application.firstWindow();
+    await openFinanceSettings(page);
+    const section = page.getByRole('region', { name: 'Finanças', exact: true });
+    const initial = await page.evaluate(() => window.finDesk!.storage.getDemo());
+    const db = new DatabaseSync(join(profile, 'storage', 'preferences.sqlite'));
+    try {
+      db.exec(
+        "CREATE TRIGGER reject_preferences BEFORE UPDATE ON preferences BEGIN SELECT RAISE(ABORT, 'SQL privado'); END",
+      );
+      await section.getByRole('button', { name: 'Salário', exact: true }).click();
+      await expect(section.getByRole('alert')).toHaveText(
+        'Não foi possível salvar. Selecione novamente para tentar.',
+      );
+      await expect(
+        section.getByRole('button', { name: 'Calendário', exact: true }),
+      ).toHaveAttribute('aria-pressed', 'true');
+      await expect(section.getByRole('button', { name: 'Salário', exact: true })).toBeFocused();
+      db.exec('DROP TRIGGER reject_preferences');
+      await section.getByRole('button', { name: 'Salário', exact: true }).click();
+      await expect(section.getByRole('button', { name: 'Salário', exact: true })).toHaveAttribute(
+        'aria-pressed',
+        'true',
+      );
+      expect(await page.evaluate(() => window.finDesk!.storage.getDemo())).toEqual(initial);
+    } finally {
+      db.close();
+    }
+    await application.close();
+    const filename = join(profile, 'storage', 'preferences.sqlite');
+    const incompatible = new DatabaseSync(filename);
+    incompatible.exec('PRAGMA user_version = 99');
+    incompatible.close();
+    const before = await readFile(filename);
+    application = await launch(profile);
+    page = await application.firstWindow();
+    await page.getByRole('link', { name: 'Configurações', exact: true }).click();
+    const failed = page.getByRole('region', { name: 'Finanças', exact: true });
+    await expect(failed.getByRole('alert')).toContainText('incompatível');
+    await expect(failed.getByRole('group', { name: 'Período padrão' })).toHaveCount(0);
+    await failed.getByRole('button', { name: 'Tentar novamente', exact: true }).click();
+    await expect(failed.getByRole('alert')).toContainText('incompatível');
+    expect(await readFile(filename)).toEqual(before);
+    const previewEvent = application.waitForEvent('window');
+    await application.evaluate(async ({ BrowserWindow }) => {
+      const preview = new BrowserWindow({
+        show: false,
+        webPreferences: { sandbox: true, contextIsolation: true, nodeIntegration: false },
+      });
+      await preview.loadURL('findesk://app/#/configuracoes');
+    });
+    const preview = await previewEvent;
+    const previewSection = preview.getByRole('region', { name: 'Finanças', exact: true });
+    await expect(
+      previewSection.getByText('Preferências disponíveis no aplicativo desktop.', { exact: true }),
+    ).toBeVisible();
+    await expect(previewSection.getByRole('group', { name: 'Período padrão' })).toHaveCount(0);
+  } finally {
+    await application?.close();
+    await clean(profile);
+  }
+});
+
 async function clean(profile: string): Promise<void> {
   if (
     dirname(resolve(profile)) !== resolve(tmpdir()) ||

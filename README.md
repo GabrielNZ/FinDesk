@@ -2,7 +2,7 @@
 
 Projeto pessoal de finanças e investimentos para Windows, previsto em Angular, Electron e TypeScript.
 
-Esta entrega contém a **casca navegável do aplicativo**, com tema escuro, logo original e barra nativa do Windows. Finanças tem saldo fictício, seletores de conta/moeda, cinco submenus e navegação por mês calendário. Há persistência local e Configurações → Dados de demonstração com restauração explícita. Conteúdo dos submenus e ciclos ainda serão desenvolvidos. Nenhuma instituição está conectada.
+Esta entrega contém a **casca navegável do aplicativo**, com tema escuro, logo original e barra nativa do Windows. Finanças tem saldo fictício, seletores de conta/moeda, cinco submenus e períodos sobre calendário ou ciclos salvos. Há persistência local e Configurações → Dados de demonstração com restauração explícita. Conteúdo dos submenus e configuração das recorrências ainda serão desenvolvidos. Nenhuma instituição está conectada.
 
 ## Instalar e executar
 
@@ -44,7 +44,8 @@ O script inicia o Angular em `127.0.0.1:4200` e abre o Electron. Fechar a janela
 - Em Finanças, alterne contas/moedas e meses. O saldo mantém a referência fictícia de 29/10/2026; a cotação de conversão é fictícia e identificada. Todas as contas + Original mostra moedas separadas.
 - Conta/moeda são os círculos com marca/bandeira ao lado de importar. Clique para abrir as opções; hover/foco alonga a opção e revela seu nome. Setas/Home/End navegam, Enter seleciona e Escape fecha. O saldo aparece no card à esquerda.
 - Ao lado do saldo, os três botões em coluna alternam calendário, salário e cartão. Nos três modos, a pequena seta acompanha a expansão e fica separada do seletor aberto, sem linha de datas; recolher preserva a seleção. Salário/cartão usam datas salvas da conta selecionada, sem geração. Todas as contas ou falta de datas deixam esses modos indisponíveis; trocar para uma conta sem o ciclo ativo volta ao calendário sem aviso.
-- Troque entre Geral, Movimentações, Cartão, Compromissos e Assinaturas: contexto preservado, conteúdo ainda pendente. Ao reabrir, conta/moeda são lembradas e o calendário volta à referência da demonstração. Importação e configuração de recorrências continuam pendentes. O saldo mantém fundo uniforme e a largura anterior; só a altura foi aumentada discretamente.
+- Configurações → Finanças → Período padrão: Calendário, Salário ou Cartão, com salvamento automático. Aplica na próxima abertura, sem alterar a consulta atual. Se a conta não oferece o ciclo, abre no calendário e conserva o padrão salvo.
+- Troque entre Geral, Movimentações, Cartão, Compromissos e Assinaturas: contexto preservado, conteúdo ainda pendente. Ao reabrir, conta/moeda são lembradas e o período atual segue o padrão salvo, sem recuperar consultas históricas. Importação e configuração de recorrências continuam pendentes. O saldo mantém fundo uniforme e a largura anterior; só a altura foi aumentada discretamente.
 - Investimentos permanece em preparação. Reabra o aplicativo após esta atualização para carregar o contrato de preferências v2 e sua migração; a recarga da interface em desenvolvimento não reinicia o worker.
 - Abra a engrenagem para ver Configurações → Integrações.
 - Em Configurações, use **Ver logo** para consultar as versões branca e preta originais.

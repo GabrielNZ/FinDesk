@@ -16,6 +16,8 @@ D36–D39 antecipam a primeira fatia dos ciclos durante a revisão do cabeçalho
 
 ## Etapa 0 — fundação e demonstração
 
+F02b.2 concretiza a preferência em Configurações conforme D42/D43 e [PERIODO_PADRAO.md](financas/PERIODO_PADRAO.md), sem geração de datas ou configuração de fontes. A próxima rodada proposta fecha fontes/referências dos ciclos; não inicia os cards de F03 implicitamente.
+
 | Entrega                          | Escopo e critério central                                                                       | Situação                                               |
 | -------------------------------- | ----------------------------------------------------------------------------------------------- | ------------------------------------------------------ |
 | Revisão documental               | Fontes preservadas, requisitos consolidados e precedência definida                              | Aprovada e enviada                                     |

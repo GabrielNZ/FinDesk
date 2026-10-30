@@ -8,14 +8,14 @@ Decisões confirmadas D36–D39, em [DECISIONS.md](../DECISIONS.md). Antecipaç�
 
 - **D40:** no calendário, a seleção do mês começa recolhida atrás de uma pequena seta à direita do botão. Ao abrir, mostra somente mês/ano com navegação, em 44 px de altura. Não há linha visível de datas nesse modo; o contexto e a descrição acessível mantêm o intervalo completo. Recolher preserva o mês, e selecionar Calendário novamente inicia recolhido. Escape fecha a expansão e devolve foco à seta.
 
-- Calendário é o modo inicial desta revisão. Três botões mutuamente exclusivos em coluna ao lado do saldo; expansão à direita do botão ativo. Ações de importar/banco/moeda permanecem juntas no canto anterior. Em janela estreita, o período reacomoda abaixo para preservar o saldo e as ações.
+- Calendário é o padrão inicial, alterável em Configurações conforme D42/D43. Três botões mutuamente exclusivos em coluna ao lado do saldo; expansão à direita do botão ativo. Ações de importar/banco/moeda permanecem juntas no canto anterior. Em janela estreita, o período reacomoda abaixo para preservar o saldo e as ações.
 - Salário: data prevista salva até a véspera da próxima data prevista salva. Recebimento antecipado/atrasado não muda a âncora.
 - Cartão: dia seguinte ao fechamento anterior salvo até o próximo fechamento salvo, incluindo este dia. Vencimento não define esse intervalo e vínculos observados entre compra/parcela/fatura permanecem intocados.
 - Usar somente datas existentes na demonstração persistida. Não gerar mês ausente, regra de dia útil ou dia 29–31; datas observadas válidas, inclusive bissextas, são usadas como fornecidas.
 - O modo depende da conta selecionada. Todas as contas, conta sem datas suficientes ou sem intervalo cobrindo a referência deixam o modo indisponível, com motivo acessível no hover/foco. Mais de um cartão exige uma referência ainda não configurada nesta fatia; não escolher um silenciosamente.
 - Trocar para uma conta que não oferece o ciclo ativo volta ao calendário **sem aviso**, conforme a resposta de Gabriel em D38.
 - Cada modo conserva o intervalo consultado na execução quando ele continua válido. O saldo continua na referência do snapshot. Navegação de ciclos usa apenas os intervalos salvos; não inventa anterior/seguinte.
-- Trocas de modo são temporárias. Não sobrescrever o campo de período padrão salvo ao mudar conta/moeda; a seção de preferência em Configurações ainda não foi implementada. Reabrir inicia o calendário nesta revisão.
+- Trocas de modo são temporárias. Não sobrescrever o padrão ao mudar conta/moeda. Configurações → Finanças permite salvar o padrão para a próxima abertura, preservando a consulta atual; conta incompatível abre no calendário sem aviso e mantém a preferência. Critérios em [PERIODO_PADRAO.md](PERIODO_PADRAO.md).
 
 ## Exemplo do conjunto fictício
 
@@ -29,4 +29,4 @@ Os submenus ainda são estruturas sem seus indicadores, extratos ou faturas func
 
 ## Pendências preservadas
 
-Configurar fontes e recorrências, geração em meses curtos/dias úteis, escolher referência entre vários cartões, regra de alocação de compras sem vínculo observado e composição da preferência de período padrão em Configurações. As fronteiras dos intervalos exibidos e o retorno silencioso ao calendário já foram respondidos; não perguntar novamente sem novas evidências.
+Configurar fontes e recorrências, geração em meses curtos/dias úteis, escolher referência entre vários cartões e regra de alocação de compras sem vínculo observado. Fronteiras dos intervalos, retorno silencioso e preferência de período já foram respondidos; não perguntar novamente sem novas evidências.
