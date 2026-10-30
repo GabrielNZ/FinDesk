@@ -53,7 +53,11 @@ Implementação vigente: captura de ponteiro mantém o arraste da alça; a barra
 
 **D26 — diretório de dados, confirmado na F01c:** Gabriel escolheu “LocalAppData\\FinDesk\\data (recomendado)”, isto é, `%LOCALAPPDATA%\FinDesk\data`, fora do repositório. Não usar a pasta Roaming padrão do Electron para esses bancos por decisão unilateral. Esta avaliação criou apenas bancos temporários; o caminho escolhido ainda não foi utilizado pela aplicação.
 
-**D27 — restauração, confirmado na F01c:** Gabriel escolheu “Restaurar dados e manter preferências/layout (recomendado)”. Demonstração separada dos dados pessoais futuros; restaurar repõe somente os fatos fictícios. Preferências/layout permanecem; restaurar layout é ação distinta. A composição da seção em Configurações ainda será discutida.
+**D27 — restauração, confirmado na F01c:** Gabriel escolheu “Restaurar dados e manter preferências/layout (recomendado)”. Demonstração separada dos dados pessoais futuros; restaurar repõe somente os fatos fictícios. Preferências/layout permanecem; restaurar layout é ação distinta. A composição da seção em Configurações foi posteriormente confirmada em D28/D29.
+
+**D28 — seção de dados, confirmada na F01c.3:** Gabriel escolheu “Entre Integrações e Identidade (recomendado)”. Configurações recebe a seção compacta Dados de demonstração, com disponibilidade do armazenamento e ação Restaurar dados. Falha é apresentada e a restauração fica indisponível.
+
+**D29 — confirmação inline, confirmada na F01c.3:** Gabriel escolheu “Confirmação na própria seção (recomendado)”. Texto proposto aceito: “Repor os dados fictícios? Preferências e layout serão mantidos.” Ações Cancelar e Restaurar, sem modal adicional. D27 continua definindo o alcance da operação; não há nova escolha de exclusão de dados pessoais.
 
 ## Escolhas de implementação dentro da arquitetura estabelecida
 
@@ -72,7 +76,7 @@ Não são novas decisões de produto nem uma troca de stack. Detalhes em [ARCHIT
 
 - SQLite/API/worker e diretório confirmados em D23/D25/D26. F01c.2 implementa o armazenamento mínimo. Escolha técnica: agregado financeiro v1 em JSON canônico validado dentro de SQLite, separado das preferências; evita antecipar tabelas por entidade e mantém a transação dos vínculos. Normalização futura exige migração versionada. Detalhes em DATA_MODEL e ADR 0002.
 - A base visual será mantida com conteúdo enxuto, conforme D12. Os estudos A/B são históricos; a logo original agora está aplicada conforme D10. Ver [DESIGN_SYSTEM.md](DESIGN_SYSTEM.md).
-- Próxima fatia proposta após revisar F01c.2: F01c.3, definir com Gabriel a seção de dados em Configurações, a apresentação de falhas e a confirmação da restauração antes de implementar a interface.
+- Próxima entrega proposta após revisar F01c.3: F02, estrutura de Finanças/cabeçalho/submenus e levantamento das políticas de conta/ciclos ainda abertas. D28/D29 encerram as escolhas da seção de demonstração, sem aprovar automaticamente as telas financeiras.
 
 ## Pesquisas realizadas e manutenção
 

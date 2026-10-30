@@ -57,7 +57,9 @@ Testes do backend cobrem reabertura/alterações, seed, restauração preservand
 
 ### F01c.3 — acesso explícito na interface
 
-Propor com Gabriel a composição enxuta da seção de dados de demonstração em Configurações e a apresentação/confirmação da restauração. Explicar exatamente que dados fictícios serão repostos e que preferências/layout permanecem. Completar os critérios de uso e regressão da interface antes de avançar a F02. Não transformar esta proposta em tela já aprovada por uma decisão apenas técnica.
+Composição escolhida em D28/D29 e implementada na F01c.3: seção Dados de demonstração entre Integrações e Identidade. Ação Restaurar dados abre confirmação inline; Cancelar/Escape não alteram fatos, confirmar repõe somente a demonstração e mantém preferências/layout. Estado de armazenamento, bloqueio de operação repetida, sucesso/falha e prévia sem ponte são explícitos. Verificar novamente consulta disponibilidade sem restaurar. Foco e janela compacta foram verificados no Electron com dados fictícios temporários.
+
+O fluxo de Configurações consome a ponte existente, sem nova API de banco ou modificação do alcance D27. Não há restauração automática quando o armazenamento falha. Casos de falha inicial que exigem outra versão/reabertura do aplicativo continuam sem recuperação destrutiva pela interface.
 
 ## Limites e decisões futuras
 

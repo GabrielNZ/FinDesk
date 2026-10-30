@@ -1,0 +1,67 @@
+:host {
+  display: block;
+}
+.data-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+}
+.data-heading h2 {
+  margin: 0;
+}
+.data-status {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  margin-top: 14px;
+  color: var(--fd-muted);
+  font-size: 13px;
+}
+.data-status .pi {
+  color: var(--fd-accent);
+}
+.restore-confirmation {
+  margin-top: 20px;
+  padding: 18px 20px;
+  border: 1px solid var(--fd-border);
+  border-radius: var(--fd-radius);
+  background: var(--fd-surface);
+}
+.restore-confirmation .confirmation-question {
+  color: var(--fd-text);
+  font-weight: 600;
+}
+.confirmation-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 14px;
+}
+.data-error {
+  margin-top: 16px;
+}
+.data-error p {
+  color: var(--fd-text);
+}
+.data-error button {
+  margin-top: 8px;
+}
+.settings-section .data-feedback {
+  margin-top: 14px;
+  color: var(--fd-accent);
+}
+@media (max-width: 760px) {
+  .data-heading {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .restore-confirmation {
+    padding: 16px;
+  }
+  .confirmation-actions {
+    justify-content: flex-start;
+    flex-wrap: wrap;
+  }
+}

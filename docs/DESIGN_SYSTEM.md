@@ -50,6 +50,12 @@ Os estudos anteriores em `FinDesk-Project/public/identity/` ficam preservados ap
 
 ## Participação nas próximas telas
 
+### Configurações — dados de demonstração (D28/D29)
+
+Seção entre Integrações e Identidade, seguindo os tokens/fontes e o espaçamento existentes. Título, estado e ação Restaurar dados; confirmação inline com Cancelar/Restaurar e aviso de preservação de preferências/layout. Sem modal novo ou texto promocional. PrimeNG Button usado pontualmente.
+
+Verificação inicial e progresso têm estado explícito; restauração desabilitada fora de disponibilidade. Cancelar e Escape devolvem foco à ação; durante a operação os botões ficam bloqueados. Sucesso anunciado; erro sanitizado com Verificar novamente, que não restaura dados. Sem ponte, a seção identifica a prévia e mantém a ação indisponível. A confirmação e as ações acomodam janelas menores sem corte horizontal.
+
 Antes de implementar composição ou comportamento relevante, discutir com Gabriel a prioridade das informações, densidade, interações e alternativas visuais. Trazer uma recomendação concreta em pequenas rodadas. Não limitar a participação à escolha de biblioteca, barra da janela ou símbolo. Detalhes rotineiros dentro da direção acordada continuam autônomos.
 
 ## Padrão confirmado para Finanças

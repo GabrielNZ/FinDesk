@@ -1,0 +1,110 @@
+<section
+  class="settings-section"
+  aria-labelledby="demo-data-title"
+  [attr.aria-busy]="data.state() === 'checking' || data.state() === 'restoring'"
+>
+  <div class="settings-section-icon"><i class="pi pi-database" aria-hidden="true"></i></div>
+  <div>
+    <div class="data-heading">
+      <h2 id="demo-data-title">Dados de demonstração</h2>
+      @if (!confirming()) {
+        <button
+          #restoreButton
+          pButton
+          type="button"
+          size="small"
+          severity="secondary"
+          [outlined]="true"
+          [disabled]="data.state() !== 'available'"
+          (click)="requestConfirmation()"
+        >
+          <span pButtonLabel>Restaurar dados</span>
+        </button>
+      }
+    </div>
+
+    <div class="data-status" role="status" aria-live="polite">
+      @switch (data.state()) {
+        @case ('checking') {
+          <i class="pi pi-spinner pi-spin" aria-hidden="true"></i
+          ><span>Verificando armazenamento…</span>
+        }
+        @case ('available') {
+          <i class="pi pi-check-circle" aria-hidden="true"></i><span>Armazenamento disponível</span>
+        }
+        @case ('restoring') {
+          <i class="pi pi-spinner pi-spin" aria-hidden="true"></i><span>Restaurando dados…</span>
+        }
+        @case ('failed') {
+          <i class="pi pi-exclamation-circle" aria-hidden="true"></i
+          ><span>Armazenamento indisponível</span>
+        }
+        @case ('browser') {
+          <i class="pi pi-desktop" aria-hidden="true"></i
+          ><span>Disponível no aplicativo desktop.</span>
+        }
+      }
+    </div>
+
+    @if (confirming()) {
+      <div
+        class="restore-confirmation"
+        role="group"
+        aria-labelledby="restore-question"
+        aria-describedby="restore-description"
+      >
+        <p id="restore-question" class="confirmation-question">Repor os dados fictícios?</p>
+        <p id="restore-description">Preferências e layout serão mantidos.</p>
+        <div class="confirmation-actions">
+          <button
+            #cancelButton
+            pButton
+            type="button"
+            size="small"
+            severity="secondary"
+            [text]="true"
+            [disabled]="data.state() === 'restoring'"
+            (click)="cancelConfirmation()"
+            (keydown.escape)="cancelConfirmation()"
+          >
+            <span pButtonLabel>Cancelar</span>
+          </button>
+          <button
+            pButton
+            type="button"
+            size="small"
+            severity="secondary"
+            [outlined]="true"
+            [disabled]="data.state() !== 'available'"
+            (click)="confirmRestore()"
+            (keydown.escape)="cancelConfirmation()"
+          >
+            <span pButtonLabel>{{
+              data.state() === 'restoring' ? 'Restaurando…' : 'Restaurar'
+            }}</span>
+          </button>
+        </div>
+      </div>
+    }
+
+    @if (data.error()) {
+      <div class="data-error">
+        <p role="alert">{{ data.error() }}</p>
+        <button
+          #retryButton
+          pButton
+          type="button"
+          size="small"
+          severity="secondary"
+          [text]="true"
+          (click)="verifyStorage()"
+        >
+          <span pButtonLabel>Verificar novamente</span>
+        </button>
+      </div>
+    }
+    @if (data.feedback()) {
+      <p class="data-feedback" role="status">{{ data.feedback() }}</p>
+    }
+  </div>
+</section>

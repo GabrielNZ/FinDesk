@@ -4,9 +4,21 @@ Atualizado em **29/10/2026** (America/Sao_Paulo).
 
 ## Situação atual
 
-**F01c.2 aprovada; F01c.3 autorizada para levantamento e composição acordada da interface.** Registrar o backend aprovado com commit/push e discutir posição/textos/confirmação em Configurações antes de implementar a parte dependente. D25–D27 continuam confirmadas.
+**F01c.3 aprovada; F02 autorizada para levantamento.** “Vamos para a próxima” aprova a seção de demonstração apresentada, autoriza seu commit/push e o início da próxima pequena entrega. Configurações apresenta a disponibilidade do armazenamento e a restauração explícita dos dados fictícios conforme D28/D29. Escolhas abertas da F02 serão discutidas antes da implementação dependente.
 
-## F01c.2 — entrega atual
+## F01c.3 — última entrega aprovada
+
+- **Confirmado:** seção compacta Dados de demonstração entre Integrações e Identidade; confirmação na própria seção com Cancelar/Restaurar e o aviso de preservação de preferências/layout. Sem modal adicional. D27 continua definindo que somente fatos fictícios são repostos.
+- **Implementado:** [componente](FinDesk-Project/src/app/features/settings/demo-data-settings.component.ts) e estado local da seção via ponte existente, sem alteração do backend. Estados de verificação, disponível, restauração, falha e prévia sem ponte. Botão indisponível quando não há armazenamento acessível; erro sanitizado e Verificar novamente, sem disparar restauração implícita.
+- **Interação:** foco inicial em Cancelar; Cancelar/Escape preservam os fatos e devolvem foco à ação. Progresso bloqueia nova restauração/cliques repetidos. Sucesso anuncia retorno e devolve foco; falha oferece nova verificação. Saída da página não tenta focar componente destruído. Não há recarga global do layout.
+- **Verificação:** tipos/templates, lint, formatação e build web passaram; quatro cenários Electron aprovados nesta rodada (três novos da seção + casca). Cobertos cancelamento/clique/Escape, foco, operação única, preferências preservadas, falha de escrita sem detalhes SQL/caminho, verificação sem reposição automática, versão futura sem apagamento e janela sem ponte. Conferência visual ampla/compacta, sem corte horizontal; fonte do botão confirmada como Segoe UI Variable Text em prévia.
+- **Isolamento:** testes em perfis/bancos temporários fictícios; nenhuma restauração foi executada pelo agente no banco normal aberto por Gabriel. Os 30 testes Node anteriores continuam válidos; não foram repetidos por mudança só da interface. Backend/IPC/dependências/lockfile preservados.
+- **Como conferir:** Configurações → Dados de demonstração. A versão em desenvolvimento aberta usa recarga da interface. Ação só repõe a demonstração após confirmar; preferências/layout permanecem. Fluxos financeiros ainda não aparecem nas telas.
+- **Perguntas aguardando resposta:** nenhuma desta seção; as duas escolhas foram respondidas. Motor, worker, diretório e alcance da restauração já confirmados em D23/D25–D29; não repetir perguntas.
+- **Próxima entrega proposta — F02:** iniciar a estrutura de Finanças com cabeçalho/saldo e cinco submenus, preservando o contexto. Levantar conta inicial e políticas dos ciclos/fechamento/dias úteis antes das partes dependentes. Mês calendário e moeda Original continuam os padrões já registrados; não transformar sugestões em regras aprovadas.
+- **Autorização:** F01c.3 aprovada por “vamos para a próxima”, após sua apresentação. Commit/push autorizados e F02 iniciada pelo levantamento; regras de ciclos e composição da tela não ficam aprovadas implicitamente.
+
+## F01c.2 — histórico da entrega aprovada
 
 - **Implementado:** [serviço/worker/store](FinDesk-Project/desktop/storage/store.ts) e [contratos da ponte](FinDesk-Project/shared/storage-api.ts), com demo.sqlite e preferences.sqlite em `%LOCALAPPDATA%\FinDesk\data`. Apenas fatos fictícios, sem criar banco pessoal. Inicialização assíncrona em relação à janela; encerramento fecha o serviço/worker.
 - **Esquema:** v1 com identidade/marcador, agregado financeiro JSON canônico e preferências tipadas. Estrutura, precisão, datas e vínculos verificados na leitura. Migração transacional; versão futura, arquivo desconhecido, corrupção ou snapshot removido não provocam recriação/seed automático. Racional em DATA_MODEL; ainda não são tabelas por entidade.
@@ -73,7 +85,7 @@ Atualizado em **29/10/2026** (America/Sao_Paulo).
 - **Dependências propostas:** F01b para regras comuns e fixtures executáveis após respostas pertinentes; F01c para persistência mínima após decisão conjunta, antes das preferências salvas de F02/F03. F02–F20 seguem a referência da especificação, com subdivisões quando necessário.
 - **Pesquisa de armazenamento:** comparação e escolha concluídas na F01a; driver e detalhes de persistência continuam pendentes. Integração real permanece para F20.
 - **Levantamento:** demais temas da seção 16 serão discutidos em pequenas rodadas antes da implementação dependente; não bloqueiam fatos/cálculos comuns independentes.
-- **Histórico de autorização:** casca/F00/reorganização em `6920552`; F01a em `4694ef9`; F01b em `34af7ad`; F01c.1 em `8abad2a`, todas aprovadas/enviadas. F01c.2 é a entrega atual; próxima proposta F01c.3.
+- **Histórico de autorização:** casca/F00/reorganização em `6920552`; F01a em `4694ef9`; F01b em `34af7ad`; F01c.1 em `8abad2a`; F01c.2 em `0bc8b33`, todas aprovadas/enviadas. F01c.3 é a entrega atual; próxima proposta F02.
 
 ## Entrega atual
 
@@ -118,7 +130,8 @@ Esses resultados são históricos da casca. A F01b adicionou os testes de domín
 - Casca/F00/reorganização aprovadas e enviadas: `6920552` — `feat(base): adiciona casca desktop e organiza projeto`.
 - F01a aprovada/enviada: `4694ef9` — `docs(financas): consolida requisitos e cenários da F01a`.
 - F01b aprovada/enviada: `34af7ad` — `feat(financas): adiciona domínio e fixtures da F01b`.
-- **Última entrega aprovada e enviada:** `8abad2a` — `chore(persistencia): valida SQLite no Electron e registra decisões`. F01c.2 é a entrega atual, ainda sem commit/push.
+- F01c.1 aprovada/enviada: `8abad2a` — `chore(persistencia): valida SQLite no Electron e registra decisões`.
+- **Último commit enviado antes desta entrega:** `0bc8b33` — `feat(persistencia): salva demonstração e preferências no SQLite`. F01c.3 aprovada para commit/push nesta rodada.
 - Política confirmada: **push após cada entrega aprovada**. Identidade Git existente preservada. Originais mantidos byte a byte no histórico após a configuração de atributos.
 
 ## Pendências e próxima entrega proposta
@@ -133,7 +146,7 @@ Esses resultados são históricos da casca. A F01b adicionou os testes de domín
 
 **Aprovação atual:** Gabriel aprovou expressamente as mudanças existentes e autorizou commit/push. Substitui a pendência anterior de revisão do conjunto.
 
-**Próximo passo vigente:** revisar F01c.2 e, mediante continuidade, registrar a entrega e iniciar o levantamento da F01c.3. Não implementar a interface ou F02–F20 automaticamente.
+**Próximo passo vigente:** revisar F01c.3 e, mediante continuidade, registrar a entrega e iniciar F02 pelo levantamento dos requisitos abertos. Não executar F02–F20 automaticamente.
 
 **Espaçamento superior:** reduzidas a altura do cabeçalho e a margem interna superior do conteúdo após a remoção da linha divisória, conforme solicitado. Botão de informação preservado à direita. Ajuste apenas de CSS, revisado sem executar a suíte.
 
@@ -143,7 +156,7 @@ Esses resultados são históricos da casca. A F01b adicionou os testes de domín
 
 **Reposicionamento da navbar — ajuste atual:** por solicitação de 29/10/2026, removidos o redimensionamento pela borda, seus controles/gestos e o texto “Soltar: posição”. Permanece a alça para encaixar à esquerda, direita, em cima ou embaixo, com prévia visual sem legenda e confirmação ao soltar. O botão de recolher/expandir e a adaptação horizontal permanecem. D20 substitui as partes correspondentes de D18/D19. Estado em memória, sem novas operações IPC ou banco. Verificação conjunta concluída: tipos/templates, lint e build web passaram; os cinco testes Playwright no Electron passaram, cobrindo encaixe nos quatro lados, prévia sem texto, recolhimento/expansão, cancelamento, alternativa por teclado, ausência de redimensionamento pela borda e navegação da casca.
 
-**Persistência — sequência atual:** motor SQLite confirmado em F01a; API/worker, diretório e preservação de preferências na restauração confirmados em F01c.1. Implementar/testar esquema, migrações, seed e restauração em F01c.2; propor interface em F01c.3. Não confundir a prova temporária com banco do aplicativo.
+**Persistência — sequência atual:** motor SQLite confirmado em F01a; API/worker, diretório e preservação de preferências na restauração confirmados em F01c.1. F01c.2 implementa esquema, migrações, seed e restauração; F01c.3 acrescenta a interface conforme D28/D29. A aprovação atual está registrada no início deste arquivo.
 
 Ainda não implementados: os fluxos da versão local de Finanças definidos em F01–F19, inclusive cards dinâmicos, compromissos, assinaturas, previsões, detecção, disponível, orçamento e alertas. Integrações reais permanecem separadas em F20. Carteira de investimentos, simulador, tema claro, backup/restauração elaborados e instalador seguem seus escopos próprios. Consultar [docs/ROADMAP.md](docs/ROADMAP.md) e [docs/INTEGRATIONS.md](docs/INTEGRATIONS.md).
 

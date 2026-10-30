@@ -2,7 +2,7 @@
 
 Projeto pessoal de finanças e investimentos para Windows, previsto em Angular, Electron e TypeScript.
 
-Esta entrega contém a **casca navegável do aplicativo**, com tema escuro, logo original e barra nativa do Windows. Há domínio financeiro básico e persistência local de dados fictícios/preferências; as telas financeiras e o acesso visual à restauração ainda não foram implementados. Nenhuma instituição está conectada.
+Esta entrega contém a **casca navegável do aplicativo**, com tema escuro, logo original e barra nativa do Windows. Há domínio financeiro básico, persistência local fictícia e Configurações → Dados de demonstração com restauração explícita. As telas financeiras ainda serão desenvolvidas. Nenhuma instituição está conectada.
 
 ## Instalar e executar
 
@@ -60,7 +60,7 @@ Formatação da aplicação: `npm run format` e `npm run format:check`. Esses co
 
 `npm run test:domain` compila domínio/fixtures e executa os testes financeiros básicos sem abrir a interface. `npm test` inclui também os testes de segurança; `npm run check` verifica tipos, lint, formatação e esses testes. A F01b não implementa persistência ou indicadores na tela.
 
-Na execução normal, o armazenamento usa `%LOCALAPPDATA%\FinDesk\data\demo.sqlite` e `preferences.sqlite`. O seed fictício só inicializa base nova; reabrir preserva alterações. Restaurar demo é operação explícita do backend, sem apagar preferências. A ação em Configurações será discutida em F01c.3. Não há banco pessoal criado nem backup independente implementado.
+Na execução normal, o armazenamento usa `%LOCALAPPDATA%\FinDesk\data\demo.sqlite` e `preferences.sqlite`. O seed só inicializa base nova; reabrir preserva alterações. Em Configurações → Dados de demonstração, Restaurar dados pede confirmação na própria seção e repõe apenas fatos fictícios, preservando preferências/layout. Não há banco pessoal criado nem backup independente implementado.
 
 `npm run test:persistence` verifica o backend em diretórios temporários. `npm test` inclui esses testes; Playwright acrescenta testes da ponte/reabertura no Electron real. Os testes usam perfis exclusivos e não gravam nos bancos normais de LocalAppData. Não executar manualmente bancos reais para testar recuperação.
 

@@ -43,6 +43,8 @@ O suporte de Electron no Playwright é [experimental](https://playwright.dev/doc
 
 ## Verificação manual
 
+F01c.3: passaram tipos/templates, lint, formatação, build web e quatro cenários Electron (três da seção de dados + casca), com inspeção visual ampla/compacta. A restauração foi contada por auditoria no banco temporário para verificar que Cancelar/Escape não escrevem e cliques repetidos não executam novamente. Falha de escrita, verificação sem restauração implícita, foco, indisponibilidade por versão futura e prévia sem ponte foram conferidos. Os 30 testes Node anteriores foram reutilizados, sem mudanças no backend/domínio.
+
 F01c.2: passaram tipos/templates, lint, formatação, build web/desktop, os 30 testes Node e três testes Electron (casca e dois de armazenamento). Os quatro testes de gestos da navbar não foram repetidos, pois a mecânica não mudou. Testes adicionais validam origem de outra janela, argumentos extras, token de restauração inválido, reabertura, preferências preservadas e falha de versão futura com dados intactos. Janela de teste usa armazenamento temporário; execução normal usa o diretório D26. A ação visual de restauração ainda será desenvolvida em F01c.3.
 
 1. `npm start` abre o build com barra nativa Windows.
