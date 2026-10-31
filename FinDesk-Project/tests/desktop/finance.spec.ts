@@ -618,7 +618,9 @@ test('F02a: saldo atual, submenus e contexto persistido sem salvar mês históri
         .getByRole('navigation', { name: 'Submenus de Finanças' })
         .getByRole('link', { name: submenu, exact: true })
         .click();
-      await expect(page.getByRole('heading', { name: submenu, exact: true })).toBeVisible();
+      if (submenu === 'Geral')
+        await expect(page.getByRole('region', { name: 'Cards do Geral' })).toBeVisible();
+      else await expect(page.getByRole('heading', { name: submenu, exact: true })).toBeVisible();
       await expect(picker(page, 'Conta')).toHaveAttribute('data-value', 'demo-u');
       await expect(picker(page, 'Moeda')).toHaveAttribute('data-value', 'BRL');
       await expectCalendarRange(page, '01/09/2026 – 30/09/2026');

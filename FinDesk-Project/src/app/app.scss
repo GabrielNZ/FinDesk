@@ -37,7 +37,13 @@
 .layout-dragging {
   cursor: grabbing;
 }
+.layout-dragging .sidebar {
+  box-shadow: inset 0 0 0 3px #77d9a5;
+}
 .sidebar {
+  cursor: default;
+  touch-action: none;
+  user-select: none;
   grid-area: navigation;
   position: relative;
   min-width: 0;
@@ -79,30 +85,6 @@
 }
 .brand-symbol {
   flex-shrink: 0;
-}
-.navigation-grip {
-  display: grid;
-  place-items: center;
-  width: 28px;
-  height: 28px;
-  flex-shrink: 0;
-  border: 0;
-  border-radius: 5px;
-  background: transparent;
-  color: var(--fd-subtle);
-  cursor: grab;
-  touch-action: none;
-}
-.navigation-grip:hover,
-.navigation-grip:focus-visible {
-  color: var(--fd-text);
-  background: #202728;
-}
-.navigation-grip:active {
-  cursor: grabbing;
-}
-.navigation-grip .pi {
-  font-size: 12px;
 }
 .nav-label {
   margin-top: 28px;
@@ -266,15 +248,24 @@ nav a.active,
 }
 
 .workspace {
+  position: relative;
   grid-area: workspace;
   display: flex;
   flex-direction: column;
   min-width: 0;
   min-height: 0;
   overflow-y: auto;
+  scrollbar-gutter: stable;
 }
 .topbar {
-  min-height: 48px;
+  position: absolute;
+  top: 28px;
+  left: 0;
+  right: 0;
+  height: clamp(33.6px, 3vw, 43.2px);
+  z-index: 3;
+  pointer-events: none;
+  min-height: 0;
   display: flex;
   flex-shrink: 0;
   justify-content: flex-end;
@@ -282,13 +273,14 @@ nav a.active,
   padding: 0 42px;
 }
 .topbar-actions {
+  pointer-events: auto;
   display: flex;
   align-items: center;
   gap: 16px;
 }
 .main-content {
   width: 100%;
-  padding: 24px 42px 30px;
+  padding: 28px 42px 30px;
   flex: 1 0 auto;
 }
 .main-content:focus {
@@ -360,7 +352,7 @@ nav a.active,
   display: grid;
   place-items: center;
   background: #6cbd9a26;
-  border: 2px solid var(--fd-accent);
+  border: 3px solid #77d9a5;
   border-radius: 8px;
 }
 .dock-preview[data-edge='left'] {
@@ -390,7 +382,7 @@ nav a.active,
 
 @media (max-width: 1100px) {
   .main-content {
-    padding: 20px 28px 30px;
+    padding: 28px 28px 30px;
   }
   .topbar,
   .workspace-footer {
@@ -410,7 +402,7 @@ nav a.active,
     padding-bottom: 16px;
   }
   .main-content {
-    padding: 20px 22px 28px;
+    padding: 28px 22px 28px;
   }
   .topbar {
     padding: 0 22px;

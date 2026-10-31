@@ -12,28 +12,28 @@
   [class.layout-toggling]="layout.animatingToggle()"
   [style.--navigation-size.px]="layout.size()"
 >
-  <aside id="main-sidebar" class="sidebar" aria-label="Painel de navegação">
+  <aside
+    id="main-sidebar"
+    class="sidebar"
+    aria-label="Painel de navegação"
+    tabindex="0"
+    aria-haspopup="menu"
+    aria-controls="navigation-position-menu"
+    [attr.aria-expanded]="positionMenuOpen()"
+    aria-describedby="navigation-move-help"
+    (pointerdown)="startNavigationDock($event, layoutFrame, positionMenu)"
+    (contextmenu)="openPositionMenu($event, positionMenu)"
+    (keydown)="navigationKey($event, positionMenu)"
+  >
+    <span id="navigation-move-help" class="visually-hidden"
+      >Arraste o fundo para uma borda para mover a navegação. Enter ou espaço abre o menu de
+      posições. Escape cancela.</span
+    >
     <div class="navigation-heading">
       <a class="wordmark" routerLink="/visao-geral" aria-label="FinDesk — início">
         <img class="brand-symbol" [src]="product.symbol" alt="" width="30" height="30" />
         <span>{{ product.name }}</span>
       </a>
-      <button
-        class="navigation-grip"
-        type="button"
-        aria-label="Mover navegação"
-        aria-haspopup="menu"
-        aria-controls="navigation-position-menu"
-        [attr.aria-expanded]="positionMenuOpen()"
-        title="Arraste para uma borda ou clique para escolher a posição"
-        (pointerdown)="positionMenu.hide(); layout.startDock($event, layoutFrame)"
-        (click)="openPositionMenu($event, positionMenu)"
-      >
-        <i
-          [class]="layout.horizontal() ? 'pi pi-ellipsis-h' : 'pi pi-ellipsis-v'"
-          aria-hidden="true"
-        ></i>
-      </button>
     </div>
 
     <p class="nav-label">ACOMPANHAR</p>

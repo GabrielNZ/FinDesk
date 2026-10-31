@@ -92,6 +92,174 @@ test('FIN-047 / C30: seed idempotente, alterações persistidas e restauração 
   }
 });
 
+test('F03a: layout reabre, restaura separado dos fatos/preferências e sobrevive à restauração demo', async (t) => {
+  const root = await temporary(t);
+  let store = new DemoStore(root);
+  const {
+    defaultCardLayout,
+    reorderCard,
+    resizeCard,
+  } = require('../../out/application/card-layout.js');
+  const layout = resizeCard(reorderCard(defaultCardLayout(), 'upcoming', 0), 'categories', 4, 7);
+  const facts = store.readDemo();
+  const prefs = store.readPreferences();
+  try {
+    assert.equal(store.readCardLayout(), null);
+    assert.deepEqual(store.saveCardLayout(layout), layout);
+    store.restoreDemo();
+    assert.deepEqual(store.readCardLayout(), layout);
+    assert.deepEqual(store.readPreferences(), prefs);
+  } finally {
+    store.close();
+  }
+  store = new DemoStore(root);
+  try {
+    assert.deepEqual(store.readCardLayout(), layout);
+    assert.deepEqual(store.restoreCardLayout(), defaultCardLayout());
+    assert.deepEqual(store.readPreferences(), prefs);
+    assert.deepEqual(store.readDemo(), facts);
+  } finally {
+    store.close();
+  }
+});
+
+test('F03a: falhas/versão futura do layout não substituem dados sem restauração explícita', async (t) => {
+  const root = await temporary(t);
+  const store = new DemoStore(root);
+  const { defaultCardLayout, resizeCard } = require('../../out/application/card-layout.js');
+  const initial = defaultCardLayout();
+  const db = new DatabaseSync(join(root, 'preferences.sqlite'));
+  try {
+    store.saveCardLayout(initial);
+    db.exec(
+      "CREATE TRIGGER reject_layout BEFORE UPDATE ON preferences WHEN OLD.key = 'layout.finance-general.v3' BEGIN SELECT RAISE(ABORT, 'privado'); END",
+    );
+    assert.throws(() => store.saveCardLayout(resizeCard(initial, 'categories', 12, 5)));
+    assert.deepEqual(store.readCardLayout(), initial);
+    db.exec('DROP TRIGGER reject_layout');
+    const future = JSON.stringify({ ...initial, version: 99 });
+    db.prepare("UPDATE preferences SET payload = ? WHERE key = 'layout.finance-general.v3'").run(
+      future,
+    );
+    assert.throws(
+      () => store.readCardLayout(),
+      (error) => error.code === 'incompatible',
+    );
+    assert.throws(
+      () => store.saveCardLayout(initial),
+      (error) => error.code === 'incompatible',
+    );
+    assert.equal(
+      db.prepare("SELECT payload FROM preferences WHERE key = 'layout.finance-general.v3'").get()
+        .payload,
+      future,
+    );
+    assert.deepEqual(store.restoreCardLayout(), initial);
+  } finally {
+    db.close();
+    store.close();
+  }
+});
+
+test('F03a: leitura v1 preserva bytes e próximo ajuste grava v3 sem apagar o legado', async (t) => {
+  const root = await temporary(t);
+  const store = new DemoStore(root);
+  const { defaultCardLayout, resizeCard } = require('../../out/application/card-layout.js');
+  const legacy = JSON.stringify({
+    version: 1,
+    area: 'finance-general',
+    cards: defaultCardLayout().cards.map((card) => ({ ...card, rows: 4 })),
+  });
+  const db = new DatabaseSync(join(root, 'preferences.sqlite'));
+  try {
+    db.prepare('INSERT INTO preferences VALUES (?, ?)').run('layout.finance-general.v1', legacy);
+    const upgraded = store.readCardLayout();
+    assert.equal(upgraded.version, 3);
+    assert.equal(upgraded.priority, null);
+    assert.equal(
+      db.prepare('SELECT payload FROM preferences WHERE key = ?').get('layout.finance-general.v1')
+        .payload,
+      legacy,
+    );
+    const changed = resizeCard(upgraded, 'categories', 7.125, 4.138);
+    store.saveCardLayout(changed);
+    assert.deepEqual(store.readCardLayout(), changed);
+    assert.equal(
+      db.prepare('SELECT payload FROM preferences WHERE key = ?').get('layout.finance-general.v1')
+        .payload,
+      legacy,
+    );
+  } finally {
+    db.close();
+    store.close();
+  }
+});
+
+test('F03a: worker exige contrato fechado de layout e confirmação específica para restaurar', async (t) => {
+  const root = await temporary(t);
+  const { defaultCardLayout } = require('../../out/application/card-layout.js');
+  const layout = defaultCardLayout();
+  for (const request of [
+    { id: 1, operation: 'read-card-layout', payload: 'finance.v3' },
+    { id: 1, operation: 'save-card-layout', payload: { ...layout, sql: 'privado' } },
+    { id: 1, operation: 'restore-card-layout' },
+    { id: 1, operation: 'restore-card-layout', payload: 'restore-demo-data' },
+  ])
+    assert.throws(() => validateRequest(request));
+  const client = new StorageClient(root);
+  try {
+    assert.deepEqual(await client.getCardLayout(), { ok: true, value: null });
+    assert.deepEqual(await client.saveCardLayout(layout), { ok: true, value: layout });
+    assert.deepEqual(await client.restoreCardLayout(), { ok: true, value: layout });
+  } finally {
+    await client.close();
+  }
+});
+
+test('F03a: layout v2 converte sem escrita e alinhamento v3 reabre preservando legado e fatos', async (t) => {
+  const root = await temporary(t);
+  let store = new DemoStore(root);
+  const { defaultCardLayout } = require('../../out/application/card-layout.js');
+  const legacy = JSON.stringify({ ...defaultCardLayout(), version: 2 });
+  const db = new DatabaseSync(join(root, 'preferences.sqlite'));
+  const facts = store.readDemo();
+  const preferences = store.readPreferences();
+  try {
+    db.prepare('INSERT INTO preferences VALUES (?, ?)').run('layout.finance-general.v2', legacy);
+    const layout = store.readCardLayout();
+    assert.equal(layout.version, 3);
+    assert.equal(
+      db.prepare('SELECT payload FROM preferences WHERE key = ?').get('layout.finance-general.v3'),
+      undefined,
+    );
+    store.saveCardLayout({
+      ...layout,
+      cards: layout.cards.map((card, index) => (index === 0 ? { ...card, align: 0.5 } : card)),
+    });
+    assert.equal(
+      db.prepare('SELECT payload FROM preferences WHERE key = ?').get('layout.finance-general.v2')
+        .payload,
+      legacy,
+    );
+    store.close();
+    store = new DemoStore(root);
+    assert.equal(store.readCardLayout().cards[0].align, 0.5);
+    assert.deepEqual(store.readDemo(), facts);
+    assert.deepEqual(store.readPreferences(), preferences);
+    db.prepare('UPDATE preferences SET payload = ? WHERE key = ?').run(
+      '{"version":99}',
+      'layout.finance-general.v3',
+    );
+    assert.throws(
+      () => store.readCardLayout(),
+      (error) => error.code === 'incompatible',
+    );
+  } finally {
+    db.close();
+    store.close();
+  }
+});
+
 test('FIN-047 / C30: migração inicial e rollback de uma migração que falha preservam versão/dados', () => {
   const db = new DatabaseSync(':memory:');
   try {

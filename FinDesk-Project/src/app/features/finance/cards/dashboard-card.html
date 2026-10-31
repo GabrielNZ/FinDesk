@@ -1,0 +1,36 @@
+<article
+  class="card-shell"
+  tabindex="0"
+  [class.focused-shell]="focused()"
+  [attr.aria-labelledby]="'card-heading-' + placement().id"
+  [attr.aria-describedby]="'card-help-' + placement().id"
+  [attr.aria-expanded]="focused()"
+  [attr.data-move-id]="placement().id"
+  [attr.data-focus-id]="placement().id"
+  (pointerdown)="startMove($event)"
+  (dblclick)="doubleClick($event)"
+  (keydown)="key($event)"
+>
+  <header>
+    <h3 [id]="'card-heading-' + placement().id">{{ heading() }}</h3>
+  </header>
+  <div class="card-content"><ng-content /></div>
+  <button
+    class="resize-handle"
+    type="button"
+    [attr.data-resize-id]="placement().id"
+    [attr.aria-label]="'Redimensionar ' + heading()"
+    [attr.aria-disabled]="disabled() || focused()"
+    [attr.aria-describedby]="'resize-help-' + placement().id"
+    (pointerdown)="resizeStart.emit($event)"
+    (keydown)="resizeKey.emit($event)"
+  ></button>
+  <span class="visually-hidden" [id]="'card-help-' + placement().id"
+    >Arraste pelo card ou use as setas para mover. Alt e setas laterais ajustam a posição no espaço
+    livre da linha. Shift e setas ajustam o tamanho. Duplo clique ou Enter amplia e retorna. Escape
+    cancela ou volta.</span
+  >
+  <span class="visually-hidden" [id]="'resize-help-' + placement().id"
+    >Arraste pelo canto ou use as setas para ajustar largura e altura. Escape cancela.</span
+  >
+</article>

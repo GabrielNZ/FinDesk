@@ -39,7 +39,7 @@ Estado em 29/10/2026. Fontes originais e precedência: [REVIEW.md](REVIEW.md). E
 
 **D20 — simplificação confirmada em 29/10/2026, substitui partes de D18/D19:** remover o redimensionamento manual pela borda e o texto “Soltar: posição”. Manter apenas a mudança entre as quatro bordas pela alça, a prévia visual sem legenda e o botão de recolher/expandir. Foram removidos também o separador ajustável, seus gestos/atalhos e o recolhimento por arraste. O menu de posições continua como alternativa ao mouse.
 
-Implementação vigente: captura de ponteiro mantém o arraste da alça; a barra ocupa a borda e o conteúdo rola na área restante, sem sobreposição. Tamanhos são definidos pelo layout, orientação e estado do botão, sem ajuste manual.
+Implementação após D67: captura de ponteiro mantém o arraste pelo fundo, substituindo a alça; a barra ocupa a borda e o conteúdo rola na área restante, sem sobreposição. Tamanhos são definidos pelo layout, orientação e estado do botão, sem ajuste manual.
 
 **D21 — especificação incremental de Finanças, recebida em 29/10/2026:** [FINANCAS_SPEC.md](FINANCAS_SPEC.md) passa a reger os requisitos dessa área e prevalece sobre sugestões antigas conflitantes. Gabriel autorizou iniciar somente F00 nesta rodada: diagnóstico e próxima proposta, preservando o código correto. O escopo local inclui os cinco submenus, cards dinâmicos, compromissos, assinaturas mensais/anuais, previsões, detecção, disponível, orçamentos e alertas; não equivale à autorização de implementar tudo. Banco continua pendente, com comparação SQLite/MySQL antes da escolha; nenhuma migração necessária no estado atual. D20 permanece aplicável à navbar. Parâmetros ressalvados na especificação continuam propostas.
 
@@ -108,6 +108,50 @@ Implementação vigente: captura de ponteiro mantém o arraste da alça; a barra
 **D53 — ajuste dos botões de período, solicitado por Gabriel:** retirar a dica visual que apenas mostra o nome do modo. Clicar no botão já selecionado alterna abrir/recolher o seletor; a setinha continua oferecendo a mesma ação. Escolher outro modo mantém a seleção exclusiva e o início recolhido. Nomes acessíveis permanecem; explicações de indisponibilidade continuam conforme D37. Sem alteração de dimensões, regra financeira ou preferência persistida.
 
 **D54 — alteração visual rejeitada e revertida por Gabriel:** a tentativa de aumentar os ícones e suavizar a moldura não foi aprovada. Restaurados tamanho, bordas e fundo anteriores. Interações D53 permanecem; não tratar a proposta visual rejeitada como direção aprovada.
+
+**D55 — primeira experiência de cards, confirmada por Gabriel:** F03a usa o Geral com Categorias, Evolução e Próximos compromissos em estado de protótipo, sem cálculos/gráficos funcionais. Não criar prévia separada nem antecipar metodologias das etapas seguintes.
+
+**D56 — posicionamento dos cards, confirmado por Gabriel:** encaixe em grade para posição e dimensões, sem sobreposição. Não adotar posicionamento livre.
+
+**D57 — controles dos cards, confirmado por Gabriel:** alças e controles sempre disponíveis. Gabriel escolheu essa opção em lugar do modo Organizar recomendado; não exigir ativar esse modo para mover/redimensionar.
+
+**D58 — redimensionamento dos cards, confirmado por Gabriel:** alça sempre visível no canto inferior direito para largura/altura, com encaixe na grade, acompanhada de opções de tamanho acessíveis por clique/teclado. Não limitar a experiência somente a tamanhos predefinidos.
+
+**D59 — salvamento/restauração do layout, confirmado por Gabriel:** salvar automaticamente ao terminar arraste ou ajuste de tamanho; Restaurar layout com confirmação na própria página. Sem botão Salvar layout obrigatório.
+
+**D60 — foco temporário do card, confirmado por Gabriel após esclarecimento:** o card ocupa a área de conteúdo do Geral, com os demais temporariamente ocultos e cabeçalho/filtros/submenus utilizáveis. Voltar ou Escape restaura posições/tamanhos e foco anteriores. Não abrir modal nem salvar esse foco como dimensão de layout.
+
+**D61 — limpeza do cabeçalho dos cards, solicitada por Gabriel:** remover o título Geral e o selo Protótipo acima dos cards. Preservar a região acessível Cards do Geral e a ação Restaurar layout. Os estados dos conteúdos ainda não implementados continuam explícitos dentro dos cards.
+
+**D62 — arraste pelo corpo do card, confirmado por Gabriel:** pressionar e mover alguns pixels inicia o arraste, sem espera de um segundo. Fundo, título e conteúdo comum permitem mover; botões, links, campos, seletores, sliders e regiões explicitamente interativas preservam seus gestos. Remover a alça de três pontos e o menu de opções de tamanho. Substitui essas partes de D57/D58; controles continuam disponíveis sem modo Organizar.
+
+**D63 — canto e foco dos cards, solicitado por Gabriel:** redimensionar pelo canto inferior direito com traço grosso acompanhando a borda, sem ícone de seta. Duplo clique no corpo comum do card entra/sai do foco temporário de D60; Escape também retorna. Remover botão de expansão e opções de tamanho por menu. Teclado preservado: setas movem; Shift + setas ajustam tamanho; Enter/espaço entra/sai do foco; setas na alça ajustam tamanho.
+
+**D64 — redimensionamento fluido e adaptação do vizinho, solicitado por Gabriel:** acompanhar o mouse continuamente, sem saltos inteiros de coluna/altura. O card vizinho cede largura até o mínimo de conteúdo antes de mudar de linha. Ao mudar de linha, recupera a largura preferida anterior à compressão; a adaptação temporária não sobrescreve sua preferência. Mantém organização alinhada, sem sobreposição, e salvamento ao terminar o gesto. Substitui o ajuste rígido de dimensões de D56/D58.
+
+**D65 — confirmação de layout no próprio botão, solicitada por Gabriel:** primeiro clique em Restaurar layout muda o mesmo botão para “Restaurar layout?”; segundo clique confirma. Retirar a seção separada de confirmação. Escape, perda de foco ou clique fora cancelam sem restaurar. Mantém restauração restrita ao layout.
+
+**D66 — altura inicial dos cards, solicitada por Gabriel:** Categorias e Evolução começam um pouco mais altos. Ajuste local: de 304 para 344 px (+40 px); Próximos compromissos permanece em 304 px. O novo padrão vale para ausência de layout salvo e restauração explícita, preservando tamanhos já escolhidos.
+
+**D67 — arraste da navbar pelo fundo, solicitado por Gabriel:** retirar os três pontos e iniciar o encaixe ao pressionar e mover no fundo da navbar, preservando links/botões e a prévia nas quatro bordas. Sem redimensionar a navbar. Manter a alternativa de posições por teclado/menu contextual no próprio painel, sem novo botão visível.
+
+**D68 — cursor de movimento, solicitado por Gabriel:** cards e navbar usam cursor comum ao passar o mouse ou pressionar sem mover. Mostrar a mão de arraste somente depois de iniciado o movimento e restaurar ao terminar/cancelar. Controles internos e canto de redimensionamento preservam seus cursores próprios.
+
+**D69 — resposta visual da navbar durante o arraste, solicitada por Gabriel:** destacar em verde a borda da navbar enquanto estiver em movimento e a área de destino quando houver uma borda válida sob o ponteiro. Retirar os destaques ao soltar/cancelar; manter a prévia sem texto e confirmação somente ao soltar.
+
+**D70 — arraste livre visual e inserção de cards, solicitado por Gabriel:** durante o gesto, o card acompanha o mouse por toda a janela, inclusive fora da área de conteúdo. Encaixe continua restrito à organização válida dos cards. Oferecer inserção antes/depois do vizinho e nas extremidades das linhas, com espaço de destino e deslocamento dos demais durante o gesto, como reorganização de aplicativos no celular. Soltar fora da área válida ou cancelar restaura o layout anterior. Preservar redimensionamento adaptativo, foco por duplo clique, teclado e salvamento somente ao terminar.
+
+**D71 — troca e inserção coexistem, esclarecido por Gabriel:** sobrepor o ponteiro a outro card propõe troca direta entre os dois, preservando a ordem dos demais. Continuar até ultrapassar a borda do destino passa a inserção, empurrando os intermediários. As duas ações devem ter prévia e coexistir com o arraste livre visual de D70; não substituir troca por inserção. Usar a geometria inicial para manter destinos estáveis durante o deslocamento visual.
+
+**D72 — posicionamento nos espaços livres da linha, solicitado por Gabriel:** permitir deslocamento horizontal contínuo de um card no espaço vazio da própria linha, incluindo esquerda, centro e direita, sem sobreposição. Preservar os outros cards e a organização vertical; arrastar de outra linha continua acionando troca/inserção/empurrão existentes. Preferência horizontal é salva e se adapta à largura disponível, sem substituir o fluxo atual.
+
+**D73 — adaptação somente ao crescer, esclarecido por Gabriel:** diminuir largura/altura de um card não deve comprimir os demais nem puxar cards de outra linha para cima. Somente crescimento horizontal que invade a linha existente pode fazer os vizinhos cederem largura; novas linhas continuam protegidas. Preservar os gestos de organização, posicionamento livre da linha e restauração de largura preferida quando um vizinho precisa descer.
+
+**D74 — alinhamento e espaçamento da interface, solicitado por Gabriel:** centralizar a coluna de períodos na altura do saldo; aproximar o conteúdo geral do topo preservando o acesso Sobre no mesmo lugar; Restaurar layout na linha dos submenus de Finanças, reduzindo o espaço até os cards. Manter confirmação no próprio botão e comportamento nas janelas estreitas.
+
+**D75 — assistência leve de altura, solicitada por Gabriel:** ao redimensionar a altura perto da altura de um card vizinho da mesma linha, oferecer encaixe suave com guia discreta. Continuar o arraste deve liberar o encaixe; sem alterar a altura dos vizinhos ou as regras D73. Ajuste local inicial: captar a até 8 px e liberar ao afastar mais de 12 px.
+
+**D76 — área de encaixe da navbar ampliada, solicitada por Gabriel:** reconhecer a borda pretendida com o ponteiro mais afastado, mantendo prévia verde, decisão ao soltar e cancelamento. Ajuste local: ampliar a faixa de 64 para 128 px, escolhendo a borda mais próxima.
 
 ## Escolhas de implementação dentro da arquitetura estabelecida
 

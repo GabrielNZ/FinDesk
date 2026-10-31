@@ -1,6 +1,5 @@
 <div class="finance-title">
-  <h1>Finanças<span class="heading-dot">.</span></h1>
-  <span class="outline-tag">Demonstração</span>
+  <h1>Finanças</h1>
 </div>
 
 @switch (context.state()) {
@@ -97,13 +96,18 @@
       <p class="preference-status" role="status">Salvando seleção…</p>
     }
 
-    <nav class="finance-submenus" aria-label="Submenus de Finanças">
-      @for (submenu of submenus; track submenu.path) {
-        <a [routerLink]="submenu.path" routerLinkActive="active" ariaCurrentWhenActive="page">{{
-          submenu.label
-        }}</a>
+    <div class="finance-toolbar">
+      <nav class="finance-submenus" aria-label="Submenus de Finanças">
+        @for (submenu of submenus; track submenu.path) {
+          <a [routerLink]="submenu.path" routerLinkActive="active" ariaCurrentWhenActive="page">{{
+            submenu.label
+          }}</a>
+        }
+      </nav>
+      @if (cardLayout.active()) {
+        <fd-card-layout-action />
       }
-    </nav>
+    </div>
 
     @if (!context.hasSelection()) {
       <p class="finance-notice">Selecione uma conta para continuar.</p>

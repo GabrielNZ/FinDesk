@@ -1,5 +1,6 @@
 import type { CivilDate } from '../domain/civil-date';
 import type { FinanceFacts } from '../domain/finance-facts';
+import type { CardLayout } from './card-layout';
 
 export interface DemoSnapshot {
   readonly formatVersion: 1;
@@ -45,6 +46,9 @@ export interface StorageApi {
   getPreferences(): Promise<StorageResult<FinancePreferences>>;
   savePreferences(value: FinancePreferences): Promise<StorageResult<FinancePreferences>>;
   restoreDemoData(confirmation: 'restore-demo-data'): Promise<StorageResult<DemoSnapshot>>;
+  getCardLayout(): Promise<StorageResult<CardLayout | null>>;
+  saveCardLayout(layout: CardLayout): Promise<StorageResult<CardLayout>>;
+  restoreCardLayout(confirmation: 'restore-card-layout'): Promise<StorageResult<CardLayout>>;
 }
 
 export const STORAGE_CHANNELS = {
@@ -53,4 +57,7 @@ export const STORAGE_CHANNELS = {
   readPreferences: 'findesk:preferences-read',
   savePreferences: 'findesk:preferences-save',
   restoreDemo: 'findesk:demo-restore',
+  readCardLayout: 'findesk:card-layout-read',
+  saveCardLayout: 'findesk:card-layout-save',
+  restoreCardLayout: 'findesk:card-layout-restore',
 } as const;

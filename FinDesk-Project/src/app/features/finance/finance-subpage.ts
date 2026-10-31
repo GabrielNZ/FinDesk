@@ -2,18 +2,24 @@ import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { ActivatedRoute } from '@angular/router';
 import { FinanceContext } from './finance-context.service';
+import { CardBoard } from './cards/card-board';
 
 @Component({
   selector: 'fd-finance-subpage',
+  imports: [CardBoard],
   template: `
-    <section class="finance-content" [attr.aria-label]="route()['label']">
-      <h2>{{ route()['label'] }}</h2>
-      @if (route()['section'] === 'cartao' && !context.hasCard()) {
-        <p>Esta conta não possui cartão na demonstração.</p>
-      } @else {
-        <p>{{ route()['pending'] }}</p>
-      }
-    </section>
+    @if (route()['section'] === 'geral') {
+      <fd-card-board />
+    } @else {
+      <section class="finance-content" [attr.aria-label]="route()['label']">
+        <h2>{{ route()['label'] }}</h2>
+        @if (route()['section'] === 'cartao' && !context.hasCard()) {
+          <p>Esta conta não possui cartão na demonstração.</p>
+        } @else {
+          <p>{{ route()['pending'] }}</p>
+        }
+      </section>
+    }
   `,
   styles: `
     .finance-content {

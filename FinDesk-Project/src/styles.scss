@@ -23,6 +23,18 @@
 * {
   box-sizing: border-box;
 }
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+:is(.fd-nav-dragging, .fd-card-dragging),
+:is(.fd-nav-dragging, .fd-card-dragging) * {
+  cursor: grabbing !important;
+}
 body {
   margin: 0;
   min-width: 360px;

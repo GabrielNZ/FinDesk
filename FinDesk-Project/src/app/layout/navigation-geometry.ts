@@ -19,5 +19,5 @@ export function dockTarget(
   ];
   edges.sort((a, b) => a[1] - b[1]);
   const nearest = edges[0];
-  return nearest && nearest[1] <= 64 ? nearest[0] : null;
+  return nearest && nearest[1] <= 128 ? nearest[0] : null;
 }

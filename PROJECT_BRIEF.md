@@ -22,6 +22,22 @@ Tema escuro primeiro, tokens semânticos e preparação para tema claro posterio
 
 ## Interações da interface
 
+D74–D76: conteúdo geral próximo ao topo com Sobre preservado; períodos centralizados no saldo e Restaurar layout na linha dos submenus, somente no Geral. Assistência leve de altura entre vizinhos, com saída fácil ao continuar o arraste. Área de encaixe da navbar ampliada para 128 px, sem mudar a confirmação ao soltar.
+
+D73: diminuir largura/altura de um card não reduz vizinhos nem puxa outra linha. Crescimento horizontal adapta somente a linha existente; reorganização por arraste continua disponível.
+
+D72 acrescenta posição horizontal contínua no espaço livre da própria linha, salva e adaptável à largura, sem sobreposição. Preserva troca/empurrão entre cards/linhas. Finalização do arraste deve manter destino/tamanho estáveis, sem aviso de salvamento deslocando o conteúdo.
+
+D71 esclarece os cards: sobrepor outro card troca apenas os dois; ultrapassar sua borda passa a inserir/empurrar. Os dois comportamentos coexistem no mesmo gesto, mantendo arraste livre visual e soltura válida.
+
+D69/D70: borda verde na navbar e no destino durante arraste. Cards acompanham o mouse por toda a janela e inserem antes/depois dos vizinhos com espaço marcado e deslocamento durante a prévia. Soltura continua restrita ao layout válido; fora dele/Escape restaura sem salvar. Mantidas as interações anteriores e as preferências de tamanho.
+
+D67/D68: navbar pode ser arrastada pelo fundo, sem três pontos, preservando links/botões e encaixe nas quatro bordas. Menu de posições por clique direito ou Enter/espaço com foco no painel. Cards/navbar usam cursor comum no hover; mão de arraste apenas durante movimento efetivo.
+
+D65/D66 ajustam a F03a: confirmação de restauração no mesmo botão, pelo segundo clique; Escape/clique fora/perda de foco cancelam. Altura padrão de Categorias/Evolução em 344 px, sem substituir layouts salvos; Próximos compromissos permanece 304 px.
+
+F03a (D55–D64): Geral apresenta os protótipos Categorias/Evolução/Próximos compromissos alinhados e sem sobreposição. Arrastar pelo corpo comum sem espera, preservando controles internos; canto grosso para redimensionar continuamente; duplo clique para entrar/sair do foco temporário, com filtros preservados. Sem alça de três pontos, menu de tamanhos ou botão de expansão. Vizinho cede largura até o mínimo e recupera a preferência ao descer de linha. Teclado, salvamento automático por área e restauração confirmada mantidos. D61 remove título Geral/selo acima dos cards. Não inclui cálculos ou gráficos funcionais. Critérios em [CARDS.md](docs/financas/CARDS.md).
+
 Direção de interação reforçada na revisão da F02a (D34/D35): saldo em card com carteira no canto, sem parágrafos redundantes de conta/data; conta/moeda em círculos com marcas/bandeiras, opções descendo sem painel e nomes revelados pela expansão lateral da opção no hover/foco. Aplicar composições próprias desde o protótipo, sem adiar essa direção para o fim. Contexto financeiro e persistência permanecem os já definidos.
 
 D36–D39 confirmam saldo sem degradê, um pouco mais alto e com largura preservada; somente os períodos ficam em coluna ao lado, com expansão do intervalo à direita. Importar/banco/moeda permanecem juntos no canto anterior. Opção selecionada não se repete na lista. Modos de salário/cartão usam datas salvas da conta, sem geração; troca de conta incompatível retorna ao calendário sem aviso. Limites em [períodos salvos](docs/financas/PERIODOS.md); configuração de fontes/recorrências ainda pendente.

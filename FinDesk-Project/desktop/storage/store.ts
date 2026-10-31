@@ -5,6 +5,8 @@ import { createDemoScenario } from '../../fixtures/financas/demo';
 import type { DemoSnapshot, FinancePreferences, StorageInfo } from '../../shared/storage-api';
 import { parsePreferences, parseStoredJson, StorageFailure, validateSnapshot } from './contracts';
 import { DEMO_MIGRATIONS, migrate, PREFERENCE_MIGRATIONS } from './migrations';
+import { defaultCardLayout, parseCardLayout } from '../../application/card-layout';
+import type { CardLayout } from '../../shared/card-layout';
 
 export const DEFAULT_PREFERENCES: FinancePreferences = Object.freeze({
   version: 3,
@@ -175,5 +177,52 @@ export class DemoStore {
   close(): void {
     if (this.demo?.isOpen) this.demo.close();
     if (this.preferences?.isOpen) this.preferences.close();
+  }
+
+  readCardLayout(): CardLayout | null {
+    const [, preferences] = this.requireOpen();
+    const row = preferences
+      .prepare(
+        "SELECT payload FROM preferences WHERE key IN ('layout.finance-general.v3', 'layout.finance-general.v2', 'layout.finance-general.v1') ORDER BY key DESC LIMIT 1",
+      )
+      .get();
+    if (!row) return null;
+    const raw = parseStoredJson(row['payload']);
+    if (
+      raw &&
+      typeof raw === 'object' &&
+      'version' in raw &&
+      raw.version !== 1 &&
+      raw.version !== 2 &&
+      raw.version !== 3
+    )
+      throw new StorageFailure('incompatible');
+    try {
+      return parseCardLayout(raw);
+    } catch {
+      throw new StorageFailure('corrupt');
+    }
+  }
+
+  saveCardLayout(value: unknown): CardLayout {
+    const checked = parseCardLayout(value);
+    this.readCardLayout();
+    return this.writeCardLayout(checked);
+  }
+
+  private writeCardLayout(checked: CardLayout): CardLayout {
+    const [, preferences] = this.requireOpen();
+    transaction(preferences, () => {
+      preferences
+        .prepare(
+          "INSERT INTO preferences (key, payload) VALUES ('layout.finance-general.v3', ?) ON CONFLICT(key) DO UPDATE SET payload = excluded.payload",
+        )
+        .run(JSON.stringify(checked));
+    });
+    return this.readCardLayout()!;
+  }
+
+  restoreCardLayout(): CardLayout {
+    return this.writeCardLayout(defaultCardLayout());
   }
 }

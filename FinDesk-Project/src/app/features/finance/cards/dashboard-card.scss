@@ -1,0 +1,76 @@
+:host {
+  display: block;
+  min-width: 0;
+  height: 100%;
+}
+.card-shell {
+  position: relative;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--fd-border);
+  border-radius: var(--fd-radius);
+  background: var(--fd-surface);
+  cursor: default;
+  user-select: none;
+  touch-action: none;
+}
+.focused-shell,
+.focused-shell:active {
+  cursor: default;
+}
+header {
+  display: flex;
+  align-items: center;
+  min-height: 56px;
+  padding: 12px 24px;
+}
+h3 {
+  min-width: 0;
+  font-size: 15px;
+  font-weight: 500;
+  line-height: 1.3;
+}
+.card-content {
+  flex: 1;
+  min-height: 0;
+  padding: 12px 24px 32px;
+  overflow: auto;
+}
+.resize-handle {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  // A área transparente precisa alcançar também o canto externo do traço.
+  // Arredondá-la deixa o clique atravessar para o conteúdo e inicia movimento.
+  border-radius: 0;
+  cursor: nwse-resize;
+  touch-action: none;
+}
+.resize-handle::after {
+  content: '';
+  position: absolute;
+  right: 2px;
+  bottom: 2px;
+  width: 17px;
+  height: 17px;
+  border-right: 4px solid var(--fd-muted);
+  border-bottom: 4px solid var(--fd-muted);
+  border-bottom-right-radius: 8px;
+}
+.resize-handle:hover::after,
+.resize-handle:focus-visible::after {
+  border-color: var(--fd-accent);
+}
+.resize-handle[aria-disabled='true'] {
+  opacity: 0.25;
+  cursor: default;
+}
+.resize-handle:focus-visible {
+  outline-offset: 2px;
+}

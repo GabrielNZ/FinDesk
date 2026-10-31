@@ -93,8 +93,22 @@ export class NavigationLayout {
     return performance.now() < this.ignoreClickUntil;
   }
 
-  startDock(event: PointerEvent, frame: HTMLElement): void {
-    if (this.gesture || event.button !== 0 || !event.isPrimary) return;
+  startDock(event: PointerEvent, frame: HTMLElement): boolean {
+    if (this.gesture || event.button !== 0 || !event.isPrimary) return false;
+    if (
+      !(event.target instanceof Element) ||
+      event.target.closest(
+        'a, button, input, textarea, select, [contenteditable="true"], [role="button"], [role="slider"], [data-navigation-interactive]',
+      )
+    )
+      return false;
+    const source = event.target;
+    const box = source.getBoundingClientRect();
+    if (
+      (source.scrollHeight > source.clientHeight && event.clientX >= box.right - 14) ||
+      (source.scrollWidth > source.clientWidth && event.clientY >= box.bottom - 14)
+    )
+      return false;
     const target = event.currentTarget as HTMLElement;
     event.preventDefault();
     this.stopAnimation();
@@ -109,7 +123,6 @@ export class NavigationLayout {
       moved: false,
       listeners,
     };
-    target.setPointerCapture(event.pointerId);
     const options = { signal: listeners.signal };
     window.addEventListener('pointermove', (move) => this.movePointer(move), options);
     window.addEventListener(
@@ -140,13 +153,20 @@ export class NavigationLayout {
       options,
     );
     target.addEventListener('lostpointercapture', () => this.finishGesture(false), options);
+    return true;
   }
 
   private movePointer(event: PointerEvent): void {
     const gesture = this.gesture;
     if (!gesture || event.pointerId !== gesture.pointerId) return;
-    gesture.moved ||=
-      Math.hypot(event.clientX - gesture.startX, event.clientY - gesture.startY) >= 6;
+    if (
+      !gesture.moved &&
+      Math.hypot(event.clientX - gesture.startX, event.clientY - gesture.startY) >= 6
+    ) {
+      gesture.moved = true;
+      gesture.target.setPointerCapture(gesture.pointerId);
+      document.documentElement.classList.add('fd-nav-dragging');
+    }
     if (gesture.moved) {
       this.dragging.set(true);
       this.candidate.set(dockTarget(event.clientX, event.clientY, gesture.frame));
@@ -163,6 +183,7 @@ export class NavigationLayout {
     if (commit && gesture.moved && target) this.moveTo(target);
     this.candidate.set(null);
     this.dragging.set(false);
+    document.documentElement.classList.remove('fd-nav-dragging');
     if (gesture.target.hasPointerCapture(gesture.pointerId))
       gesture.target.releasePointerCapture(gesture.pointerId);
   }

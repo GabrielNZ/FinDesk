@@ -1,0 +1,109 @@
+<section aria-label="Cards do Geral" [attr.aria-busy]="state.saving() || state.restoring()">
+  @if (state.state() === 'loading') {
+    <p class="layout-status" role="status">Carregando layout…</p>
+  } @else if (state.state() === 'failed') {
+    <p class="layout-status" role="alert">{{ state.error() }}</p>
+    <button type="button" class="layout-action" (click)="state.load()">Tentar novamente</button>
+  } @else if (state.state() === 'browser') {
+    <p class="layout-status">
+      Layout disponível no aplicativo desktop. Reinicie-o se a ponte precisar ser atualizada.
+    </p>
+  }
+  @if (state.saveError()) {
+    <div class="layout-status">
+      <p role="alert">{{ state.saveError() }}</p>
+      @if (state.state() === 'ready' && !confirming()) {
+        <button type="button" class="layout-action" (click)="state.commit(state.layout())">
+          Tentar salvar novamente
+        </button>
+      }
+    </div>
+  } @else if (state.restoring()) {
+    <p class="layout-status" role="status">Restaurando layout…</p>
+  } @else if (state.saving()) {
+    <span class="visually-hidden" role="status">Salvando layout…</span>
+  }
+  <span class="visually-hidden" role="status">{{ announcement() }}</span>
+  @if (state.state() === 'ready') {
+    <div class="board-container">
+      <div
+        #board
+        class="card-board"
+        [class.reordering]="!!drag()"
+        [class.focus-view]="!!focused()"
+        [style.--focus-height.px]="focusHeight()"
+        [style.height.px]="boardHeight()"
+      >
+        @if (heightAssist(); as assist) {
+          <div
+            class="height-guide"
+            aria-hidden="true"
+            [style.top.px]="boxFor(assist.id).y + assist.height"
+          ></div>
+        }
+        @if (drag()?.valid) {
+          @if (dropSlot(); as slot) {
+            <div
+              class="drop-slot"
+              [attr.data-mode]="drag()?.mode"
+              aria-hidden="true"
+              [style.left.px]="slot.x"
+              [style.top.px]="slot.y + (drag()?.offsetY ?? 0)"
+              [style.width.px]="slot.width"
+              [style.height.px]="slot.height"
+            ></div>
+          }
+        }
+        @for (savedCard of boardWidth() > 0 ? state.layout().cards : []; track savedCard.id) {
+          @let card = placement(savedCard.id);
+          @let box = boxFor(savedCard.id);
+          <fd-dashboard-card
+            class="card-item"
+            [attr.data-card-id]="card.id"
+            [attr.data-columns]="card.columns"
+            [attr.data-rows]="card.rows"
+            [style.left.px]="drag()?.id === card.id ? drag()!.x : focused() === card.id ? 0 : box.x"
+            [style.top.px]="
+              drag()?.id === card.id
+                ? drag()!.y
+                : focused() === card.id
+                  ? 0
+                  : box.y + (drag()?.offsetY ?? 0)
+            "
+            [style.width]="
+              drag()?.id === card.id
+                ? drag()!.width + 'px'
+                : focused() === card.id
+                  ? '100%'
+                  : box.width + 'px'
+            "
+            [style.height.px]="
+              drag()?.id === card.id
+                ? drag()!.height
+                : focused() === card.id
+                  ? focusHeight()
+                  : box.height
+            "
+            [hidden]="!!focused() && focused() !== card.id"
+            [class.focused-card]="focused() === card.id"
+            [class.moving-card]="drag()?.id === card.id"
+            [placement]="card"
+            [heading]="headings[card.id]"
+            [focused]="focused() === card.id"
+            [disabled]="state.restoring() || confirming()"
+            (moveStart)="start($event, card, 'move')"
+            (resizeStart)="start($event, card, 'resize')"
+            (moveKey)="moveKey($event, card.id)"
+            (resizeKey)="resizeKey($event, card)"
+            (focusRequested)="toggleFocus(card.id)"
+          >
+            <div class="prototype-content">
+              <i [class]="'pi ' + icons[card.id]" aria-hidden="true"></i>
+              <p>{{ pending[card.id] }}</p>
+            </div>
+          </fd-dashboard-card>
+        }
+      </div>
+    </div>
+  }
+</section>

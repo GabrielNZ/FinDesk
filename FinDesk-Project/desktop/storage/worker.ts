@@ -29,6 +29,15 @@ try {
         case 'restore-demo':
           value = store.restoreDemo();
           break;
+        case 'read-card-layout':
+          value = store.readCardLayout();
+          break;
+        case 'save-card-layout':
+          value = store.saveCardLayout(request.payload);
+          break;
+        case 'restore-card-layout':
+          value = store.restoreCardLayout();
+          break;
         case 'close':
           store.close();
           value = null;

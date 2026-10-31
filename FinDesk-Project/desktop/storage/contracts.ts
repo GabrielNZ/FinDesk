@@ -1,6 +1,8 @@
 import { civilDate } from '../../domain/civil-date';
 import { validateFacts } from '../../domain/finance';
 import { snapshotShape } from './snapshot-shape';
+import { parseCardLayout } from '../../application/card-layout';
+import type { CardLayout } from '../../shared/card-layout';
 import type {
   DemoSnapshot,
   AccountCycleReference,
@@ -180,7 +182,22 @@ export function validateSnapshot(value: unknown): DemoSnapshot {
 }
 
 export type StorageOperation =
-  'read-demo' | 'read-preferences' | 'save-preferences' | 'restore-demo' | 'close';
+  | 'read-demo'
+  | 'read-preferences'
+  | 'save-preferences'
+  | 'restore-demo'
+  | 'read-card-layout'
+  | 'save-card-layout'
+  | 'restore-card-layout'
+  | 'close';
+
+export function parseLayoutRequest(value: unknown): CardLayout {
+  try {
+    return parseCardLayout(value);
+  } catch {
+    throw new StorageFailure('invalid-request');
+  }
+}
 export interface WorkerRequest {
   readonly id: number;
   readonly operation: StorageOperation;
@@ -196,14 +213,24 @@ export function validateRequest(value: unknown): WorkerRequest {
   if (
     !Number.isSafeInteger(data['id']) ||
     (data['id'] as number) < 1 ||
-    !['read-demo', 'read-preferences', 'save-preferences', 'restore-demo', 'close'].includes(
-      data['operation'] as string,
-    ) ||
+    ![
+      'read-demo',
+      'read-preferences',
+      'save-preferences',
+      'restore-demo',
+      'read-card-layout',
+      'save-card-layout',
+      'restore-card-layout',
+      'close',
+    ].includes(data['operation'] as string) ||
     Object.keys(data).some((key) => !['id', 'operation', 'payload'].includes(key))
   )
     throw new StorageFailure('invalid-request');
   if (data['operation'] === 'save-preferences') parsePreferences(data['payload']);
-  else if (data['operation'] === 'restore-demo') {
+  else if (data['operation'] === 'save-card-layout') parseLayoutRequest(data['payload']);
+  else if (data['operation'] === 'restore-card-layout') {
+    if (data['payload'] !== 'restore-card-layout') throw new StorageFailure('invalid-request');
+  } else if (data['operation'] === 'restore-demo') {
     if (data['payload'] !== 'restore-demo-data') throw new StorageFailure('invalid-request');
   } else if (data['payload'] !== undefined) throw new StorageFailure('invalid-request');
   return data as unknown as WorkerRequest;

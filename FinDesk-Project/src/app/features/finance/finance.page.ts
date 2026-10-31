@@ -4,16 +4,26 @@ import { formatMoney } from '../../../../application/finance-context';
 import { FinanceContext } from './finance-context.service';
 import { CircleSelector, type CircleChoice } from './circle-selector';
 import { PeriodControl } from './period-control';
+import { CardLayoutAction } from './cards/card-layout-action';
+import { CardLayoutState } from './cards/card-layout.service';
 
 @Component({
   selector: 'fd-finance-page',
-  imports: [RouterLink, RouterLinkActive, RouterOutlet, CircleSelector, PeriodControl],
+  imports: [
+    RouterLink,
+    RouterLinkActive,
+    RouterOutlet,
+    CircleSelector,
+    PeriodControl,
+    CardLayoutAction,
+  ],
   templateUrl: './finance.page.html',
   styleUrl: './finance.page.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class FinancePage {
   readonly context = inject(FinanceContext);
+  readonly cardLayout = inject(CardLayoutState);
   readonly money = formatMoney;
   readonly accountChoices = computed<readonly CircleChoice[]>(() => [
     ...(this.context.snapshot()?.facts.accounts ?? []).map((account): CircleChoice => ({

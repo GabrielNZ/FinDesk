@@ -11,6 +11,10 @@ const api: DesktopApi = Object.freeze({
     getPreferences: () => ipcRenderer.invoke('findesk:preferences-read'),
     savePreferences: (value) => ipcRenderer.invoke('findesk:preferences-save', value),
     restoreDemoData: (confirmation) => ipcRenderer.invoke('findesk:demo-restore', confirmation),
+    getCardLayout: () => ipcRenderer.invoke('findesk:card-layout-read'),
+    saveCardLayout: (layout) => ipcRenderer.invoke('findesk:card-layout-save', layout),
+    restoreCardLayout: (confirmation) =>
+      ipcRenderer.invoke('findesk:card-layout-restore', confirmation),
   }),
 });
 

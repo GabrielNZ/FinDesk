@@ -29,7 +29,21 @@ export class App {
   ];
 
   openPositionMenu(event: MouseEvent, menu: Menu): void {
+    if (
+      event.target instanceof Element &&
+      event.target.closest('a, button, input, select, textarea')
+    )
+      return;
+    event.preventDefault();
     if (!this.layout.wasDragged()) menu.toggle(event);
+  }
+  startNavigationDock(event: PointerEvent, frame: HTMLElement, menu: Menu): void {
+    if (this.layout.startDock(event, frame)) menu.hide();
+  }
+  navigationKey(event: KeyboardEvent, menu: Menu): void {
+    if (event.target !== event.currentTarget || !['Enter', ' '].includes(event.key)) return;
+    event.preventDefault();
+    menu.toggle(event);
   }
   readonly navigation = [
     { path: '/visao-geral', label: 'Visão geral', icon: 'pi-th-large' },
