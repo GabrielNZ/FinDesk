@@ -68,7 +68,7 @@ test('casca abre o build local com ponte isolada, navega e responde em janela me
     await expect.poll(async () => Math.round((await sidebar.boundingBox())?.width ?? 0)).toBe(72);
     expect((await main.boundingBox())?.width ?? 0).toBeGreaterThan(expandedContentWidth);
     await page.getByRole('navigation').getByRole('link', { name: 'Finanças' }).click();
-    await expect(page.getByRole('heading', { name: 'Finanças.' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Finanças', exact: true })).toBeVisible();
     expect(Math.round((await sidebar.boundingBox())?.width ?? 0)).toBe(72);
     await page.screenshot({ path: 'test-results/sidebar-collapsed.png', fullPage: true });
 
@@ -86,7 +86,7 @@ test('casca abre o build local com ponte isolada, navega e responde em janela me
       .getByRole('navigation', { name: 'Navegação principal' })
       .getByRole('link', { name: 'Finanças' })
       .click();
-    await expect(page.getByRole('heading', { name: 'Finanças.' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Finanças', exact: true })).toBeVisible();
     await page.getByRole('navigation').getByRole('link', { name: 'Investimentos' }).click();
     await expect(page.getByRole('heading', { name: 'Investimentos.' })).toBeVisible();
     await page.reload();

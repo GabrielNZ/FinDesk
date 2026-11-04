@@ -1,0 +1,53 @@
+# F04a — Extrato de movimentações e filtros iniciais
+
+## Decisões confirmadas em 31/10/2026
+
+- D77: somente movimentos efetivos da conta nesta fatia: recebimentos, despesas, transferências próprias, pagamentos de fatura e aportes. Compras/parcelas e previsões não entram na lista; pagamento de fatura não vira consumo.
+- D78: lista agrupada por dia em card com largura disponível. Busca e filtros compactos de tipo/categoria, filtros ativos removíveis. Reutilizar conta/moeda/período do cabeçalho; sem reservar blocos vazios para F05/F07.
+- D79: clicar na linha abre/recolhe detalhes abaixo dela, sem perder contexto. Consulta somente, sem edição/cadastro da F06.
+
+## Critérios de aceitação
+
+### Revisão solicitada após a primeira apresentação
+
+Esta revisão substitui a moldura única de D78. Confirmado por Gabriel: movimentações como itens independentes, área de análise à direita recebendo vários itens por arraste, adaptação do conteúdo e atualização dos totais, ícones em quadrados arredondados e dois botões quadrados ao lado de Extrato para alternar Cards/Lista. A lista não deve ocupar toda a largura disponível. As escolhas de formato, permanência dos originais e alcance da seleção foram respondidas e confirmadas em D80–D82.
+
+A composição completa permanece: cards de maior gasto/aumento/redução/desvio no topo; extrato e agrupamento no centro, com foco; gráficos comparativos por categoria e evolução abaixo. Organização dinâmica salva conforme o padrão estabelecido. A nova área de seleção precisa conviver com o agrupamento, sem apagá-lo do plano: discutir a disposição quando necessário, antes da implementação dependente. F04a não deve introduzir um contêiner rígido que obrigue relatórios e gráficos a ficarem dentro do extrato.
+
+Clique nas análises aplica filtros visíveis/removíveis ao extrato e agrupamento; gráficos usam o contexto compatível. Exemplos de R$ 300/+R$ 80/+36%, R$ 450/−R$ 100/−18%, 32% e R$ 60 acima da média ilustram o comportamento desejado, sem aprovar metodologia de comparação ou tornar esses números resultados dos fatos existentes. Parâmetros comparativos continuam sujeitos ao levantamento correspondente.
+
+Perguntas respondidas: manter original marcado, impedir repetição do mesmo ID na seleção, oferecer clique/teclado como alternativa; cards em coluna versus lista compacta; seleção restrita à consulta atual. Gabriel confirmou as três recomendações apresentadas. Total de despesas respeita as exclusões financeiras já confirmadas; demais tipos não viram gasto. Subtotais somam os valores exibidos de cada item (com arredondamento por item na conversão de apresentação D33), conservando os valores originais nos detalhes.
+
+Respostas recebidas: D80–D83 confirmam manter o original marcado, cards em coluna/lista compacta e seleção vinculada à consulta. Sem perguntas pendentes desta revisão. Os critérios iniciais abaixo permanecem válidos nas partes compatíveis, substituindo a moldura única pela composição revisada.
+
+### Aceitação da seleção e dos modos de visualização
+
+Revisão D88: acrescentar Total da seleção acima dos subtotais. É soma assinada dos movimentos selecionados únicos, não soma de magnitudes: entradas positivas e saídas negativas. Caso da imagem: Energia −120 + Serviço mensal −39,90 + Fatura −260 + Aporte −200 = −619,90 BRL. Despesas permanece 159,90, Faturas 260 e Aportes 200; não reclassificar liquidações/aportes como consumo. No modo Original, totais distintos por moeda; no convertido, somar os valores exibidos com D33 identificado. Valor ausente/inválido ou soma final além da precisão torna o total daquela moeda indisponível, sem soma parcial. Usar soma intermediária exata para não perder um resultado válido quando entradas e saídas grandes se compensam. Total acompanha seleção, remoção e filtros; nenhum fato é alterado.
+
+Revisão D86/D87: ícones neutros; cores de fluxo restritas aos valores. A tabela adapta colunas à largura real de seu bloco e usa rolagem somente quando há conteúdo excedente, sem forçar 500/420 px onde os dados cabem em menos espaço. Canto inferior direito grosso de 4 px, como no Geral, ajusta largura/altura continuamente e por setas no teclado. A lista mantém ordenação, seleção e expansão; a área de análise conserva pelo menos 240 px quando lado a lado. Janela estreita reacomoda sem regravar tamanho por mero redimensionamento da janela. Altura inicial automática; ajuste explícito fixa a altura do conteúdo e habilita rolagem vertical apenas se necessário.
+
+Organização salva segue D83: tamanho da Lista em namespace próprio `layout.finance-statement.v1` de preferences.sqlite, separado dos cards do Geral e dos fatos. Largura proporcional e altura opcional; contratos fechados/validados no processo principal e worker. Leitura não grava defaults; formato inválido/futuro preservado e erro informado, sem substituir silenciosamente. Salvar uma vez ao soltar e por ação de teclado; Escape/cancelamento/perda de foco desfazem o gesto sem gravar. Restauração da demonstração preserva o tamanho. Não criar migração nem banco para esse namespace. Testes somente em perfis temporários.
+
+Revisão D84/D85: valores de saída em vermelho e entrada em verde, pelo sinal original do movimento, incluindo transferências recebidas/enviadas sem alterar sua classificação financeira. Aplicar a fonte, seleção e valor original dos detalhes. Modo Lista passa a tabela compacta com cabeçalho, datas por linha, descrição com expansor, categoria em etiqueta, conta e valor à direita, seguindo a referência enviada. Dados atuais não informam se o meio é Débito/Pix; mostrar Conta, sem fabricar esse atributo ou incluir compras do cartão. Manter controles próprios de busca/filtros, seleção e arraste. Layout estreito pode mostrar conta junto da descrição e usar rolagem apenas dentro da tabela se necessário, preservando a área de análise à direita.
+
+1. Padrão Cards: movimentos individuais em coluna por data, sem moldura externa. Dois botões quadrados junto de Extrato alternam Cards/Lista compacta, com estado selecionado acessível. Troca mantém busca/filtros, detalhes e seleção. Ícones em quadrados arredondados.
+2. Arrastar o corpo comum de uma movimentação para a área da direita adiciona o item uma vez por ID. Movimento começa após poucos pixels, sem espera; clique parado continua abrindo detalhes. Botões internos e controles permanecem independentes. Originais ficam no lugar, marcados; há ação por clique/teclado equivalente ao arraste. Mão fechada somente durante movimento efetivo.
+3. Durante arraste, prévia acompanha o ponteiro pela janela e destino válido recebe destaque. Soltar fora, Escape, perda de foco ou saída da tela não adiciona item; limpar prévia/listeners/cursor ao terminar, cancelar ou destruir componente.
+4. Área da direita fica disponível mesmo vazia; os selecionados aparecem expandidos e adaptam o espaço com remoção individual/limpeza geral. Despesas somam suas magnitudes; recebimentos, transferências enviadas/recebidas, pagamentos de fatura e aportes têm subtotais próprios, sem virar consumo. Originais em moedas distintas permanecem separados no modo Original. Conversão usa D33 explicitamente; falta de cotação/precisão torna o subtotal afetado indisponível, nunca parcial silencioso.
+5. Seleção é o conjunto de IDs únicos ainda presentes na consulta. Mudar conta, período, busca, tipo ou categoria remove definitivamente da seleção os itens excluídos pela consulta; limpar o filtro não os reseleciona. Trocar somente moeda ou modo visual preserva os IDs. Manter contexto na execução ao trocar submenus; sem gravar seleção nem modo visual no banco.
+6. Separar lista, detalhes e seleção para futura composição com agrupamento, relatórios acima e gráficos abaixo. Esta revisão não implementa comparações F07 nem muda o namespace de layout do Geral. Organização dos painéis completos permanece requisito das entregas pertinentes.
+7. Validar soma exata, exclusões por tipo, moedas, duplicidade por ID, poda da seleção, clique versus arraste, cancelamento, teclado, remoção, dois modos, janela estreita e preservação dos fatos/preferências. Somente perfis temporários nos testes.
+
+1. Selecionar movimentos por conta e intervalo inclusivo de datas civis do contexto. Todas as contas inclui os registros de cada conta, inclusive as duas pontas da transferência, identificadas; não há total somando moedas ou classificando liquidações/aportes como consumo.
+2. Ordenar por data mais recente, desempate determinístico por ID. Preservar registros distintos de mesmo valor/data/descrição, sem deduplicação por aparência.
+3. Busca sem distinção de acentos/maiúsculas; tipo e categoria combinam com busca e contexto. Sem categoria inclui despesas sem classificação; não atribuir essa categoria a salário/transferência/fatura/aporte. Categorias conhecidas da demo recebem rótulos locais; desconhecidas preservam seu identificador.
+4. Filtros em botões com opções próprias, sem select genérico; estados selecionados, teclado/foco e opção de remover individualmente ou limpar. Manter busca/filtros ao trocar submenus nesta execução; sem criar persistência de preferências nesta fatia.
+5. Cada linha mostra ícone de tipo como fallback local, descrição, categoria/tipo, conta e valor. Não acessar serviços remotos de logos. Rótulos amigáveis dos IDs fictícios existentes são um catálogo de apresentação restrito à fonte/seed demo, sem reescrever fatos; descrição original permanece nos detalhes.
+6. Conversão de apresentação reutiliza a cotação fictícia D33 (1 USD = 5 BRL, 29/10/2026), identificada sempre que usada, sem tratar como cotação histórica da movimentação. Detalhes preservam valor original. Sem cotação válida, mostrar indisponibilidade; nunca zero inventado.
+7. Detalhes com data, tipo, conta, valor original, categoria quando aplicável e origem/IDs de rastreabilidade. Sem ações de edição falsas; links de fatura/transferência preservados como informação. Clique/Enter/espaço alternam a linha e preservam foco.
+8. Estados distinguem período sem movimentos registrados de busca/filtros sem resultados; não afirmam inexistência de gastos onde não há histórico. Respeitar estado de leitura/erro já tratado pelo cabeçalho. Sem dados reais, mudança de banco, IPC ou novos pacotes.
+9. Conferir filtros combinados, limites de período, moedas, casos sem categoria/duplicidade aparente, contexto/detalhes, teclado e apresentação ampla/estreita. Somente perfis temporários nos testes Electron; fatos/preferências preservados.
+
+## Limites
+
+Tabela agrupada F05; edição/cadastro F06; análises F07; compras/parcelas e suas regras temporais nas etapas próprias. Card de extrato nesta fatia tem composição única; não altera o layout salvo dos cards do Geral.

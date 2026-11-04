@@ -88,8 +88,8 @@ test('F03a: arraste, redimensionamento, foco com filtros e reabertura preservam 
       .elementHandle();
     await page.locator('[data-focus-id="evolution"]').dblclick({ position: { x: 150, y: 100 } });
     await expect(page.locator('.card-item:visible')).toHaveCount(1);
-    await expect(page.getByRole('heading', { name: 'Finanças.' })).toBeVisible();
-    await expect(page.getByRole('heading', { name: 'Finanças.' })).toBeInViewport();
+    await expect(page.getByRole('heading', { name: 'Finanças', exact: true })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Finanças', exact: true })).toBeInViewport();
     const currency = page.getByRole('button', { name: /^Moeda:/ });
     await currency.click();
     await page.locator('[role="option"][data-value="USD"]').click();
@@ -570,10 +570,12 @@ test('F03a: cabeçalho compacto centraliza períodos e restauração fica na mes
       if (message.type() === 'error') errors.push(message.text());
     });
     await open(page);
-    const title = (await page.getByRole('heading', { name: 'Finanças.' }).boundingBox())!;
+    const title = (await page
+      .getByRole('heading', { name: 'Finanças', exact: true })
+      .boundingBox())!;
     const about = (await page.getByRole('button', { name: 'Sobre esta versão' }).boundingBox())!;
     expect(title.y).toBeLessThan(30);
-    expect(about.y + about.height / 2).toBeCloseTo(24, 0);
+    expect(about.y + about.height / 2).toBeCloseTo(title.y + title.height / 2, 0);
     const balance = (await page.locator('.balance-block').boundingBox())!;
     const modes = (await page.locator('.period-modes').boundingBox())!;
     expect(balance.y + balance.height / 2).toBeCloseTo(modes.y + modes.height / 2, 0);
@@ -803,7 +805,7 @@ test('F03a: canto externo captura resize e restauração confirma no mesmo botã
     await page.keyboard.press('Escape');
     await expect(restore).toHaveText('Restaurar layout');
     await restore.click();
-    await page.getByRole('heading', { name: 'Finanças.' }).click();
+    await page.getByRole('heading', { name: 'Finanças', exact: true }).click();
     await expect(restore).toHaveText('Restaurar layout');
     expect(await saved(page)).toEqual(changed);
     await restore.click();

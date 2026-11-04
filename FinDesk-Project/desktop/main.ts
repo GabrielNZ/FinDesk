@@ -15,7 +15,13 @@ import { RUNTIME_INFO_CHANNEL, type DesktopRuntimeInfo } from '../shared/desktop
 import { PRODUCT } from '../shared/product';
 import { STORAGE_CHANNELS } from '../shared/storage-api';
 import { StorageClient } from './storage/client';
-import { failure, parsePreferences, parseLayoutRequest, StorageFailure } from './storage/contracts';
+import {
+  failure,
+  parsePreferences,
+  parseLayoutRequest,
+  parseStatementLayoutRequest,
+  StorageFailure,
+} from './storage/contracts';
 import { storageDirectory } from './storage/paths';
 import {
   APP_PAGE,
@@ -108,6 +114,7 @@ async function start(): Promise<void> {
 
   const readOperations = {
     [STORAGE_CHANNELS.readCardLayout]: () => storage?.getCardLayout(),
+    [STORAGE_CHANNELS.readStatementLayout]: () => storage?.getStatementLayout(),
     [STORAGE_CHANNELS.status]: () => storage?.getStatus(),
     [STORAGE_CHANNELS.readDemo]: () => storage?.getDemo(),
     [STORAGE_CHANNELS.readPreferences]: () => storage?.getPreferences(),
@@ -152,6 +159,18 @@ async function start(): Promise<void> {
     if (!trustedSender(event) || args.length !== 1 || args[0] !== 'restore-card-layout')
       return failure(new StorageFailure('invalid-request'));
     return storage?.restoreCardLayout() ?? failure(new StorageFailure('unavailable'));
+  });
+  ipcMain.handle(STORAGE_CHANNELS.saveStatementLayout, (event, ...args: unknown[]) => {
+    if (!trustedSender(event) || args.length !== 1)
+      return failure(new StorageFailure('invalid-request'));
+    try {
+      return (
+        storage?.saveStatementLayout(parseStatementLayoutRequest(args[0])) ??
+        failure(new StorageFailure('unavailable'))
+      );
+    } catch (error) {
+      return failure(error);
+    }
   });
   session.defaultSession.setPermissionRequestHandler((_contents, _permission, callback) => {
     callback(false);

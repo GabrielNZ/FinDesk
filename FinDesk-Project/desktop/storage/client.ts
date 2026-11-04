@@ -8,6 +8,7 @@ import type {
 } from '../../shared/storage-api';
 import { failure, StorageFailure, type StorageOperation, type WorkerResponse } from './contracts';
 import type { CardLayout } from '../../shared/card-layout';
+import type { StatementLayout } from '../../shared/statement-layout';
 
 /** Canal interno para um único worker; sem SQL, eval ou caminho em mensagens. */
 export class StorageClient {
@@ -105,6 +106,12 @@ export class StorageClient {
 
   getCardLayout(): Promise<StorageResult<CardLayout | null>> {
     return this.request('read-card-layout');
+  }
+  getStatementLayout(): Promise<StorageResult<StatementLayout | null>> {
+    return this.request('read-statement-layout');
+  }
+  saveStatementLayout(layout: StatementLayout): Promise<StorageResult<StatementLayout>> {
+    return this.request('save-statement-layout', layout);
   }
   saveCardLayout(layout: CardLayout): Promise<StorageResult<CardLayout>> {
     return this.request('save-card-layout', layout);

@@ -16,7 +16,7 @@ D36–D39 antecipam a primeira fatia dos ciclos durante a revisão do cabeçalho
 
 ## Etapa 0 — fundação e demonstração
 
-F03a implementa a primeira aplicação do padrão de cards no Geral conforme D55–D60 e [CARDS.md](financas/CARDS.md): arraste/tamanho em grade, alternativas por teclado, foco temporário, persistência/restauração restritas. Conteúdos financeiros continuam nas entregas próprias. Próxima proposta F04a — Extrato de movimentações e filtros iniciais; aprovação/estado ficam somente em PROJECT_STATUS.
+F03a implementa a primeira aplicação do padrão de cards no Geral conforme D55–D60 e [CARDS.md](financas/CARDS.md): arraste/tamanho em grade, alternativas por teclado, foco temporário, persistência/restauração restritas. F04a (D77–D79) acrescenta o extrato de caixa por dia, busca/filtros e detalhes na linha conforme [EXTRATO.md](financas/EXTRATO.md). Próxima proposta: F05a — Agrupamento por categoria e estabelecimento, com levantamento antes da implementação. Aprovação/estado ficam somente em PROJECT_STATUS.
 
 F02b.3 concretiza referências por conta e geração salarial mensal limitada conforme D44–D52 e [CICLOS_CONFIGURAVEIS.md](financas/CICLOS_CONFIGURAVEIS.md). Feriados, múltiplas fontes salariais, geração de fechamentos e alocação de compras sem vínculo ficam nos escopos pertinentes. Próxima proposta: F03a — Padrão inicial de cards e modo de organização, com composição/gestos discutidos antes da implementação.
 

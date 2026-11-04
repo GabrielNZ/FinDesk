@@ -20,6 +20,98 @@ const {
   validateRequest,
 } = require('../../out/desktop/storage/contracts.js');
 const { storageDirectory } = require('../../out/desktop/storage/paths.js');
+const { defaultStatementLayout } = require('../../out/application/statement-layout.js');
+
+test('F04a/D87: tamanho da lista persiste isolado, leitura não grava e restauração demo o preserva', async (t) => {
+  const root = await temporary(t);
+  let store = new DemoStore(root);
+  const facts = store.readDemo();
+  const prefs = store.readPreferences();
+  const layout = { ...defaultStatementLayout(), listShare: 0.55, listHeight: 432.5 };
+  try {
+    assert.equal(store.readStatementLayout(), null);
+    const db = new DatabaseSync(join(root, 'preferences.sqlite'));
+    try {
+      assert.equal(
+        db
+          .prepare(
+            "SELECT count(*) AS n FROM preferences WHERE key = 'layout.finance-statement.v1'",
+          )
+          .get().n,
+        0,
+      );
+    } finally {
+      db.close();
+    }
+    store.saveStatementLayout(layout);
+    assert.equal(store.readCardLayout(), null);
+    assert.deepEqual(store.readDemo(), facts);
+    assert.deepEqual(store.readPreferences(), prefs);
+    store.restoreDemo();
+    assert.deepEqual(store.readStatementLayout(), layout);
+  } finally {
+    store.close();
+  }
+  store = new DemoStore(root);
+  try {
+    assert.deepEqual(store.readStatementLayout(), layout);
+  } finally {
+    store.close();
+  }
+});
+
+test('F04a/D87: worker valida layout fechado e preserva formato futuro sem sobrescrever', async (t) => {
+  const root = await temporary(t);
+  const client = new StorageClient(root);
+  try {
+    const layout = { ...defaultStatementLayout(), listHeight: 360 };
+    assert.deepEqual(await client.getStatementLayout(), { ok: true, value: null });
+    assert.equal(
+      (await client.saveStatementLayout({ ...layout, path: 'privado' })).error.code,
+      'invalid-request',
+    );
+    assert.deepEqual(await client.saveStatementLayout(layout), { ok: true, value: layout });
+    assert.deepEqual(await client.getStatementLayout(), { ok: true, value: layout });
+    assert.throws(() =>
+      validateRequest({ id: 1, operation: 'read-statement-layout', payload: 'sql' }),
+    );
+  } finally {
+    await client.close();
+  }
+  const db = new DatabaseSync(join(root, 'preferences.sqlite'));
+  const payload = JSON.stringify({ ...defaultStatementLayout(), version: 2 });
+  try {
+    db.prepare("UPDATE preferences SET payload = ? WHERE key = 'layout.finance-statement.v1'").run(
+      payload,
+    );
+  } finally {
+    db.close();
+  }
+  const store = new DemoStore(root);
+  try {
+    assert.throws(
+      () => store.readStatementLayout(),
+      (error) => error.code === 'incompatible',
+    );
+    assert.throws(
+      () => store.saveStatementLayout(defaultStatementLayout()),
+      (error) => error.code === 'incompatible',
+    );
+  } finally {
+    store.close();
+  }
+  const check = new DatabaseSync(join(root, 'preferences.sqlite'));
+  try {
+    assert.equal(
+      check
+        .prepare("SELECT payload FROM preferences WHERE key = 'layout.finance-statement.v1'")
+        .get().payload,
+      payload,
+    );
+  } finally {
+    check.close();
+  }
+});
 
 async function temporary(t) {
   const root = await mkdtemp(join(tmpdir(), 'findesk-storage-'));

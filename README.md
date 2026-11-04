@@ -2,7 +2,7 @@
 
 Projeto pessoal de finanças e investimentos para Windows, previsto em Angular, Electron e TypeScript.
 
-Esta entrega contém a **casca navegável do aplicativo**, com tema escuro, logo original e barra nativa do Windows. Finanças tem saldo fictício, seletores de conta/moeda, cinco submenus e períodos sobre calendário ou ciclos salvos. Há persistência local e Configurações → Dados de demonstração com restauração explícita. Conteúdo dos submenus e configuração das recorrências ainda serão desenvolvidos. Nenhuma instituição está conectada.
+O aplicativo tem tema escuro, logo original e barra nativa do Windows. Finanças oferece saldo fictício, seletores de conta/moeda, calendário e ciclos configuráveis por conta. O Geral apresenta cards de protótipo organizáveis; Movimentações oferece extrato de caixa em cards/lista, busca/filtros e seleção por arraste para reunir detalhes e subtotais à direita. Há persistência local e restauração explícita da demonstração em Configurações. Compras do cartão, agrupamentos, análises e os demais conteúdos financeiros continuam nas etapas correspondentes. Nenhuma instituição está conectada.
 
 ## Instalar e executar
 

@@ -2,6 +2,8 @@
 
 O FinDesk é um aplicativo desktop local com interface Angular. A casca concretiza as responsabilidades estabelecidas no mestre, sem introduzir servidor de aplicação, serviços externos ou uma arquitetura distribuída.
 
+F04a/D87 acrescenta contrato fechado `StatementLayout` e geometria pura em `application/statement-layout.ts`. `StatementResize` coordena ponteiro/teclado, prévia contínua e cancelamento; `StatementLayoutState` lê e serializa gravações ao concluir ajustes. Preload oferece somente `getStatementLayout`/`saveStatementLayout`, com remetente/quantidade de argumentos e forma validados no principal e no worker. SQL permanece no store, em chave fixa de preferências, sem operação genérica de caminho/query. A organização do Geral mantém seu contrato/namespace; não há nova migração ou servidor.
+
 ```mermaid
 flowchart LR
   UI[Interface Angular] --> API[Contrato tipado]

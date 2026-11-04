@@ -2,6 +2,8 @@
 
 **F01c.2 implementa armazenamento da demonstração e preferências.** É a base local fictícia, não o MVP financeiro completo nem um banco de dados pessoais.
 
+F04a/D87: `layout.finance-statement.v1` em preferences.sqlite guarda `{version: 1, area: 'finance-statement', listShare, listHeight}`. Largura é fração finita de 0,2 a 0,85; altura é null (natural) ou número finito de 160 a 1.600 px. O renderer limita a exibição à janela sem regravar a preferência. Semear/ler não cria essa chave; só ajuste explícito grava. Validação fechada no principal/worker e formato desconhecido preservado, sem recriação. Restauração demo preserva a chave. Não altera esquema do SQLite, preferências financeiras ou layout do Geral; seleção/modo de visualização continuam apenas na execução.
+
 ## Ampliação de requisitos de Finanças
 
 A [especificação de Finanças](FINANCAS_SPEC.md) exige ainda categorias/estabelecimentos e regras manuais, compromissos avulsos e séries recorrentes com ocorrências, assinaturas mensais/anuais e histórico, salário previsto confirmado, vínculos de pagamento/conciliação, cobertura temporal da fonte, sugestões confirmáveis, orçamentos/alertas e preferências de período/layout por área. São conceitos requeridos, sem esquema ou entidades de código adotados nesta F00.

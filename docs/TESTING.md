@@ -29,6 +29,8 @@ Os demais comandos desta página pressupõem o diretório `FinDesk-Project/`. N�
 
 ## Cobertura desta fatia
 
+- D86/D87: testes de aplicação verificam parser fechado e geometria do tamanho da Lista; persistência cobre namespace isolado, defaults sem escrita, reabertura, restauração demo e bloqueio de versão futura. Fluxos Electron exercitam resize real/teclado/cancelamento, gravar só ao soltar, rolagem conforme excesso e recuperação de falha simulada em preferences.sqlite de perfil temporário. Nenhuma falha é simulada no perfil normal. Evidências efetivas em PROJECT_STATUS.
+- F04a: `node --test tests/application/statement.test.mjs` após `npm run build:domain` confere consulta de caixa, período inclusivo, busca/filtros, ausência de categoria, registros parecidos, conversão, seleção por ID e totais por tipo/moeda sem somas parciais. `npx playwright test tests/desktop/statement.spec.ts` após build confere cards/lista, arraste/clique/cancelamento, seleção/remoção/teclado, poda pelo contexto, detalhes e conta/moeda/ciclos em perfis temporários `findesk-statement-*`, comparando fatos e preferências. Não usa bancos normais. Contagens/resultados efetivos no status.
 - `typecheck`: TypeScript estrito de desktop, domínio/fixtures, templates Angular e testes/configuração.
 - `lint`: ESLint e regras Angular de código, templates e acessibilidade; scripts Node incluídos.
 - `format:check`: Prettier; originais em `docs/references/` e arquivos gerados estão excluídos intencionalmente.

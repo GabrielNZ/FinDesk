@@ -7,6 +7,8 @@ import { parsePreferences, parseStoredJson, StorageFailure, validateSnapshot } f
 import { DEMO_MIGRATIONS, migrate, PREFERENCE_MIGRATIONS } from './migrations';
 import { defaultCardLayout, parseCardLayout } from '../../application/card-layout';
 import type { CardLayout } from '../../shared/card-layout';
+import { parseStatementLayout } from '../../application/statement-layout';
+import type { StatementLayout } from '../../shared/statement-layout';
 
 export const DEFAULT_PREFERENCES: FinancePreferences = Object.freeze({
   version: 3,
@@ -202,6 +204,36 @@ export class DemoStore {
     } catch {
       throw new StorageFailure('corrupt');
     }
+  }
+
+  readStatementLayout(): StatementLayout | null {
+    const [, preferences] = this.requireOpen();
+    const row = preferences
+      .prepare("SELECT payload FROM preferences WHERE key = 'layout.finance-statement.v1'")
+      .get();
+    if (!row) return null;
+    const raw = parseStoredJson(row['payload']);
+    if (raw && typeof raw === 'object' && 'version' in raw && raw.version !== 1)
+      throw new StorageFailure('incompatible');
+    try {
+      return parseStatementLayout(raw);
+    } catch {
+      throw new StorageFailure('corrupt');
+    }
+  }
+
+  saveStatementLayout(value: unknown): StatementLayout {
+    const checked = parseStatementLayout(value);
+    this.readStatementLayout();
+    const [, preferences] = this.requireOpen();
+    transaction(preferences, () => {
+      preferences
+        .prepare(
+          "INSERT INTO preferences (key, payload) VALUES ('layout.finance-statement.v1', ?) ON CONFLICT(key) DO UPDATE SET payload = excluded.payload",
+        )
+        .run(JSON.stringify(checked));
+    });
+    return this.readStatementLayout()!;
   }
 
   saveCardLayout(value: unknown): CardLayout {

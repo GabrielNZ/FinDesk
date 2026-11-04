@@ -28,7 +28,7 @@ async function openFinance(page: Page): Promise<void> {
     .getByRole('navigation', { name: 'Navegação principal' })
     .getByRole('link', { name: 'Finanças', exact: true })
     .click();
-  await expect(page.getByRole('heading', { name: 'Finanças.' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Finanças', exact: true })).toBeVisible();
 }
 
 function picker(page: Page, label: 'Conta' | 'Moeda') {

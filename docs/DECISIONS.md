@@ -188,6 +188,30 @@ Fontes consultadas em 28/10/2026:
 - [IPC e preload](https://www.electronjs.org/docs/latest/tutorial/ipc).
 - [Barras de janela](https://www.electronjs.org/docs/latest/tutorial/custom-title-bar).
 
+**D77 — registros da F04a, confirmado por Gabriel em 31/10/2026:** movimentos efetivos da conta primeiro, incluindo recebimentos, despesas, transferências próprias, pagamentos de fatura e aportes, identificados por tipo. Compras/parcelas do cartão ficam separadas nesta entrega. Não altera D24 nem transforma liquidações/transferências/aportes em consumo.
+
+**D78 — composição da F04a, confirmado por Gabriel em 31/10/2026:** lista por dia em card de largura disponível, com busca/filtros compactos por tipo/categoria e filtros removíveis; conta/moeda/período no cabeçalho existente. Agrupamento e análises permanecem F05/F07.
+
+**D79 — detalhes da F04a, confirmado por Gabriel em 31/10/2026:** abrir/recolher a própria linha, mantendo contexto; consulta apenas. Cadastro/edição permanecem F06. Critérios em [EXTRATO.md](financas/EXTRATO.md).
+
+**D80 — apresentação revisada de Movimentações, confirmado por Gabriel:** substituir a moldura única por movimentos individuais em coluna no modo Cards e linhas compactas no modo Lista, alternados por dois botões quadrados junto de Extrato. Ícones em quadrados arredondados. Substitui a parte visual correspondente de D78; conta/moeda/período e filtros continuam.
+
+**D81 — seleção por arraste, confirmado por Gabriel:** arrastar para a direita mantém o original no extrato com marca de selecionado e exibe sua versão expandida na análise. Um ID não é contado duas vezes; itens distintos parecidos continuam distintos. Remover da seleção não altera fatos. Alternativa por clique/teclado acompanha o gesto.
+
+**D82 — seleção vinculada à consulta, confirmado por Gabriel:** ao trocar conta/período/busca/filtros, retirar da seleção os itens que deixaram de pertencer à consulta e recalcular. Não manter itens fixados entre contextos. Troca Cards/Lista não perde seleção/filtros; subtotais respeitam tipo e moeda.
+
+**D83 — composição completa reforçada por Gabriel:** análises de maior gasto/aumento/redução/desvio no topo, extrato e agrupamento no centro, gráficos comparativos por categoria/evolução abaixo, organização dinâmica salva. Clique na análise filtra as visualizações com indicação removível. A seleção à direita acrescenta uma interação e não elimina agrupamento/gráficos do plano. Valores ilustrativos não são resultados confirmados dos dados existentes nem aprovação de metodologia comparativa. Critérios em [EXTRATO.md](financas/EXTRATO.md).
+
+**D86 — revisão de cores e rolagem, solicitado por Gabriel:** ícones neutros, valores com cores de fluxo. Barra da Lista somente onde o conteúdo exceder o espaço; adaptar colunas à largura real em vez de impor largura mínima desnecessária.
+
+**D87 — redimensionamento da Lista, solicitado por Gabriel:** mesmo canto grosso do Geral para aumentar/diminuir o bloco. Implementação segue o padrão já confirmado de organização salva D83: largura/altura ajustáveis, seleção preservada, análise com mínimo lateral, tamanho próprio separado do layout do Geral. Critérios e limites em [EXTRATO.md](financas/EXTRATO.md).
+
+**D84 — cores do fluxo no extrato, solicitado por Gabriel:** saídas em vermelho e entradas em verde, mantendo sinais/valores e distinção entre consumo, transferência, fatura e aporte. Zero permanece neutro.
+
+**D85 — modo Lista em tabela, solicitado por Gabriel:** seguir a referência enviada com cabeçalho de colunas, registros compactos separados por linhas, data por item, descrição expansível, categoria em etiqueta e valor à direita. Preservar seleção/arraste e o modo Cards. Limitação verificada no código: os fatos não informam meio específico; nesta implementação mostramos a conta conhecida, sem inventar Débito/Crédito/Pix ou acrescentar compras do cartão.
+
+**D88 — total da seleção, solicitado por Gabriel:** mostrar um total além dos subtotais de tipo. Implementação soma os movimentos selecionados com os sinais, preservando moedas e IDs; no exemplo enviado, −R$ 619,90, dos quais R$ 159,90 são despesas, R$ 260 fatura e R$ 200 aporte. Total da seleção representa o fluxo desses registros; não altera as exclusões dos indicadores de consumo.
+
 ## Perguntas aguardando resposta e pesquisas futuras
 
 Angular/PrimeNG e barra nativa continuam confirmados em D07/D08. A limpeza de conteúdo foi acordada em D12, e a logo original foi aplicada conforme D10. Em 29/10/2026, Gabriel aprovou explicitamente o conjunto atual (casca, ajustes, F00 e reorganização) e autorizou commit e push. F01a não foi iniciada por essa tarefa de registro Git.

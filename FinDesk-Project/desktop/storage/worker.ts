@@ -32,6 +32,12 @@ try {
         case 'read-card-layout':
           value = store.readCardLayout();
           break;
+        case 'read-statement-layout':
+          value = store.readStatementLayout();
+          break;
+        case 'save-statement-layout':
+          value = store.saveStatementLayout(request.payload);
+          break;
         case 'save-card-layout':
           value = store.saveCardLayout(request.payload);
           break;

@@ -3,13 +3,16 @@ import { toSignal } from '@angular/core/rxjs-interop';
 import { ActivatedRoute } from '@angular/router';
 import { FinanceContext } from './finance-context.service';
 import { CardBoard } from './cards/card-board';
+import { Statement } from './statement/statement';
 
 @Component({
   selector: 'fd-finance-subpage',
-  imports: [CardBoard],
+  imports: [CardBoard, Statement],
   template: `
     @if (route()['section'] === 'geral') {
       <fd-card-board />
+    } @else if (route()['section'] === 'movimentacoes') {
+      <fd-statement />
     } @else {
       <section class="finance-content" [attr.aria-label]="route()['label']">
         <h2>{{ route()['label'] }}</h2>

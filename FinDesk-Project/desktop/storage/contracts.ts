@@ -3,6 +3,8 @@ import { validateFacts } from '../../domain/finance';
 import { snapshotShape } from './snapshot-shape';
 import { parseCardLayout } from '../../application/card-layout';
 import type { CardLayout } from '../../shared/card-layout';
+import { parseStatementLayout } from '../../application/statement-layout';
+import type { StatementLayout } from '../../shared/statement-layout';
 import type {
   DemoSnapshot,
   AccountCycleReference,
@@ -187,6 +189,8 @@ export type StorageOperation =
   | 'save-preferences'
   | 'restore-demo'
   | 'read-card-layout'
+  | 'read-statement-layout'
+  | 'save-statement-layout'
   | 'save-card-layout'
   | 'restore-card-layout'
   | 'close';
@@ -194,6 +198,13 @@ export type StorageOperation =
 export function parseLayoutRequest(value: unknown): CardLayout {
   try {
     return parseCardLayout(value);
+  } catch {
+    throw new StorageFailure('invalid-request');
+  }
+}
+export function parseStatementLayoutRequest(value: unknown): StatementLayout {
+  try {
+    return parseStatementLayout(value);
   } catch {
     throw new StorageFailure('invalid-request');
   }
@@ -219,6 +230,8 @@ export function validateRequest(value: unknown): WorkerRequest {
       'save-preferences',
       'restore-demo',
       'read-card-layout',
+      'read-statement-layout',
+      'save-statement-layout',
       'save-card-layout',
       'restore-card-layout',
       'close',
@@ -228,6 +241,8 @@ export function validateRequest(value: unknown): WorkerRequest {
     throw new StorageFailure('invalid-request');
   if (data['operation'] === 'save-preferences') parsePreferences(data['payload']);
   else if (data['operation'] === 'save-card-layout') parseLayoutRequest(data['payload']);
+  else if (data['operation'] === 'save-statement-layout')
+    parseStatementLayoutRequest(data['payload']);
   else if (data['operation'] === 'restore-card-layout') {
     if (data['payload'] !== 'restore-card-layout') throw new StorageFailure('invalid-request');
   } else if (data['operation'] === 'restore-demo') {

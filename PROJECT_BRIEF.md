@@ -22,6 +22,12 @@ Tema escuro primeiro, tokens semânticos e preparação para tema claro posterio
 
 ## Interações da interface
 
+D88: seleção de Movimentações mostra total assinado além dos subtotais por tipo. Entradas positivas e saídas negativas, IDs únicos, originais separados por moeda ou conversão D33 identificada. Total desses movimentos não equivale a consumo; transferência, aporte e pagamento de fatura mantêm a classificação própria. Ausência/erro impede total parcial enganoso.
+
+D84–D87 refinam Movimentações: modo Lista em tabela com cabeçalho, categoria em etiqueta e valores alinhados à direita. Cor de entrada/saída apenas nos valores, com ícones neutros. Tabela adapta colunas à largura real e recebe o canto grosso para ajustar largura/altura, salvo separadamente do Geral. Rolagem apenas quando os registros excedem a área. Alterar tamanho não altera fatos, filtros ou seleção.
+
+F04a (D77–D83): Movimentações consulta movimentos efetivos das contas por dia, com busca/filtros e detalhes. A revisão substitui a moldura única por cards individuais em coluna ou lista compacta. Arrastar/selecionar para a direita mantém o original marcado e reúne detalhes/subtotais por tipo e moeda, sem repetir IDs. Seleção acompanha conta/período/busca/filtros. Conta/moeda/período reutilizam o cabeçalho. Composição completa preservada: análises no topo, extrato/agrupamento no centro e gráficos abaixo, com organização salva nas entregas pertinentes. Compras/parcelas, agrupamento, edição e comparações permanecem nas etapas correspondentes; transferência/aporte/pagamento de fatura não são consumo. Critérios em [EXTRATO.md](docs/financas/EXTRATO.md).
+
 D74–D76: conteúdo geral próximo ao topo com Sobre preservado; períodos centralizados no saldo e Restaurar layout na linha dos submenus, somente no Geral. Assistência leve de altura entre vizinhos, com saída fácil ao continuar o arraste. Área de encaixe da navbar ampliada para 128 px, sem mudar a confirmação ao soltar.
 
 D73: diminuir largura/altura de um card não reduz vizinhos nem puxa outra linha. Crescimento horizontal adapta somente a linha existente; reorganização por arraste continua disponível.

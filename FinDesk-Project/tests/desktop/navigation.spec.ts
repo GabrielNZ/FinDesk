@@ -207,7 +207,7 @@ test('links e botões não iniciam arraste; fundo aceita menu contextual e perda
   await page.keyboard.press('Space');
   await page.getByRole('menuitem', { name: 'Esquerda' }).click();
   await page.getByRole('link', { name: 'Finanças', exact: true }).click();
-  await expect(page.getByRole('heading', { name: 'Finanças.' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Finanças', exact: true })).toBeVisible();
   await expect(page.locator('html')).not.toHaveClass(/fd-nav-dragging/);
   await page.getByRole('link', { name: 'Configurações', exact: true }).click();
   await expect(page.getByRole('heading', { name: 'Configurações.' })).toBeVisible();
