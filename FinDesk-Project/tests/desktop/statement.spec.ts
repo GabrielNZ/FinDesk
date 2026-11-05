@@ -102,6 +102,187 @@ async function resizeList(page: Page, dx: number, dy: number, cancel = false) {
   await expect(page.locator('.table-panel')).not.toHaveClass(/resizing/);
 }
 
+async function dragGroup(
+  page: Page,
+  label: string,
+  finish: 'drop' | 'outside' | 'escape' = 'drop',
+) {
+  const source = page.locator(`.group-card[data-group-label="${label}"] .group-summary`);
+  await source.scrollIntoViewIfNeeded();
+  const box = (await source.boundingBox())!;
+  const zone = (await page.locator('.selection-area').boundingBox())!;
+  await page.mouse.move(box.x + 45, box.y + 40);
+  await page.mouse.down();
+  await page.mouse.move(zone.x + zone.width / 2, Math.min(zone.y + 60, 600), { steps: 8 });
+  await expect(page.locator('.fd-statement-ghost:popover-open')).toBeVisible();
+  await expect(page.locator('.selection-area')).toHaveClass(/drop-ready/);
+  if (finish === 'escape') await page.keyboard.press('Escape');
+  if (finish === 'outside') await page.mouse.move(10, 70, { steps: 3 });
+  await page.mouse.up();
+  await expect(page.locator('.fd-statement-ghost')).toHaveCount(0);
+  await expect(page.locator('body')).not.toHaveClass(/fd-statement-dragging/);
+  await expect(page.locator('.selection-area')).not.toHaveClass(/drop-ready|dragging/);
+}
+
+test('F05a/D99–D100: limpar seleção preserva rolagem e switch mantém altura, contexto, arraste e teclado', async () => {
+  test.setTimeout(90_000);
+  const profile = await mkdtemp(join(tmpdir(), 'findesk-statement-'));
+  let app: ElectronApplication | undefined;
+  try {
+    const session = await launch(profile);
+    app = session.app;
+    const page = session.page;
+    await page.locator('#select-mov-energia').click();
+    await page.locator('#select-mov-uber-1').click();
+    const main = page.locator('.workspace');
+    await main.evaluate((element) => {
+      element.scrollTop = 100;
+    });
+    await page.evaluate(
+      () =>
+        new Promise<void>((done) =>
+          requestAnimationFrame(() => requestAnimationFrame(() => done())),
+        ),
+    );
+    const scroll = await main.evaluate((element) => element.scrollTop);
+    expect(scroll).toBeGreaterThan(0);
+    await page.getByRole('button', { name: 'Limpar seleção', exact: true }).click();
+    await expect(page.locator('.selected-movement')).toHaveCount(0);
+    const samples = await main.evaluate(async (element) => {
+      const values = [];
+      for (let i = 0; i < 8; i++) {
+        await new Promise(requestAnimationFrame);
+        values.push(element.scrollTop);
+      }
+      return values;
+    });
+    expect(samples.every((value) => Math.abs(value - scroll) < 2)).toBe(true);
+    await expect(page.locator('.selection-area')).toBeFocused();
+    await page.locator('#select-mov-uber-1').click();
+    const control = page.getByRole('tablist', { name: 'Conteúdo de Movimentações' });
+    await control.scrollIntoViewIfNeeded();
+    const dimensions = await control.evaluate((element) => {
+      const reference = document.createElement('div');
+      reference.style.cssText =
+        'position:absolute;left:-9999px;display:flex;gap:14px;width:max-content';
+      for (const button of Array.from(element.querySelectorAll('button'))) {
+        const clone = document.createElement('button');
+        clone.textContent = button.textContent;
+        clone.style.cssText = `font:${getComputedStyle(button).font};padding:6px 0;border:0;border-bottom:2px solid transparent;white-space:nowrap`;
+        reference.append(clone);
+      }
+      document.body.append(reference);
+      const actual = element.getBoundingClientRect(),
+        old = reference.getBoundingClientRect();
+      const result = {
+        width: actual.width,
+        height: actual.height,
+        oldWidth: old.width,
+        oldHeight: old.height,
+      };
+      reference.remove();
+      return result;
+    });
+    expect(dimensions.width).toBeGreaterThan(dimensions.oldWidth);
+    expect(dimensions.height).toBeCloseTo(dimensions.oldHeight, 0);
+    const statementTab = page.getByRole('tab', { name: 'Extrato', exact: true });
+    const groupingTab = page.getByRole('tab', { name: 'Agrupamento', exact: true });
+    await page.emulateMedia({ reducedMotion: 'no-preference' });
+    const motion = await control.evaluate(
+      (element) =>
+        new Promise<{ start: number; middle: number; end: number; duration: number }>(
+          (resolve, reject) => {
+            const thumb = element.querySelector<HTMLElement>('.source-thumb')!;
+            const start = thumb.getBoundingClientRect().left;
+            const timeout = setTimeout(() => {
+              observer.disconnect();
+              reject(new Error('Transição do switch ausente.'));
+            }, 5000);
+            const observer = new MutationObserver(() => {
+              // Busca a transição real após a atualização Angular, antes de um frame eventualmente limitado pelo Windows.
+              const animation = thumb
+                .getAnimations()
+                .find(
+                  (animation) =>
+                    animation instanceof CSSTransition &&
+                    animation.transitionProperty === 'transform',
+                );
+              if (!animation) return;
+              observer.disconnect();
+              clearTimeout(timeout);
+              const duration = Number(animation.effect!.getComputedTiming().duration);
+              animation.pause();
+              animation.currentTime = duration / 2;
+              const middle = thumb.getBoundingClientRect().left;
+              animation.currentTime = duration;
+              const end = thumb.getBoundingClientRect().left;
+              animation.finish();
+              resolve({ start, middle, end, duration });
+            });
+            observer.observe(thumb, { attributes: true, attributeFilter: ['style'] });
+            element.querySelector<HTMLButtonElement>('#finance-source-grouping')!.click();
+          },
+        ),
+    );
+    expect(motion.duration).toBeGreaterThan(0);
+    expect(motion.end).toBeGreaterThan(motion.start + 20);
+    expect(motion.middle).toBeGreaterThan(motion.start + 1);
+    expect(motion.middle).toBeLessThan(motion.end - 1);
+    await expect(groupingTab).toHaveAttribute('aria-selected', 'true');
+    await expect(page.locator('.selected-movement')).toHaveCount(1);
+    let from = (await groupingTab.boundingBox())!,
+      to = (await statementTab.boundingBox())!;
+    await page.mouse.move(from.x + from.width / 2, from.y + from.height / 2);
+    await page.mouse.down();
+    await page.mouse.move(to.x + to.width / 2, to.y + to.height / 2, { steps: 6 });
+    await expect(control).toHaveClass(/dragging/);
+    await expect(groupingTab).toHaveAttribute('aria-selected', 'true');
+    await page.mouse.up();
+    await expect(statementTab).toHaveAttribute('aria-selected', 'true');
+    await expect(control).not.toHaveClass(/dragging/);
+    await expect(page.locator('.movement')).toHaveCount(10);
+    from = (await statementTab.boundingBox())!;
+    to = (await groupingTab.boundingBox())!;
+    await page.mouse.move(from.x + from.width / 2, from.y + from.height / 2);
+    await page.mouse.down();
+    await page.mouse.move(to.x + to.width / 2, to.y + to.height / 2, { steps: 6 });
+    await expect(control).toHaveClass(/dragging/);
+    await page.keyboard.press('Escape');
+    await page.mouse.up();
+    await expect(control).not.toHaveClass(/dragging/);
+    await expect(statementTab).toHaveAttribute('aria-selected', 'true');
+    await statementTab.focus();
+    await page.keyboard.press('ArrowRight');
+    await expect(groupingTab).toBeFocused();
+    await expect(groupingTab).toHaveAttribute('aria-selected', 'true');
+    await page.keyboard.press('Home');
+    await expect(statementTab).toBeFocused();
+    await page.keyboard.press('End');
+    await expect(groupingTab).toBeFocused();
+    await expect(page.locator('.selected-movement')).toHaveCount(1);
+    await page.emulateMedia({ reducedMotion: 'reduce' });
+    expect(
+      await page
+        .locator('.source-thumb')
+        .evaluate((element) => parseFloat(getComputedStyle(element).transitionDuration)),
+    ).toBe(0);
+    await page.screenshot({
+      path: 'test-results/statement-source-switch.png',
+      fullPage: true,
+      animations: 'disabled',
+    });
+    await app.evaluate(({ BrowserWindow }) => BrowserWindow.getAllWindows()[0]?.setSize(960, 720));
+    expect(
+      await page
+        .getByRole('main')
+        .evaluate((element) => element.scrollWidth <= element.clientWidth),
+    ).toBe(true);
+  } finally {
+    await app?.close();
+    await clean(profile);
+  }
+});
+
 test('F04a/D88: quatro itens exibem total, subtotais e atualizam a soma ao remover/filtrar', async () => {
   test.setTimeout(60_000);
   const profile = await mkdtemp(join(tmpdir(), 'findesk-statement-'));
@@ -148,6 +329,321 @@ async function listLayout(page: Page) {
     return result.value;
   });
 }
+
+test('F05a/D94–D96: grade expande extrato por estabelecimento sem filtrar consulta ou seleção', async () => {
+  test.setTimeout(90_000);
+  const profile = await mkdtemp(join(tmpdir(), 'findesk-statement-'));
+  let app: ElectronApplication | undefined;
+  try {
+    const session = await launch(profile);
+    app = session.app;
+    const page = session.page;
+    const errors: string[] = [];
+    page.on('pageerror', (error) => errors.push(error.message));
+    const before = await page.evaluate(async () => ({
+      facts: await window.finDesk!.storage.getDemo(),
+      prefs: await window.finDesk!.storage.getPreferences(),
+      layout: await window.finDesk!.storage.getStatementLayout(),
+      cards: await window.finDesk!.storage.getCardLayout(),
+    }));
+    const source = (await page.locator('.movement-list').boundingBox())!;
+    const selection = (await page.locator('.selection-area').boundingBox())!;
+    expect(source.width / (source.width + selection.width)).toBeCloseTo(0.7, 2);
+    await page.locator('#select-mov-energia').click();
+    await page.getByRole('tab', { name: 'Agrupamento', exact: true }).click();
+    await expect(page.getByRole('tab', { name: 'Agrupamento', exact: true })).toHaveAttribute(
+      'aria-selected',
+      'true',
+    );
+    const grid = page.locator('.group-grid');
+    await expect(grid).toHaveCSS('display', 'grid');
+    await expect(page.locator('.group-card[data-group-level="category"]')).toHaveCount(4);
+    const tiles = await page.locator('.group-card').evaluateAll((cards) =>
+      cards.map((card) => ({
+        x: card.getBoundingClientRect().x,
+        y: card.getBoundingClientRect().y,
+        width: card.getBoundingClientRect().width,
+      })),
+    );
+    expect(tiles[1]!.x).toBeGreaterThan(tiles[0]!.x);
+    expect(tiles[1]!.y).toBeCloseTo(tiles[0]!.y, 0);
+    await expect(page.locator('[data-group-label="Casa"] .group-icon .pi')).toHaveClass(/pi-home/);
+    await expect(page.locator('.pi-folder')).toHaveCount(0);
+    await page.screenshot({
+      path: 'test-results/statement-group-cards.png',
+      fullPage: true,
+      animations: 'disabled',
+    });
+    for (const label of [
+      'Recebimentos',
+      'Transferências próprias',
+      'Pagamentos de fatura',
+      'Aportes',
+    ])
+      await expect(
+        page.locator(`.group-card[data-group-level="kind"][data-group-label="${label}"]`),
+      ).toBeVisible();
+    await expect(page.locator('.movement')).toHaveCount(0);
+    await page.getByRole('button', { name: 'Expandir Transporte', exact: true }).click();
+    const transport = page.locator('.group-card[data-group-label="Transporte"]');
+    await expect(page.locator('.group-card.expanded')).toHaveCount(1);
+    expect((await transport.boundingBox())!.width).toBeGreaterThan(
+      (await grid.boundingBox())!.width - 10,
+    );
+    await expect(transport.locator('.group-count')).toHaveText('2 lançamentos');
+    await expect(transport.locator('.group-values')).toHaveText('-R$ 60,00');
+    const uber = transport.getByRole('region', { name: 'Uber', exact: true });
+    await expect(uber.locator('.merchant-total')).toHaveText('-R$ 60,00');
+    await expect(page.locator('.selected-movement')).toHaveCount(1);
+    await expect(page.locator('.movement')).toHaveCount(2);
+    await page.locator('[data-movement-id="mov-uber-1"] .movement-summary').click();
+    await expect(page.locator('#detail-mov-uber-1')).toBeVisible();
+    await expect(page.locator('#detail-mov-uber-1')).toContainText('Arquivo');
+    await dragMovement(page, 'mov-uber-1');
+    await expect(page.locator('.selected-movement')).toHaveCount(2);
+    await expect(page.locator('#detail-mov-uber-1')).toBeVisible();
+    await page.locator('#select-mov-uber-2').click();
+    await expect(page.locator('.selected-movement')).toHaveCount(3);
+    await page.locator('#select-mov-uber-2').click();
+    await expect(page.locator('.selected-movement')).toHaveCount(2);
+    await expect(page.getByRole('tab', { name: 'Agrupamento', exact: true })).toHaveAttribute(
+      'aria-selected',
+      'true',
+    );
+    await expect(page.locator('[data-grand-currency="BRL"]')).toHaveText('-R$ 150,00');
+    await page.getByRole('button', { name: 'Recolher Transporte', exact: true }).click();
+    await page.getByRole('button', { name: 'Expandir Casa', exact: true }).click();
+    await expect(page.locator('.group-card.expanded')).toHaveCount(1);
+    await expect(
+      page.getByRole('button', { name: 'Expandir Transporte', exact: true }),
+    ).toBeHidden();
+    await expect(page.locator('.movement')).toHaveCount(1);
+    await expect(page.locator('.selected-movement')).toHaveCount(2);
+    await expect(
+      page.getByRole('button', { name: 'Remover filtro de grupo', exact: true }),
+    ).toHaveCount(0);
+    await page.getByRole('tab', { name: 'Extrato', exact: true }).click();
+    await expect(page.locator('.movement')).toHaveCount(10);
+    await page.getByRole('button', { name: 'Visualizar como lista', exact: true }).click();
+    await expect(page.getByRole('table', { name: 'Movimentações por data' })).toBeVisible();
+    await expect(page.locator('.selected-movement')).toHaveCount(2);
+    await page.getByRole('tab', { name: 'Agrupamento', exact: true }).click();
+    await expect(page.getByRole('button', { name: 'Recolher Casa', exact: true })).toBeVisible();
+    await page.screenshot({
+      path: 'test-results/statement-grouping-wide.png',
+      fullPage: true,
+      animations: 'disabled',
+    });
+    await submenu(page, 'Geral');
+    await submenu(page, 'Movimentações');
+    await expect(page.getByRole('tab', { name: 'Agrupamento', exact: true })).toHaveAttribute(
+      'aria-selected',
+      'true',
+    );
+    await expect(page.locator('.selected-movement')).toHaveCount(2);
+    await expect(page.getByRole('button', { name: 'Recolher Casa', exact: true })).toBeVisible();
+    expect(
+      await page.evaluate(async () => ({
+        facts: await window.finDesk!.storage.getDemo(),
+        prefs: await window.finDesk!.storage.getPreferences(),
+        layout: await window.finDesk!.storage.getStatementLayout(),
+        cards: await window.finDesk!.storage.getCardLayout(),
+      })),
+    ).toEqual(before);
+    expect(errors).toEqual([]);
+  } finally {
+    await app?.close();
+    await clean(profile);
+  }
+});
+
+test('F05a: foco temporário, teclado e janela estreita mantêm consulta e layout salvo', async () => {
+  test.setTimeout(60_000);
+  const profile = await mkdtemp(join(tmpdir(), 'findesk-statement-'));
+  let app: ElectronApplication | undefined;
+  try {
+    const session = await launch(profile);
+    app = session.app;
+    const page = session.page;
+    const before = await listLayout(page);
+    const statementTab = page.getByRole('tab', { name: 'Extrato', exact: true });
+    await statementTab.focus();
+    await page.keyboard.press('ArrowRight');
+    const groupingTab = page.getByRole('tab', { name: 'Agrupamento', exact: true });
+    await expect(groupingTab).toBeFocused();
+    await expect(groupingTab).toHaveAttribute('aria-selected', 'true');
+    const corner = page.getByRole('button', { name: 'Redimensionar agrupamento de movimentações' });
+    await expect(corner).toBeEnabled();
+    const width = (await page.locator('.movement-list').boundingBox())!.width;
+    await page.getByRole('button', { name: 'Focar agrupamento', exact: true }).click();
+    await expect(page.locator('.selection-area')).toBeHidden();
+    expect((await page.locator('.movement-list').boundingBox())!.width).toBeGreaterThan(
+      width + 100,
+    );
+    await expect(page.locator('.statement-resize-handle')).toBeDisabled();
+    await expect(page.getByRole('button', { name: /^Conta:/ })).toBeVisible();
+    await page.keyboard.press('Escape');
+    await expect(page.locator('.selection-area')).toBeVisible();
+    expect(await listLayout(page)).toEqual(before);
+    await page.getByRole('button', { name: 'Focar seleção', exact: true }).click();
+    await expect(page.locator('.movement-list')).toBeHidden();
+    await expect(page.getByRole('heading', { name: 'Finanças', exact: true })).toBeVisible();
+    await page.keyboard.press('Escape');
+    await expect(page.locator('.movement-list')).toBeVisible();
+    await app.evaluate(({ BrowserWindow }) => BrowserWindow.getAllWindows()[0]?.setSize(960, 720));
+    await expect
+      .poll(() =>
+        page.getByRole('main').evaluate((element) => element.scrollWidth <= element.clientWidth),
+      )
+      .toBe(true);
+    const entertainment = page.getByRole('button', {
+      name: 'Expandir Entretenimento',
+      exact: true,
+    });
+    await entertainment.focus();
+    await page.keyboard.press('Enter');
+    await expect(page.locator('.group-card.expanded')).toHaveCount(1);
+    await expect(page.locator('.merchant-section')).toHaveCount(2);
+    await page.keyboard.press('Escape');
+    await expect(page.locator('.group-card.expanded')).toHaveCount(0);
+    await expect(entertainment).toBeFocused();
+    await page.keyboard.press('Space');
+    await expect(page.locator('.group-card.expanded')).toHaveCount(1);
+    await page.getByRole('button', { name: 'Recolher Entretenimento', exact: true }).click();
+    await expect(page.locator('.group-card.expanded')).toHaveCount(0);
+    await entertainment.click();
+    expect(
+      await page
+        .locator('.movement-list')
+        .evaluate((element) => element.scrollWidth <= element.clientWidth),
+    ).toBe(true);
+    await page.screenshot({
+      path: 'test-results/statement-grouping-narrow.png',
+      fullPage: true,
+      animations: 'disabled',
+    });
+    expect(await listLayout(page)).toEqual(before);
+    await expect(corner).toBeDisabled();
+    await page.getByRole('button', { name: 'Recolher Entretenimento', exact: true }).click();
+    await expect(corner).toBeEnabled();
+    const height = (await page.locator('.statement-group-scroll').boundingBox())!.height;
+    await corner.focus();
+    await page.keyboard.press('ArrowDown');
+    await expect.poll(async () => (await listLayout(page))?.listHeight).toBeCloseTo(height + 16, 0);
+    const adjusted = await listLayout(page);
+    await statementTab.click();
+    await page.getByRole('button', { name: 'Visualizar como lista', exact: true }).click();
+    await expect
+      .poll(async () => (await page.locator('.statement-table-scroll').boundingBox())!.height)
+      .toBeCloseTo(height + 16, 0);
+    expect(await listLayout(page)).toEqual(adjusted);
+  } finally {
+    await app?.close();
+    await clean(profile);
+  }
+});
+
+test('F05a/D97–D98: arraste de agrupamento cria bloco único, expansão preenche a área e contexto remove membros', async () => {
+  test.setTimeout(120_000);
+  const profile = await mkdtemp(join(tmpdir(), 'findesk-statement-'));
+  let app: ElectronApplication | undefined;
+  try {
+    const session = await launch(profile);
+    app = session.app;
+    const page = session.page;
+    const before = await page.evaluate(async () => ({
+      facts: await window.finDesk!.storage.getDemo(),
+      prefs: await window.finDesk!.storage.getPreferences(),
+      layout: await window.finDesk!.storage.getStatementLayout(),
+      cards: await window.finDesk!.storage.getCardLayout(),
+    }));
+    await page.locator('#select-mov-uber-1').click();
+    await page.getByRole('tab', { name: 'Agrupamento', exact: true }).click();
+    await dragGroup(page, 'Transporte', 'escape');
+    await expect(page.locator('.selected-group')).toHaveCount(0);
+    await dragGroup(page, 'Transporte', 'outside');
+    await expect(page.locator('.selected-group')).toHaveCount(0);
+    await expect(page.locator('.selected-movement')).toHaveCount(1);
+    await dragGroup(page, 'Transporte');
+    const block = page.locator('.selected-group[data-selected-group-label="Transporte"]');
+    await expect(block).toBeVisible();
+    await expect(block.locator('.selected-movement')).toHaveCount(2);
+    await expect(page.locator('.selected-movement')).toHaveCount(2);
+    await expect(page.locator('[data-grand-currency="BRL"]')).toHaveText('-R$ 60,00');
+    await expect(block.locator('.selected-group-total')).toHaveText('-R$ 60,00');
+    await expect(page.locator('.group-card.expanded')).toHaveCount(0);
+    await dragGroup(page, 'Transporte');
+    await expect(page.locator('.selected-group')).toHaveCount(1);
+    await expect(page.locator('.selected-movement')).toHaveCount(2);
+    await page.getByRole('button', { name: 'Recolher seleção Transporte', exact: true }).click();
+    await expect(block.locator('.selected-group-items')).toBeHidden();
+    await expect(page.locator('[data-grand-currency="BRL"]')).toHaveText('-R$ 60,00');
+    await page.getByRole('button', { name: 'Expandir seleção Transporte', exact: true }).click();
+    await page.getByRole('button', { name: 'Expandir Transporte', exact: true }).click();
+    const expanded = page.locator('.group-card.expanded');
+    await expect(page.locator('.group-card:visible')).toHaveCount(1);
+    await expect(page.locator('.selection-area')).toBeVisible();
+    await expect
+      .poll(async () => {
+        const box = (await expanded.boundingBox())!;
+        return Math.abs(box.y + box.height - (await page.evaluate(() => window.innerHeight)) + 31);
+      })
+      .toBeLessThan(5);
+    const emptySpace = await expanded.evaluate((element) => {
+      const body = element.querySelector('.group-body')!;
+      const detail = element.querySelector('.group-detail')!;
+      return body.getBoundingClientRect().bottom - detail.getBoundingClientRect().bottom;
+    });
+    expect(emptySpace).toBeGreaterThan(40);
+    await expect(
+      page.getByRole('button', { name: 'Redimensionar agrupamento de movimentações' }),
+    ).toBeDisabled();
+    await page.screenshot({
+      path: 'test-results/statement-group-selection.png',
+      fullPage: true,
+      animations: 'disabled',
+    });
+    await block.locator('[data-selected-id="mov-uber-1"] .remove-selection').click();
+    await expect(block.locator('.selected-movement')).toHaveCount(1);
+    await expect(page.locator('[data-grand-currency="BRL"]')).toHaveText('-R$ 30,00');
+    await page.getByRole('button', { name: 'Adicionar Transporte à seleção', exact: true }).click();
+    await expect(block.locator('.selected-movement')).toHaveCount(2);
+    await page.getByRole('button', { name: 'Recolher Transporte', exact: true }).click();
+    await page.getByRole('button', { name: 'Adicionar Casa à seleção', exact: true }).click();
+    await expect(page.locator('.selected-group')).toHaveCount(2);
+    await expect(page.locator('.selected-movement')).toHaveCount(3);
+    await expect(page.locator('[data-grand-currency="BRL"]')).toHaveText('-R$ 180,00');
+    await page.getByRole('button', { name: 'Remover agrupamento Transporte', exact: true }).click();
+    await expect(page.locator('.selected-group')).toHaveCount(1);
+    await expect(page.locator('[data-grand-currency="BRL"]')).toHaveText('-R$ 120,00');
+    await page.getByRole('button', { name: 'Remover agrupamento Casa', exact: true }).click();
+    await expect(page.locator('.selected-group')).toHaveCount(0);
+    await expect(page.locator('.selected-movement')).toHaveCount(0);
+    await page.getByRole('button', { name: 'Adicionar Casa à seleção', exact: true }).focus();
+    await page.keyboard.press('Enter');
+    await expect(page.locator('.selected-group[data-selected-group-label="Casa"]')).toBeVisible();
+    const search = page.getByRole('searchbox', { name: 'Buscar movimentações' });
+    await search.fill('Uber');
+    await expect(page.locator('.selected-group')).toHaveCount(0);
+    await expect(page.locator('.selected-movement')).toHaveCount(0);
+    await search.fill('');
+    await expect(page.locator('.selected-group')).toHaveCount(0);
+    await page.getByRole('button', { name: 'Adicionar Transporte à seleção', exact: true }).click();
+    await page.getByRole('button', { name: 'Limpar seleção', exact: true }).click();
+    await expect(page.locator('.selected-group')).toHaveCount(0);
+    expect(
+      await page.evaluate(async () => ({
+        facts: await window.finDesk!.storage.getDemo(),
+        prefs: await window.finDesk!.storage.getPreferences(),
+        layout: await window.finDesk!.storage.getStatementLayout(),
+        cards: await window.finDesk!.storage.getCardLayout(),
+      })),
+    ).toEqual(before);
+  } finally {
+    await app?.close();
+    await clean(profile);
+  }
+});
 
 test('F04a: busca/filtros combinados, detalhes por teclado e contexto entre submenus sem gravar fatos', async () => {
   const profile = await mkdtemp(join(tmpdir(), 'findesk-statement-'));
@@ -352,11 +848,11 @@ test('F04a/D82: modos preservam seleção, filtros a reduzem e subtotais finance
     await page.locator('#select-mov-uber-1').click();
     await page.locator('#select-mov-uber-2').click();
     await page.getByRole('button', { name: 'Visualizar como lista', exact: true }).click();
-    await expect(page.locator('.movement-list')).toHaveClass(/list-view/);
+    await expect(page.getByRole('table', { name: 'Movimentações por data' })).toBeVisible();
     await expect(page.locator('.selected-movement')).toHaveCount(2);
     await submenu(page, 'Geral');
     await submenu(page, 'Movimentações');
-    await expect(page.locator('.movement-list')).toHaveClass(/list-view/);
+    await expect(page.getByRole('table', { name: 'Movimentações por data' })).toBeVisible();
     await expect(page.locator('.selected-movement')).toHaveCount(2);
     await search.fill('mov-uber-1');
     await expect(page.locator('.selected-movement')).toHaveCount(1);

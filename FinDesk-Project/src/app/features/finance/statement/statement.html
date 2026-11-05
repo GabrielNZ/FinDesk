@@ -2,29 +2,49 @@
   class="statement"
   aria-label="Extrato de movimentações"
   tabindex="-1"
-  (keydown.escape)="closePanel($event)"
+  (keydown.escape)="escape($event)"
 >
   <div class="statement-toolbar">
     <div class="statement-heading">
-      <h2>Extrato</h2>
-      <div class="view-modes" role="group" aria-label="Visualização do extrato">
-        <button
-          type="button"
-          aria-label="Visualizar como cards"
-          [attr.aria-pressed]="state.view() === 'cards'"
-          (click)="state.view.set('cards')"
-        >
-          <i class="pi pi-th-large" aria-hidden="true"></i>
-        </button>
-        <button
-          type="button"
-          aria-label="Visualizar como lista"
-          [attr.aria-pressed]="state.view() === 'list'"
-          (click)="state.view.set('list')"
-        >
-          <i class="pi pi-list" aria-hidden="true"></i>
-        </button>
-      </div>
+      <fd-statement-source-switch [area]="state.area()" (areaChanged)="switchSource($event)" />
+      @if (state.area() === 'statement') {
+        <div class="view-modes" role="group" aria-label="Visualização do extrato">
+          <button
+            type="button"
+            aria-label="Visualizar como cards"
+            [attr.aria-pressed]="state.view() === 'cards'"
+            (click)="state.view.set('cards')"
+          >
+            <i class="pi pi-th-large" aria-hidden="true"></i>
+          </button>
+          <button
+            type="button"
+            aria-label="Visualizar como lista"
+            [attr.aria-pressed]="state.view() === 'list'"
+            (click)="state.view.set('list')"
+          >
+            <i class="pi pi-list" aria-hidden="true"></i>
+          </button>
+        </div>
+      }
+      <button
+        type="button"
+        class="panel-focus"
+        [attr.aria-label]="
+          state.focus() === 'source'
+            ? 'Voltar da consulta em foco'
+            : state.area() === 'statement'
+              ? 'Focar extrato'
+              : 'Focar agrupamento'
+        "
+        [attr.aria-pressed]="state.focus() === 'source'"
+        (click)="toggleFocus('source')"
+      >
+        <i
+          [class]="state.focus() === 'source' ? 'pi pi-window-minimize' : 'pi pi-window-maximize'"
+          aria-hidden="true"
+        ></i>
+      </button>
     </div>
     <div class="query-tools">
       <label class="search">
@@ -134,11 +154,19 @@
   <div
     #statementGrid
     class="statement-layout"
-    [class.list-layout]="state.view() === 'list'"
     [style.--statement-list-share]="layout.value().listShare"
     [style.min-height.px]="resizeFloor()"
+    [style.--statement-focus-height.px]="focusHeight()"
+    [class.focus-source]="state.focus() === 'source'"
+    [class.focus-selection]="state.focus() === 'selection'"
   >
-    <div class="movement-list" [class.list-view]="state.view() === 'list'">
+    <div
+      class="movement-list"
+      id="finance-source-content"
+      role="tabpanel"
+      [attr.aria-labelledby]="'finance-source-' + state.area()"
+      [hidden]="state.focus() === 'selection'"
+    >
       @if (!context.range()) {
         <p class="empty">Período indisponível.</p>
       } @else if (!rows().length) {
@@ -150,7 +178,55 @@
           }}
         </p>
       }
-      @if (state.view() === 'list') {
+      @if (state.area() === 'grouping') {
+        @if (layout.error()) {
+          <div class="statement-layout-error">
+            <p role="alert">{{ layout.error() }}</p>
+            <button
+              type="button"
+              (click)="layout.ready() ? layout.save(layout.value()) : layout.load()"
+            >
+              {{ layout.ready() ? 'Tentar salvar' : 'Tentar novamente' }}
+            </button>
+          </div>
+        }
+        <div #tablePanel class="table-panel" [class.resizing]="resizing()">
+          <div
+            #tableScroll
+            class="statement-group-scroll"
+            [style.height.px]="
+              expandedGroup()
+                ? groupHeight()
+                : state.focus() === 'source'
+                  ? focusHeight()
+                  : layout.value().listHeight
+            "
+          >
+            <fd-statement-groups
+              [groups]="tree()"
+              [openId]="state.openGroup()"
+              [expandedHeight]="groupHeight()"
+              [dragId]="activeGroupDrag()"
+              [movementTemplate]="groupMovement"
+              (groupToggled)="toggleGroup($event)"
+              (groupDragStarted)="startGroupDrag($event)"
+              (groupSelected)="selectGroup($event)"
+            />
+          </div>
+          <span id="group-resize-help" class="visually-hidden"
+            >Arraste para ajustar largura e altura ou use as setas. Escape cancela.</span
+          >
+          <button
+            type="button"
+            class="statement-resize-handle"
+            aria-label="Redimensionar agrupamento de movimentações"
+            aria-describedby="group-resize-help"
+            [disabled]="!layout.ready() || !!state.focus() || expandedGroup()"
+            (pointerdown)="startResize($event)"
+            (keydown)="resizer.key($event)"
+          ></button>
+        </div>
+      } @else if (state.view() === 'list') {
         @if (layout.error()) {
           <div class="statement-layout-error">
             <p role="alert">{{ layout.error() }}</p>
@@ -171,7 +247,9 @@
             class="statement-table-scroll"
             tabindex="0"
             aria-label="Tabela do extrato"
-            [style.height.px]="layout.value().listHeight"
+            [style.height.px]="
+              state.focus() === 'source' ? focusHeight() : layout.value().listHeight
+            "
           >
             <table class="statement-table">
               <caption class="visually-hidden">
@@ -291,7 +369,7 @@
             class="statement-resize-handle"
             aria-label="Redimensionar lista de movimentações"
             aria-describedby="statement-resize-help"
-            [disabled]="!layout.ready()"
+            [disabled]="!layout.ready() || !!state.focus()"
             (pointerdown)="startResize($event)"
             (keydown)="resizer.key($event)"
           ></button>
@@ -317,7 +395,7 @@
                     (pointerdown)="startDrag($event, row)"
                   >
                     <span class="movement-icon" aria-hidden="true"
-                      ><i [class]="'pi ' + typeInfo[row.movement.kind].icon"></i
+                      ><i [class]="'pi ' + movementIcon(row)"></i
                     ></span>
                     <span class="movement-description"
                       ><strong>{{ row.description }}</strong
@@ -378,18 +456,40 @@
       class="selection-area"
       aria-label="Análise da seleção"
       tabindex="-1"
-      [class.dragging]="!!activeDrag()"
+      [class.dragging]="!!activeDrag() || !!activeGroupDrag()"
       [class.drop-ready]="dropReady()"
+      [hidden]="state.focus() === 'source'"
     >
-      @if (selectedRows().length) {
-        <div class="selection-header">
-          <h2>
-            Seleção <span class="selection-count">{{ selectedRows().length }}</span>
-          </h2>
+      <div class="selection-header">
+        <h2>
+          Seleção
+          @if (selectedRows().length) {
+            <span class="selection-count">{{ selectedRows().length }}</span>
+          }
+        </h2>
+        @if (selectedRows().length) {
           <button type="button" class="clear-selection" (click)="clearSelection()">
             Limpar seleção
           </button>
-        </div>
+        }
+        <button
+          type="button"
+          class="panel-focus"
+          [attr.aria-label]="
+            state.focus() === 'selection' ? 'Voltar da seleção em foco' : 'Focar seleção'
+          "
+          [attr.aria-pressed]="state.focus() === 'selection'"
+          (click)="toggleFocus('selection')"
+        >
+          <i
+            [class]="
+              state.focus() === 'selection' ? 'pi pi-window-minimize' : 'pi pi-window-maximize'
+            "
+            aria-hidden="true"
+          ></i>
+        </button>
+      </div>
+      @if (selectedRows().length) {
         <div class="selection-grand-total" aria-label="Total da seleção" aria-live="polite">
           <span>Total da seleção</span>
           <div class="selection-grand-values">
@@ -424,31 +524,79 @@
           }
         </div>
         <div class="selected-items">
-          @for (row of selectedRows(); track row.movement.id) {
-            <article class="selected-movement" [attr.data-selected-id]="row.movement.id">
-              <div class="selected-heading">
-                <span class="movement-icon" aria-hidden="true"
-                  ><i [class]="'pi ' + typeInfo[row.movement.kind].icon"></i
-                ></span>
-                <strong>{{ row.description }}</strong>
+          @for (block of selectedBlocks(); track block.id) {
+            <section
+              class="selected-group"
+              [attr.data-selected-group-label]="block.label"
+              [attr.aria-label]="'Agrupamento ' + block.label"
+            >
+              <div class="selected-group-header">
+                <button
+                  type="button"
+                  class="selected-group-toggle"
+                  [attr.aria-label]="
+                    (state.collapsedSelectionGroups().has(block.id)
+                      ? 'Expandir seleção '
+                      : 'Recolher seleção ') + block.label
+                  "
+                  [attr.aria-expanded]="!state.collapsedSelectionGroups().has(block.id)"
+                  [attr.aria-controls]="selectedGroupContentId(block.id)"
+                  (click)="toggleSelectedGroup(block.id)"
+                >
+                  <i [class]="'pi ' + block.icon" aria-hidden="true"></i>
+                  <span
+                    >{{ block.label }} <small>{{ block.rows.length }}</small></span
+                  >
+                  <i
+                    [class]="
+                      state.collapsedSelectionGroups().has(block.id)
+                        ? 'pi pi-chevron-down'
+                        : 'pi pi-chevron-up'
+                    "
+                    aria-hidden="true"
+                  ></i>
+                </button>
                 <button
                   type="button"
                   class="remove-selection"
-                  [attr.aria-label]="'Remover ' + row.description + ' da seleção'"
-                  (click)="removeSelection(row.movement.id, true)"
+                  [attr.aria-label]="'Remover agrupamento ' + block.label"
+                  (click)="removeSelectedGroup(block.id)"
                 >
                   <i class="pi pi-times" aria-hidden="true"></i>
                 </button>
               </div>
-              <p
-                class="selected-amount"
-                [class.fd-flow-in]="row.movement.delta.minorUnits > 0"
-                [class.fd-flow-out]="row.movement.delta.minorUnits < 0"
+              <div class="selected-group-total">
+                @for (total of block.totals; track total.currency) {
+                  <strong
+                    [class.fd-flow-in]="total.value && total.value.minorUnits > 0"
+                    [class.fd-flow-out]="total.value && total.value.minorUnits < 0"
+                    >{{
+                      total.value
+                        ? formatMoney(total.value)
+                        : 'Indisponível (' + total.currency + ')'
+                    }}</strong
+                  >
+                }
+              </div>
+              <div
+                class="selected-group-items"
+                [id]="selectedGroupContentId(block.id)"
+                [hidden]="state.collapsedSelectionGroups().has(block.id)"
               >
-                {{ row.amount ? formatMoney(row.amount) : 'Conversão indisponível' }}
-              </p>
-              <fd-statement-details [row]="row" />
-            </article>
+                @for (row of block.rows; track row.movement.id) {
+                  <ng-container
+                    [ngTemplateOutlet]="selectedMovement"
+                    [ngTemplateOutletContext]="{ $implicit: row }"
+                  />
+                }
+              </div>
+            </section>
+          }
+          @for (row of looseSelectedRows(); track row.movement.id) {
+            <ng-container
+              [ngTemplateOutlet]="selectedMovement"
+              [ngTemplateOutletContext]="{ $implicit: row }"
+            />
           }
         </div>
       } @else {
@@ -466,3 +614,93 @@
     </p>
   }
 </section>
+
+<ng-template #groupMovement let-row>
+  <article
+    class="movement group-movement"
+    [attr.data-movement-id]="row.movement.id"
+    [class.selected]="selectedSet().has(row.movement.id)"
+    [class.drag-origin]="activeDrag() === row.movement.id"
+  >
+    <div class="movement-head">
+      <button
+        type="button"
+        class="movement-summary"
+        [attr.aria-expanded]="state.expanded() === row.movement.id"
+        [attr.aria-controls]="'detail-' + row.movement.id"
+        (click)="toggleDetails(row.movement.id)"
+        (pointerdown)="startDrag($event, row)"
+      >
+        <span class="movement-icon" aria-hidden="true"
+          ><i [class]="'pi ' + movementIcon(row)"></i
+        ></span>
+        <span class="movement-description"
+          ><strong>{{ row.description }}</strong
+          ><span>{{ formatDate(row.movement.on) }} · {{ row.accountName }}</span></span
+        >
+        <span
+          class="movement-value"
+          [class.fd-flow-in]="row.movement.delta.minorUnits > 0"
+          [class.fd-flow-out]="row.movement.delta.minorUnits < 0"
+          >{{ row.amount ? formatMoney(row.amount) : 'Conversão indisponível' }}</span
+        >
+        <i
+          class="pi pi-chevron-down detail-chevron"
+          [class.open]="state.expanded() === row.movement.id"
+          aria-hidden="true"
+        ></i>
+      </button>
+      <button
+        type="button"
+        class="select-movement"
+        [id]="'select-' + row.movement.id"
+        [attr.aria-label]="
+          (selectedSet().has(row.movement.id) ? 'Retirar ' : 'Selecionar ') +
+          row.description +
+          ' para análise'
+        "
+        [attr.aria-pressed]="selectedSet().has(row.movement.id)"
+        (click)="toggleSelection(row.movement.id)"
+      >
+        <i
+          [class]="selectedSet().has(row.movement.id) ? 'pi pi-check' : 'pi pi-plus'"
+          aria-hidden="true"
+        ></i>
+      </button>
+    </div>
+    <div
+      class="movement-details"
+      [id]="'detail-' + row.movement.id"
+      [hidden]="state.expanded() !== row.movement.id"
+    >
+      <fd-statement-details [row]="row" />
+    </div>
+  </article>
+</ng-template>
+
+<ng-template #selectedMovement let-row>
+  <article class="selected-movement" [attr.data-selected-id]="row.movement.id">
+    <div class="selected-heading">
+      <span class="movement-icon" aria-hidden="true"
+        ><i [class]="'pi ' + movementIcon(row)"></i
+      ></span>
+      <strong>{{ row.description }}</strong>
+      <button
+        type="button"
+        class="remove-selection"
+        [attr.aria-label]="'Remover ' + row.description + ' da seleção'"
+        (click)="removeSelection(row.movement.id, true)"
+      >
+        <i class="pi pi-times" aria-hidden="true"></i>
+      </button>
+    </div>
+    <p
+      class="selected-amount"
+      [class.fd-flow-in]="row.movement.delta.minorUnits > 0"
+      [class.fd-flow-out]="row.movement.delta.minorUnits < 0"
+    >
+      {{ row.amount ? formatMoney(row.amount) : 'Conversão indisponível' }}
+    </p>
+    <fd-statement-details [row]="row" />
+  </article>
+</ng-template>

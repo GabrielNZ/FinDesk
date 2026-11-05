@@ -1,0 +1,95 @@
+<div
+  class="group-grid"
+  aria-label="Cards de agrupamento"
+  [class.has-expanded]="!!expandedGroup()"
+  [style.height.px]="expandedGroup() ? expandedHeight() : null"
+>
+  @for (group of groups(); track group.id) {
+    <article
+      class="group-card"
+      [class.expanded]="openId() === group.id"
+      [class.drag-origin]="dragId() === group.id"
+      [hidden]="expandedGroup() && openId() !== group.id"
+      (pointerdown)="startDrag($event, group.id)"
+      [attr.data-group-id]="group.id"
+      [attr.data-group-level]="group.level"
+      [attr.data-group-label]="group.label"
+      [attr.aria-labelledby]="toggleId(group.id)"
+    >
+      <button
+        type="button"
+        class="select-group"
+        [attr.aria-label]="'Adicionar ' + group.label + ' à seleção'"
+        (click)="groupSelected.emit(group.id)"
+      >
+        <i class="pi pi-plus" aria-hidden="true"></i>
+      </button>
+      <button
+        type="button"
+        class="group-summary"
+        [id]="toggleId(group.id)"
+        [attr.aria-label]="(openId() === group.id ? 'Recolher ' : 'Expandir ') + group.label"
+        [attr.aria-expanded]="openId() === group.id"
+        [attr.aria-controls]="contentId(group.id)"
+        (click)="groupToggled.emit(group.id)"
+      >
+        <span class="group-icon" aria-hidden="true"><i [class]="'pi ' + icon(group)"></i></span>
+        <span class="group-label">
+          <span class="group-name">{{ group.label }}</span>
+          <span class="group-count"
+            >{{ group.count }} {{ group.count === 1 ? 'lançamento' : 'lançamentos' }}</span
+          >
+        </span>
+        <span class="group-values"
+          ><ng-container
+            [ngTemplateOutlet]="totals"
+            [ngTemplateOutletContext]="{ $implicit: group.totals }"
+        /></span>
+        <i class="pi pi-chevron-down group-chevron" aria-hidden="true"></i>
+      </button>
+      <div class="group-body" [id]="contentId(group.id)" [hidden]="openId() !== group.id">
+        @if (openId() === group.id) {
+          <div class="group-detail">
+            @if (group.children.length) {
+              @for (merchant of group.children; track merchant.id) {
+                <section class="merchant-section" [attr.aria-label]="merchant.label">
+                  <div class="merchant-heading">
+                    <span>{{ merchant.label }}</span>
+                    <span class="merchant-total"
+                      ><ng-container
+                        [ngTemplateOutlet]="totals"
+                        [ngTemplateOutletContext]="{ $implicit: merchant.totals }"
+                    /></span>
+                  </div>
+                  @for (row of merchant.rows; track row.movement.id) {
+                    <ng-container
+                      [ngTemplateOutlet]="movementTemplate()"
+                      [ngTemplateOutletContext]="{ $implicit: row }"
+                    />
+                  }
+                </section>
+              }
+            } @else {
+              @for (row of group.rows; track row.movement.id) {
+                <ng-container
+                  [ngTemplateOutlet]="movementTemplate()"
+                  [ngTemplateOutletContext]="{ $implicit: row }"
+                />
+              }
+            }
+          </div>
+        }
+      </div>
+    </article>
+  }
+</div>
+
+<ng-template #totals let-values>
+  @for (total of values; track total.currency) {
+    <span
+      [class.fd-flow-in]="total.value && total.value.minorUnits > 0"
+      [class.fd-flow-out]="total.value && total.value.minorUnits < 0"
+      >{{ total.value ? formatMoney(total.value) : 'Indisponível (' + total.currency + ')' }}</span
+    >
+  }
+</ng-template>

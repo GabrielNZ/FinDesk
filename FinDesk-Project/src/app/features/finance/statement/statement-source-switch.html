@@ -1,0 +1,40 @@
+<div
+  #track
+  class="source-switch"
+  role="tablist"
+  tabindex="-1"
+  aria-label="Conteúdo de Movimentações"
+  [class.dragging]="dragging()"
+  (keydown)="navigate($event)"
+  (pointerdown)="start($event)"
+>
+  <span
+    class="source-thumb"
+    aria-hidden="true"
+    [hidden]="!ready()"
+    [style.transform]="'translateX(' + position().x + 'px)'"
+    [style.width.px]="position().width"
+  ></span>
+  <button
+    type="button"
+    id="finance-source-statement"
+    role="tab"
+    [attr.aria-selected]="area() === 'statement'"
+    [attr.tabindex]="area() === 'statement' ? 0 : -1"
+    aria-controls="finance-source-content"
+    (click)="choose('statement')"
+  >
+    Extrato
+  </button>
+  <button
+    type="button"
+    id="finance-source-grouping"
+    role="tab"
+    [attr.aria-selected]="area() === 'grouping'"
+    [attr.tabindex]="area() === 'grouping' ? 0 : -1"
+    aria-controls="finance-source-content"
+    (click)="choose('grouping')"
+  >
+    Agrupamento
+  </button>
+</div>

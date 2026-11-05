@@ -1,7 +1,7 @@
 import type { StatementLayout } from '../shared/statement-layout';
 
 export function defaultStatementLayout(): StatementLayout {
-  return { version: 1, area: 'finance-statement', listShare: 1.6 / 2.6, listHeight: null };
+  return { version: 1, area: 'finance-statement', listShare: 0.7, listHeight: null };
 }
 
 export function parseStatementLayout(value: unknown): StatementLayout {

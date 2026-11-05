@@ -1,0 +1,80 @@
+:host {
+  display: block;
+  flex-shrink: 0;
+}
+.source-switch {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: max-content;
+  isolation: isolate;
+  touch-action: pan-y;
+  user-select: none;
+}
+.source-switch::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -2;
+  border: 1px solid var(--fd-border);
+  border-radius: 999px;
+  background: #ffffff03;
+}
+.source-thumb {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  z-index: -1;
+  border: 1px solid #a9c8b52e;
+  border-radius: 999px;
+  background: var(--fd-accent-surface);
+  pointer-events: none;
+  transition:
+    transform 180ms cubic-bezier(0.2, 0.75, 0.25, 1),
+    width 180ms cubic-bezier(0.2, 0.75, 0.25, 1);
+}
+.source-thumb[hidden] {
+  display: none;
+}
+button {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 34px;
+  padding: 0 12.5px;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--fd-muted);
+  font: inherit;
+  font-family: var(--fd-font-heading);
+  font-size: 17px;
+  line-height: 20px;
+  cursor: pointer;
+  white-space: nowrap;
+  touch-action: pan-y;
+}
+button[aria-selected='true'] {
+  color: var(--fd-text);
+}
+button:hover {
+  color: var(--fd-text);
+}
+button:focus-visible {
+  outline: 2px solid var(--fd-accent);
+  outline-offset: -2px;
+}
+.dragging,
+.dragging * {
+  cursor: grabbing;
+}
+.dragging .source-thumb {
+  transition: none !important;
+}
+@media (prefers-reduced-motion: reduce) {
+  .source-thumb {
+    transition: none !important;
+  }
+}

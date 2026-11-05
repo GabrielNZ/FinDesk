@@ -212,6 +212,30 @@ Fontes consultadas em 28/10/2026:
 
 **D88 — total da seleção, solicitado por Gabriel:** mostrar um total além dos subtotais de tipo. Implementação soma os movimentos selecionados com os sinais, preservando moedas e IDs; no exemplo enviado, −R$ 619,90, dos quais R$ 159,90 são despesas, R$ 260 fatura e R$ 200 aporte. Total da seleção representa o fluxo desses registros; não altera as exclusões dos indicadores de consumo.
 
+**D89 — composição da F05a, confirmado por Gabriel:** 70% à esquerda para consulta e 30% à direita para a seleção por arraste. Substitui a proposta do Codex de três áreas. A referência inicial a extrato/soma na seleção foi esclarecida em D92/D93: Extrato completo permanece distinto da seleção manual.
+
+**D90 — alcance do agrupamento, confirmado por Gabriel:** todos os movimentos da consulta, com hierarquia de categoria/estabelecimento nas despesas e grupos próprios para os demais tipos, preservando classificação financeira.
+
+**D91 — abrir e filtrar, confirmado por Gabriel:** setinha abre/recolhe; nome/total aplica filtro. D92/D93 confirmam que o filtro atua na consulta à esquerda, sem preencher a seleção manual da direita.
+
+**D92 — seleção da F05a continua manual, confirmado por Gabriel:** nome/total do grupo filtra a consulta à esquerda; direita mantém apenas os itens arrastados/selecionados. Aplicar D82 aos itens fora do filtro, sem preenchimento automático com o grupo inteiro.
+
+**D93 — Extrato e Agrupamento distintos, confirmado por Gabriel:** alternar essas duas visualizações nos 70% à esquerda, com Cards/Lista no Extrato. Nome do grupo abre o Extrato filtrado nessa área. Direita (30%) continua Seleção para análise e soma. Corrige a interpretação anterior que chamava a seleção de extrato completo. Critérios em [AGRUPAMENTO.md](financas/AGRUPAMENTO.md).
+
+**D94 — revisão do agrupamento em cards, solicitada por Gabriel:** substituir a árvore/pastas por grade com ícone, nome e total. Clique expande os lançamentos do agrupamento na mesma página; retirar filtro compartilhado/troca para Extrato ao clicar no grupo. Abrir um card não restringe a consulta nem remove itens da Seleção. Substitui essa parte de D91–D93.
+
+**D95 — expansão na grade, confirmada por Gabriel:** um card aberto por vez, ocupando a largura da grade nos 70% à esquerda. Outros cards permanecem visíveis e se acomodam; abrir outro recolhe o anterior. Ao recolher, volta ao tamanho compacto. Expansão temporária, preservando Seleção e layout salvo.
+
+**D96 — extrato direto no card, confirmado por Gabriel:** categoria expandida mostra lançamentos separados por pequenos títulos de estabelecimento e subtotais, sem segunda etapa para abrir o estabelecimento. Exemplo Transporte → Uber, R$ 60 → duas corridas. Critérios em [AGRUPAMENTO.md](financas/AGRUPAMENTO.md).
+
+**D97 — expansão de toda a área esquerda, solicitada por Gabriel:** card aberto ocupa a largura e altura disponíveis dos 70%, ocultando temporariamente os outros. Poucos registros deixam espaço vazio; excesso usa rolagem interna. Recolher restaura a grade sem salvar dimensões da expansão. Substitui a parte de D95 que mantinha outros cards visíveis na expansão.
+
+**D98 — agrupamento arrastável à Seleção, confirmado por Gabriel:** arrastar o card cria um bloco do agrupamento à direita, com seus lançamentos dentro e controles de recolher/remover o bloco inteiro. Total continua por IDs únicos, incluindo os já selecionados individualmente. Critérios de contexto, remoção e alternativa por teclado em [AGRUPAMENTO.md](financas/AGRUPAMENTO.md).
+
+**D99 — limpar Seleção sem deslocar a página, solicitado por Gabriel:** preservar a posição da consulta ao limpar itens/blocos; o foco de retorno não pode rolar o conteúdo para baixo. Continuar removendo apenas a seleção da execução.
+
+**D100 — switch Extrato/Agrupamento, solicitado por Gabriel:** manter tamanho/tipografia atuais, substituindo a apresentação de abas sublinhadas por um controle com indicador deslizante. Alternar por clique, arraste e teclado; manter contexto/seleção, retorno/cancelamento do arraste e alternativa com movimento reduzido. No acabamento posterior solicitado, centralizar os rótulos e ampliar apenas o espaço horizontal, mantendo altura/fonte; foco interno sem invadir a opção vizinha. Sem nova preferência ou dependência.
+
 ## Perguntas aguardando resposta e pesquisas futuras
 
 Angular/PrimeNG e barra nativa continuam confirmados em D07/D08. A limpeza de conteúdo foi acordada em D12, e a logo original foi aplicada conforme D10. Em 29/10/2026, Gabriel aprovou explicitamente o conjunto atual (casca, ajustes, F00 e reorganização) e autorizou commit e push. F01a não foi iniciada por essa tarefa de registro Git.

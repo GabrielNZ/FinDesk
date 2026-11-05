@@ -50,7 +50,11 @@ export function categoryKey(movement: CashMovement): string | null {
 }
 
 export function categoryLabel(key: string): string {
-  return key === UNCATEGORIZED ? 'Sem categoria' : (CATEGORY_LABELS[key] ?? key);
+  return key === UNCATEGORIZED
+    ? 'Sem categoria'
+    : Object.hasOwn(CATEGORY_LABELS, key)
+      ? CATEGORY_LABELS[key]!
+      : key;
 }
 
 function normalized(value: string): string {
