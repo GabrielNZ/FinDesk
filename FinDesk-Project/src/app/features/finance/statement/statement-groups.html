@@ -33,7 +33,9 @@
         [attr.aria-controls]="contentId(group.id)"
         (click)="groupToggled.emit(group.id)"
       >
-        <span class="group-icon" aria-hidden="true"><i [class]="'pi ' + icon(group)"></i></span>
+        <span class="group-icon" [style.color]="category(group)?.color" aria-hidden="true"
+          ><i [class]="'pi ' + icon(group)"></i
+        ></span>
         <span class="group-label">
           <span class="group-name">{{ group.label }}</span>
           <span class="group-count"

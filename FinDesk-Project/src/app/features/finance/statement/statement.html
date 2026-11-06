@@ -27,6 +27,11 @@
           </button>
         </div>
       }
+      @if (state.area() === 'grouping') {
+        <button type="button" class="filter-toggle" (click)="openCategories()">
+          <i class="pi pi-tags" aria-hidden="true"></i> Categorias
+        </button>
+      }
       <button
         type="button"
         class="panel-focus"
@@ -38,6 +43,7 @@
               : 'Focar agrupamento'
         "
         [attr.aria-pressed]="state.focus() === 'source'"
+        [disabled]="categoryPanel()"
         (click)="toggleFocus('source')"
       >
         <i
@@ -153,6 +159,7 @@
   <span class="visually-hidden" role="status">{{ announcement() }}</span>
   <div
     #statementGrid
+    tabindex="-1"
     class="statement-layout"
     [style.--statement-list-share]="layout.value().listShare"
     [style.min-height.px]="resizeFloor()"
@@ -167,7 +174,12 @@
       [attr.aria-labelledby]="'finance-source-' + state.area()"
       [hidden]="state.focus() === 'selection'"
     >
-      @if (!context.range()) {
+      @if (!catalogue.value()) {
+        <p class="empty">{{ catalogue.error() || 'Carregando categorias…' }}</p>
+        @if (catalogue.error()) {
+          <button type="button" (click)="catalogue.load()">Tentar novamente</button>
+        }
+      } @else if (!context.range()) {
         <p class="empty">Período indisponível.</p>
       } @else if (!rows().length) {
         <p class="empty">
@@ -204,6 +216,7 @@
           >
             <fd-statement-groups
               [groups]="tree()"
+              [categories]="catalogue.categories()"
               [openId]="state.openGroup()"
               [expandedHeight]="groupHeight()"
               [dragId]="activeGroupDrag()"
@@ -312,6 +325,12 @@
                       <span
                         class="category-badge"
                         [class.uncategorized]="row.category === 'uncategorized'"
+                        [style.color]="catalogue.category(row.category)?.color"
+                        [style.background-color]="
+                          catalogue.category(row.category)
+                            ? catalogue.category(row.category)!.color + '18'
+                            : null
+                        "
                         [title]="row.category ? categoryLabel(row.category) : 'Não se aplica'"
                         >{{ row.category ? categoryLabel(row.category) : '—' }}</span
                       >
@@ -351,7 +370,10 @@
                     <tr class="table-details">
                       <td colspan="6">
                         <div class="movement-details" [id]="'detail-' + row.movement.id">
-                          <fd-statement-details [row]="row" />
+                          <fd-statement-details
+                            [row]="row"
+                            (categoryRequested)="openCategories($event)"
+                          />
                         </div>
                       </td>
                     </tr>
@@ -443,7 +465,7 @@
                   [id]="'detail-' + row.movement.id"
                   [hidden]="state.expanded() !== row.movement.id"
                 >
-                  <fd-statement-details [row]="row" />
+                  <fd-statement-details [row]="row" (categoryRequested)="openCategories($event)" />
                 </div>
               </article>
             }
@@ -451,161 +473,169 @@
         }
       }
     </div>
-    <section
-      #selectionArea
-      class="selection-area"
-      aria-label="Análise da seleção"
-      tabindex="-1"
-      [class.dragging]="!!activeDrag() || !!activeGroupDrag()"
-      [class.drop-ready]="dropReady()"
-      [hidden]="state.focus() === 'source'"
-    >
-      <div class="selection-header">
-        <h2>
-          Seleção
+    @if (categoryPanel()) {
+      <fd-category-panel [movement]="editingRow()" (closed)="closeCategories()" />
+    } @else {
+      <section
+        #selectionArea
+        class="selection-area"
+        aria-label="Análise da seleção"
+        tabindex="-1"
+        [class.dragging]="!!activeDrag() || !!activeGroupDrag()"
+        [class.drop-ready]="dropReady()"
+        [hidden]="state.focus() === 'source'"
+      >
+        <div class="selection-header">
+          <h2>
+            Seleção
+            @if (selectedRows().length) {
+              <span class="selection-count">{{ selectedRows().length }}</span>
+            }
+          </h2>
           @if (selectedRows().length) {
-            <span class="selection-count">{{ selectedRows().length }}</span>
+            <button type="button" class="clear-selection" (click)="clearSelection()">
+              Limpar seleção
+            </button>
           }
-        </h2>
-        @if (selectedRows().length) {
-          <button type="button" class="clear-selection" (click)="clearSelection()">
-            Limpar seleção
-          </button>
-        }
-        <button
-          type="button"
-          class="panel-focus"
-          [attr.aria-label]="
-            state.focus() === 'selection' ? 'Voltar da seleção em foco' : 'Focar seleção'
-          "
-          [attr.aria-pressed]="state.focus() === 'selection'"
-          (click)="toggleFocus('selection')"
-        >
-          <i
-            [class]="
-              state.focus() === 'selection' ? 'pi pi-window-minimize' : 'pi pi-window-maximize'
+          <button
+            type="button"
+            class="panel-focus"
+            [attr.aria-label]="
+              state.focus() === 'selection' ? 'Voltar da seleção em foco' : 'Focar seleção'
             "
-            aria-hidden="true"
-          ></i>
-        </button>
-      </div>
-      @if (selectedRows().length) {
-        <div class="selection-grand-total" aria-label="Total da seleção" aria-live="polite">
-          <span>Total da seleção</span>
-          <div class="selection-grand-values">
-            @for (total of grandTotals(); track total.currency) {
-              <strong
-                [attr.data-grand-currency]="total.currency"
-                [class.fd-flow-in]="total.value && total.value.minorUnits > 0"
-                [class.fd-flow-out]="total.value && total.value.minorUnits < 0"
-                >{{
-                  total.value ? formatMoney(total.value) : 'Indisponível (' + total.currency + ')'
-                }}</strong
+            [attr.aria-pressed]="state.focus() === 'selection'"
+            (click)="toggleFocus('selection')"
+          >
+            <i
+              [class]="
+                state.focus() === 'selection' ? 'pi pi-window-minimize' : 'pi pi-window-maximize'
+              "
+              aria-hidden="true"
+            ></i>
+          </button>
+        </div>
+        @if (selectedRows().length) {
+          <div class="selection-grand-total" aria-label="Total da seleção" aria-live="polite">
+            <span>Total da seleção</span>
+            <div class="selection-grand-values">
+              @for (total of grandTotals(); track total.currency) {
+                <strong
+                  [attr.data-grand-currency]="total.currency"
+                  [class.fd-flow-in]="total.value && total.value.minorUnits > 0"
+                  [class.fd-flow-out]="total.value && total.value.minorUnits < 0"
+                  >{{
+                    total.value ? formatMoney(total.value) : 'Indisponível (' + total.currency + ')'
+                  }}</strong
+                >
+              }
+            </div>
+          </div>
+          <div class="selection-totals" aria-label="Subtotais da seleção" aria-live="polite">
+            @for (total of totals(); track total.kind + total.currency) {
+              <div
+                class="selection-total"
+                [attr.data-total-kind]="total.kind"
+                [attr.data-currency]="total.currency"
               >
+                <span>{{ total.label }}</span
+                ><strong
+                  [class.fd-flow-in]="total.kind === 'income' || total.kind === 'transfer-in'"
+                  [class.fd-flow-out]="total.kind !== 'income' && total.kind !== 'transfer-in'"
+                  >{{
+                    total.value ? formatMoney(total.value) : 'Indisponível (' + total.currency + ')'
+                  }}</strong
+                >
+              </div>
             }
           </div>
-        </div>
-        <div class="selection-totals" aria-label="Subtotais da seleção" aria-live="polite">
-          @for (total of totals(); track total.kind + total.currency) {
-            <div
-              class="selection-total"
-              [attr.data-total-kind]="total.kind"
-              [attr.data-currency]="total.currency"
-            >
-              <span>{{ total.label }}</span
-              ><strong
-                [class.fd-flow-in]="total.kind === 'income' || total.kind === 'transfer-in'"
-                [class.fd-flow-out]="total.kind !== 'income' && total.kind !== 'transfer-in'"
-                >{{
-                  total.value ? formatMoney(total.value) : 'Indisponível (' + total.currency + ')'
-                }}</strong
+          <div class="selected-items">
+            @for (block of selectedBlocks(); track block.id) {
+              <section
+                class="selected-group"
+                [attr.data-selected-group-label]="block.label"
+                [attr.aria-label]="'Agrupamento ' + block.label"
               >
-            </div>
-          }
-        </div>
-        <div class="selected-items">
-          @for (block of selectedBlocks(); track block.id) {
-            <section
-              class="selected-group"
-              [attr.data-selected-group-label]="block.label"
-              [attr.aria-label]="'Agrupamento ' + block.label"
-            >
-              <div class="selected-group-header">
-                <button
-                  type="button"
-                  class="selected-group-toggle"
-                  [attr.aria-label]="
-                    (state.collapsedSelectionGroups().has(block.id)
-                      ? 'Expandir seleção '
-                      : 'Recolher seleção ') + block.label
-                  "
-                  [attr.aria-expanded]="!state.collapsedSelectionGroups().has(block.id)"
-                  [attr.aria-controls]="selectedGroupContentId(block.id)"
-                  (click)="toggleSelectedGroup(block.id)"
-                >
-                  <i [class]="'pi ' + block.icon" aria-hidden="true"></i>
-                  <span
-                    >{{ block.label }} <small>{{ block.rows.length }}</small></span
-                  >
-                  <i
-                    [class]="
-                      state.collapsedSelectionGroups().has(block.id)
-                        ? 'pi pi-chevron-down'
-                        : 'pi pi-chevron-up'
+                <div class="selected-group-header">
+                  <button
+                    type="button"
+                    class="selected-group-toggle"
+                    [attr.aria-label]="
+                      (state.collapsedSelectionGroups().has(block.id)
+                        ? 'Expandir seleção '
+                        : 'Recolher seleção ') + block.label
                     "
-                    aria-hidden="true"
-                  ></i>
-                </button>
-                <button
-                  type="button"
-                  class="remove-selection"
-                  [attr.aria-label]="'Remover agrupamento ' + block.label"
-                  (click)="removeSelectedGroup(block.id)"
-                >
-                  <i class="pi pi-times" aria-hidden="true"></i>
-                </button>
-              </div>
-              <div class="selected-group-total">
-                @for (total of block.totals; track total.currency) {
-                  <strong
-                    [class.fd-flow-in]="total.value && total.value.minorUnits > 0"
-                    [class.fd-flow-out]="total.value && total.value.minorUnits < 0"
-                    >{{
-                      total.value
-                        ? formatMoney(total.value)
-                        : 'Indisponível (' + total.currency + ')'
-                    }}</strong
+                    [attr.aria-expanded]="!state.collapsedSelectionGroups().has(block.id)"
+                    [attr.aria-controls]="selectedGroupContentId(block.id)"
+                    (click)="toggleSelectedGroup(block.id)"
                   >
-                }
-              </div>
-              <div
-                class="selected-group-items"
-                [id]="selectedGroupContentId(block.id)"
-                [hidden]="state.collapsedSelectionGroups().has(block.id)"
-              >
-                @for (row of block.rows; track row.movement.id) {
-                  <ng-container
-                    [ngTemplateOutlet]="selectedMovement"
-                    [ngTemplateOutletContext]="{ $implicit: row }"
-                  />
-                }
-              </div>
-            </section>
-          }
-          @for (row of looseSelectedRows(); track row.movement.id) {
-            <ng-container
-              [ngTemplateOutlet]="selectedMovement"
-              [ngTemplateOutletContext]="{ $implicit: row }"
-            />
-          }
-        </div>
-      } @else {
-        <div class="selection-empty">
-          <i class="pi pi-arrow-right" aria-hidden="true"></i>
-          <p>Arraste movimentações para cá</p>
-        </div>
-      }
-    </section>
+                    <i
+                      [class]="'pi ' + block.icon"
+                      [style.color]="block.color"
+                      aria-hidden="true"
+                    ></i>
+                    <span
+                      >{{ block.label }} <small>{{ block.rows.length }}</small></span
+                    >
+                    <i
+                      [class]="
+                        state.collapsedSelectionGroups().has(block.id)
+                          ? 'pi pi-chevron-down'
+                          : 'pi pi-chevron-up'
+                      "
+                      aria-hidden="true"
+                    ></i>
+                  </button>
+                  <button
+                    type="button"
+                    class="remove-selection"
+                    [attr.aria-label]="'Remover agrupamento ' + block.label"
+                    (click)="removeSelectedGroup(block.id)"
+                  >
+                    <i class="pi pi-times" aria-hidden="true"></i>
+                  </button>
+                </div>
+                <div class="selected-group-total">
+                  @for (total of block.totals; track total.currency) {
+                    <strong
+                      [class.fd-flow-in]="total.value && total.value.minorUnits > 0"
+                      [class.fd-flow-out]="total.value && total.value.minorUnits < 0"
+                      >{{
+                        total.value
+                          ? formatMoney(total.value)
+                          : 'Indisponível (' + total.currency + ')'
+                      }}</strong
+                    >
+                  }
+                </div>
+                <div
+                  class="selected-group-items"
+                  [id]="selectedGroupContentId(block.id)"
+                  [hidden]="state.collapsedSelectionGroups().has(block.id)"
+                >
+                  @for (row of block.rows; track row.movement.id) {
+                    <ng-container
+                      [ngTemplateOutlet]="selectedMovement"
+                      [ngTemplateOutletContext]="{ $implicit: row }"
+                    />
+                  }
+                </div>
+              </section>
+            }
+            @for (row of looseSelectedRows(); track row.movement.id) {
+              <ng-container
+                [ngTemplateOutlet]="selectedMovement"
+                [ngTemplateOutletContext]="{ $implicit: row }"
+              />
+            }
+          </div>
+        } @else {
+          <div class="selection-empty">
+            <i class="pi pi-arrow-right" aria-hidden="true"></i>
+            <p>Arraste movimentações para cá</p>
+          </div>
+        }
+      </section>
+    }
   </div>
   @if (converted()) {
     <p class="exchange-note">
@@ -673,7 +703,7 @@
       [id]="'detail-' + row.movement.id"
       [hidden]="state.expanded() !== row.movement.id"
     >
-      <fd-statement-details [row]="row" />
+      <fd-statement-details [row]="row" (categoryRequested)="openCategories($event)" />
     </div>
   </article>
 </ng-template>
@@ -701,6 +731,6 @@
     >
       {{ row.amount ? formatMoney(row.amount) : 'Conversão indisponível' }}
     </p>
-    <fd-statement-details [row]="row" />
+    <fd-statement-details [row]="row" (categoryRequested)="openCategories($event)" />
   </article>
 </ng-template>

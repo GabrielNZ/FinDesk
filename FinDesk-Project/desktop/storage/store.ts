@@ -1,4 +1,13 @@
 import { DatabaseSync } from 'node:sqlite';
+import { randomUUID } from 'node:crypto';
+import {
+  initialCategories,
+  parseCategoryState,
+  saveCategory,
+  classifyMovement,
+} from '../../application/categories';
+import type { CategoryState } from '../../shared/categories';
+import { parseCategoryRequest, parseClassificationRequest } from './contracts';
 import { mkdirSync } from 'node:fs';
 import { isAbsolute, join } from 'node:path';
 import { createDemoScenario } from '../../fixtures/financas/demo';
@@ -92,6 +101,7 @@ export class DemoStore {
         } else if (initialized === 1 && row) this.readPreferences();
         else throw new StorageFailure('corrupt');
       });
+      this.readCategories();
     } catch (error) {
       this.close();
       throw error;
@@ -100,7 +110,7 @@ export class DemoStore {
 
   info(): StorageInfo {
     this.requireOpen();
-    return { environment: 'demo', schemaVersion: 1 };
+    return { environment: 'demo', schemaVersion: 2 };
   }
 
   private requireOpen(): [DatabaseSync, DatabaseSync] {
@@ -131,7 +141,62 @@ export class DemoStore {
   }
 
   restoreDemo(): DemoSnapshot {
-    return this.saveDemo(freshDemo());
+    const [demo] = this.requireOpen();
+    transaction(demo, () => {
+      const facts = demo
+        .prepare('UPDATE demo_state SET payload = ? WHERE singleton = 1')
+        .run(JSON.stringify(freshDemo()));
+      const categories = demo
+        .prepare('UPDATE category_state SET payload = ? WHERE singleton = 1')
+        .run(JSON.stringify(initialCategories()));
+      if (Number(facts.changes) !== 1 || Number(categories.changes) !== 1)
+        throw new StorageFailure('corrupt');
+    });
+    return this.readDemo();
+  }
+
+  readCategories(): CategoryState {
+    const [demo] = this.requireOpen();
+    const row = demo.prepare('SELECT payload FROM category_state WHERE singleton = 1').get();
+    if (!row) throw new StorageFailure('corrupt');
+    const raw = parseStoredJson(row['payload']);
+    if (raw && typeof raw === 'object' && 'version' in raw && raw.version !== 1)
+      throw new StorageFailure('incompatible');
+    try {
+      return parseCategoryState(raw);
+    } catch {
+      throw new StorageFailure('corrupt');
+    }
+  }
+
+  saveCategory(value: unknown): CategoryState {
+    const input = parseCategoryRequest(value);
+    return this.changeCategories((state) => saveCategory(state, input, randomUUID()));
+  }
+
+  classifyMovement(value: unknown): CategoryState {
+    const input = parseClassificationRequest(value);
+    return this.changeCategories((state) =>
+      classifyMovement(state, input, this.readDemo().facts.movements),
+    );
+  }
+
+  private changeCategories(change: (state: CategoryState) => CategoryState): CategoryState {
+    const [demo] = this.requireOpen();
+    return transaction(demo, () => {
+      const current = this.readCategories();
+      let next: CategoryState;
+      try {
+        next = change(current);
+      } catch {
+        throw new StorageFailure('invalid-request');
+      }
+      const result = demo
+        .prepare('UPDATE category_state SET payload = ? WHERE singleton = 1')
+        .run(JSON.stringify(next));
+      if (Number(result.changes) !== 1) throw new StorageFailure('corrupt');
+      return next;
+    });
   }
 
   readPreferences(): FinancePreferences {

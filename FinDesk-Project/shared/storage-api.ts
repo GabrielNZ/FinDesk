@@ -2,6 +2,7 @@ import type { CivilDate } from '../domain/civil-date';
 import type { FinanceFacts } from '../domain/finance-facts';
 import type { CardLayout } from './card-layout';
 import type { StatementLayout } from './statement-layout';
+import type { CategoryState, ClassifyMovement, SaveCategory } from './categories';
 
 export interface DemoSnapshot {
   readonly formatVersion: 1;
@@ -38,10 +39,13 @@ export type StorageResult<T> =
 
 export interface StorageInfo {
   readonly environment: 'demo';
-  readonly schemaVersion: 1;
+  readonly schemaVersion: 2;
 }
 
 export interface StorageApi {
+  getCategories(): Promise<StorageResult<CategoryState>>;
+  saveCategory(value: SaveCategory): Promise<StorageResult<CategoryState>>;
+  classifyMovement(value: ClassifyMovement): Promise<StorageResult<CategoryState>>;
   getStatus(): Promise<StorageResult<StorageInfo>>;
   getDemo(): Promise<StorageResult<DemoSnapshot>>;
   getPreferences(): Promise<StorageResult<FinancePreferences>>;
@@ -55,6 +59,9 @@ export interface StorageApi {
 }
 
 export const STORAGE_CHANNELS = {
+  readCategories: 'findesk:categories-read',
+  saveCategory: 'findesk:category-save',
+  classifyMovement: 'findesk:movement-classify',
   status: 'findesk:storage-status',
   readDemo: 'findesk:demo-read',
   readPreferences: 'findesk:preferences-read',

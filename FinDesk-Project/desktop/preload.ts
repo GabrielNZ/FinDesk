@@ -6,6 +6,9 @@ import type { StorageApi } from '../shared/storage-api';
 const api: DesktopApi = Object.freeze({
   getRuntimeInfo: (): Promise<DesktopRuntimeInfo> => ipcRenderer.invoke('findesk:runtime-info'),
   storage: Object.freeze<StorageApi>({
+    getCategories: () => ipcRenderer.invoke('findesk:categories-read'),
+    saveCategory: (value) => ipcRenderer.invoke('findesk:category-save', value),
+    classifyMovement: (value) => ipcRenderer.invoke('findesk:movement-classify', value),
     getStatus: () => ipcRenderer.invoke('findesk:storage-status'),
     getDemo: () => ipcRenderer.invoke('findesk:demo-read'),
     getPreferences: () => ipcRenderer.invoke('findesk:preferences-read'),

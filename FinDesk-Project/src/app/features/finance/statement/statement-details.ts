@@ -1,6 +1,7 @@
-import { ChangeDetectionStrategy, Component, input } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, input, output } from '@angular/core';
 import type { StatementRow } from '../../../../../application/statement';
-import { categoryLabel, MOVEMENT_TYPES } from '../../../../../application/statement';
+import { MOVEMENT_TYPES } from '../../../../../application/statement';
+import { CategoryStore } from './category-store.service';
 import { formatMoney, formatCivilDate } from '../../../../../application/finance-context';
 
 @Component({
@@ -32,7 +33,16 @@ import { formatMoney, formatCivilDate } from '../../../../../application/finance
       @if (item.category) {
         <div>
           <dt>Categoria</dt>
-          <dd>{{ category(item.category) }}</dd>
+          <dd>
+            <button
+              type="button"
+              class="edit-category"
+              [attr.aria-label]="'Alterar categoria de ' + item.description"
+              (click)="categoryRequested.emit(item)"
+            >
+              {{ catalogue.label(item.category) }} <i class="pi pi-pencil" aria-hidden="true"></i>
+            </button>
+          </dd>
         </div>
       }
       <div>
@@ -86,6 +96,27 @@ import { formatMoney, formatCivilDate } from '../../../../../application/finance
       margin: 0;
       overflow-wrap: anywhere;
     }
+    .edit-category {
+      border: 0;
+      background: transparent;
+      color: var(--fd-text);
+      font: inherit;
+      padding: 0;
+      cursor: pointer;
+      text-align: left;
+    }
+    .edit-category .pi {
+      color: var(--fd-muted);
+      margin-left: 6px;
+      font-size: 10px;
+    }
+    .edit-category:hover {
+      color: var(--fd-accent);
+    }
+    .edit-category:focus-visible {
+      outline: 2px solid var(--fd-accent);
+      outline-offset: 3px;
+    }
   `,
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
@@ -93,7 +124,8 @@ export class StatementDetails {
   readonly row = input.required<StatementRow>();
   readonly date = formatCivilDate;
   readonly money = formatMoney;
-  readonly category = categoryLabel;
+  readonly catalogue = inject(CategoryStore);
+  readonly categoryRequested = output<StatementRow>();
   readonly types = MOVEMENT_TYPES;
   readonly sources = { manual: 'Manual', file: 'Arquivo', integration: 'Integração' };
 }

@@ -17,6 +17,15 @@ try {
       id = request.id;
       let value: unknown;
       switch (request.operation) {
+        case 'read-categories':
+          value = store.readCategories();
+          break;
+        case 'save-category':
+          value = store.saveCategory(request.payload);
+          break;
+        case 'classify-movement':
+          value = store.classifyMovement(request.payload);
+          break;
         case 'read-demo':
           value = store.readDemo();
           break;

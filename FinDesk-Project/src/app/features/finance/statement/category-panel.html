@@ -1,0 +1,129 @@
+<section class="category-panel" aria-labelledby="category-panel-title">
+  <header>
+    <h2 id="category-panel-title" tabindex="-1">
+      {{ movement() ? 'Categoria da despesa' : 'Categorias' }}
+    </h2>
+    <button
+      type="button"
+      class="icon-button"
+      aria-label="Fechar categorias"
+      [disabled]="store.busy()"
+      (click)="closed.emit()"
+    >
+      <i class="pi pi-times" aria-hidden="true"></i>
+    </button>
+  </header>
+  @if (movement(); as row) {
+    <p class="movement-name">{{ row.description }}</p>
+  }
+  @if (store.error()) {
+    <p role="alert" class="error">{{ store.error() }}</p>
+  }
+  @if (message()) {
+    <p role="status">{{ message() }}</p>
+  }
+  @if (!store.value()) {
+    <button type="button" (click)="store.load()">Carregar categorias</button>
+  } @else if (form(); as draft) {
+    <form (ngSubmit)="save()">
+      <label for="category-name">Nome</label>
+      <input
+        id="category-name"
+        name="category-name"
+        maxlength="60"
+        autocomplete="off"
+        [ngModel]="draft.name"
+        (ngModelChange)="change({ name: $event })"
+        [disabled]="store.busy()"
+      />
+      <fieldset [disabled]="store.busy()">
+        <legend>Ícone</legend>
+        <div class="icon-grid" role="group" aria-label="Ícone da categoria">
+          @for (option of icons; track option[0]) {
+            <button
+              type="button"
+              [attr.aria-label]="option[1]"
+              [attr.title]="option[1]"
+              [attr.aria-pressed]="draft.icon === option[0]"
+              (click)="change({ icon: option[0] })"
+            >
+              <i [class]="'pi ' + option[0]" aria-hidden="true"></i>
+            </button>
+          }
+        </div>
+      </fieldset>
+      <fieldset [disabled]="store.busy()">
+        <legend>Cor</legend>
+        <div class="color-grid" role="group" aria-label="Cor da categoria">
+          @for (option of colors; track option[0]) {
+            <button
+              type="button"
+              [attr.aria-label]="option[1]"
+              [attr.title]="option[1]"
+              [style.--category-color]="option[0]"
+              [attr.aria-pressed]="draft.color === option[0]"
+              (click)="change({ color: option[0] })"
+            >
+              <span class="swatch"></span>
+              @if (draft.color === option[0]) {
+                <i class="pi pi-check" aria-hidden="true"></i>
+              }
+            </button>
+          }
+        </div>
+      </fieldset>
+      <div class="preview" [style.color]="draft.color">
+        <i [class]="'pi ' + draft.icon" aria-hidden="true"></i
+        ><span>{{ draft.name || 'Nova categoria' }}</span>
+      </div>
+      <div class="form-actions">
+        <button type="button" [disabled]="store.busy()" (click)="cancelForm()">Cancelar</button
+        ><button type="submit" class="primary" [disabled]="store.busy()">
+          {{ store.busy() ? 'Salvando…' : 'Salvar categoria' }}
+        </button>
+      </div>
+    </form>
+  } @else {
+    <div
+      class="category-list"
+      [attr.aria-label]="movement() ? 'Escolher categoria' : 'Catálogo de categorias'"
+    >
+      @if (movement()) {
+        <button
+          type="button"
+          class="category-choice"
+          [disabled]="store.busy()"
+          [attr.aria-pressed]="current()?.kind === 'expense' && current()?.categoryId === null"
+          (click)="choose(null)"
+        >
+          <i class="pi pi-tag" aria-hidden="true"></i><span>Sem categoria</span>
+        </button>
+      }
+      @for (category of store.categories(); track category.id) {
+        <button
+          type="button"
+          class="category-choice"
+          [disabled]="store.busy()"
+          [attr.aria-label]="(movement() ? 'Classificar como ' : 'Editar ') + category.name"
+          [attr.aria-pressed]="
+            movement()
+              ? current()?.kind === 'expense' && current()?.categoryId === category.id
+              : null
+          "
+          (click)="movement() ? choose(category.id) : edit(category)"
+        >
+          <i [class]="'pi ' + category.icon" [style.color]="category.color" aria-hidden="true"></i
+          ><span>{{ category.name }}</span
+          ><i
+            [class]="movement() ? 'pi pi-check' : 'pi pi-pencil'"
+            class="choice-action"
+            aria-hidden="true"
+          ></i>
+        </button>
+      }
+    </div>
+    <button type="button" class="add-category" [disabled]="store.busy()" (click)="edit(null)">
+      <i class="pi pi-plus" aria-hidden="true"></i> Nova categoria
+    </button>
+  }
+</section>

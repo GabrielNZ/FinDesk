@@ -20,6 +20,8 @@ import {
   parsePreferences,
   parseLayoutRequest,
   parseStatementLayoutRequest,
+  parseCategoryRequest,
+  parseClassificationRequest,
   StorageFailure,
 } from './storage/contracts';
 import { storageDirectory } from './storage/paths';
@@ -113,6 +115,7 @@ async function start(): Promise<void> {
   }
 
   const readOperations = {
+    [STORAGE_CHANNELS.readCategories]: () => storage?.getCategories(),
     [STORAGE_CHANNELS.readCardLayout]: () => storage?.getCardLayout(),
     [STORAGE_CHANNELS.readStatementLayout]: () => storage?.getStatementLayout(),
     [STORAGE_CHANNELS.status]: () => storage?.getStatus(),
@@ -126,6 +129,30 @@ async function start(): Promise<void> {
       return operation() ?? failure(new StorageFailure('unavailable'));
     });
   }
+  ipcMain.handle(STORAGE_CHANNELS.saveCategory, (event, ...args: unknown[]) => {
+    if (!trustedSender(event) || args.length !== 1)
+      return failure(new StorageFailure('invalid-request'));
+    try {
+      return (
+        storage?.saveCategory(parseCategoryRequest(args[0])) ??
+        failure(new StorageFailure('unavailable'))
+      );
+    } catch (error) {
+      return failure(error);
+    }
+  });
+  ipcMain.handle(STORAGE_CHANNELS.classifyMovement, (event, ...args: unknown[]) => {
+    if (!trustedSender(event) || args.length !== 1)
+      return failure(new StorageFailure('invalid-request'));
+    try {
+      return (
+        storage?.classifyMovement(parseClassificationRequest(args[0])) ??
+        failure(new StorageFailure('unavailable'))
+      );
+    } catch (error) {
+      return failure(error);
+    }
+  });
   ipcMain.handle(STORAGE_CHANNELS.savePreferences, (event, ...args: unknown[]) => {
     if (!trustedSender(event) || args.length !== 1)
       return failure(new StorageFailure('invalid-request'));

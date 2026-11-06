@@ -1,4 +1,5 @@
 import { DatabaseSync } from 'node:sqlite';
+import { initialCategories } from '../../application/categories';
 import {
   parseStoredJson,
   StorageFailure,
@@ -22,6 +23,18 @@ export const DEMO_MIGRATIONS: readonly Migration[] = [
     payload TEXT NOT NULL CHECK (json_valid(payload))
   ) STRICT;
 `,
+  },
+  {
+    version: 2,
+    sql: `CREATE TABLE category_state (
+      singleton INTEGER PRIMARY KEY CHECK (singleton = 1),
+      payload TEXT NOT NULL CHECK (json_valid(payload))
+    ) STRICT;`,
+    apply(database) {
+      database
+        .prepare('INSERT INTO category_state VALUES (1, ?)')
+        .run(JSON.stringify(initialCategories()));
+    },
   },
 ];
 export const PREFERENCE_MIGRATIONS: readonly Migration[] = [

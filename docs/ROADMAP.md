@@ -16,6 +16,8 @@ D36–D39 antecipam a primeira fatia dos ciclos durante a revisão do cabeçalho
 
 ## Etapa 0 — fundação e demonstração
 
+F05b.1 (D101–D103) limita a primeira fatia de categorias ao catálogo e classificação individual de despesas, com painel contextual e gravação local separada dos fatos. [Critérios e limites](financas/CATEGORIAS.md). Próxima proposta: F05b.2 — Reclassificação por estabelecimento com prévia e alcance discutidos antes da aplicação em lote; regras futuras mantêm rodada própria.
+
 F03a implementa a primeira aplicação do padrão de cards no Geral conforme D55–D76 e [CARDS.md](financas/CARDS.md): arraste/tamanho adaptativo, alternativas por teclado, foco temporário, persistência/restauração restritas. F04a (D77–D88) acrescenta o extrato de caixa, busca/filtros, detalhes, seleção manual e totais conforme [EXTRATO.md](financas/EXTRATO.md). F05a (D89–D100) acrescenta [Agrupamento por categoria e estabelecimento](financas/AGRUPAMENTO.md) em grade de cards com extrato próprio na expansão, alternado com o Extrato à esquerda e mantendo a seleção à direita. Próxima proposta: F05b — Categorias e regras manuais, com levantamento antes de cadastro/reclassificação. Aprovação/estado ficam somente em PROJECT_STATUS.
 
 F02b.3 concretiza referências por conta e geração salarial mensal limitada conforme D44–D52 e [CICLOS_CONFIGURAVEIS.md](financas/CICLOS_CONFIGURAVEIS.md). Feriados, múltiplas fontes salariais, geração de fechamentos e alocação de compras sem vínculo ficam nos escopos pertinentes. Próxima proposta: F03a — Padrão inicial de cards e modo de organização, com composição/gestos discutidos antes da implementação.

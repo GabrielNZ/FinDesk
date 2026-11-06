@@ -60,6 +60,7 @@ export function groupStatement(
   rows: readonly GroupingRow[],
   currencyMode: FinancePreferences['currencyMode'],
   merchantLabels: Readonly<Record<string, string>> = {},
+  categoryLabels: Readonly<Record<string, string>> = {},
 ): StatementGroup[] {
   const seen = new Set<string>();
   const categories = new Map<string | null, GroupingRow[]>();
@@ -127,7 +128,7 @@ export function groupStatement(
       return node(
         JSON.stringify(['category', categoryId]),
         { level: 'category', categoryId },
-        categoryLabel(categoryId ?? UNCATEGORIZED),
+        categoryLabel(categoryId ?? UNCATEGORIZED, categoryLabels),
         members,
         children,
       );

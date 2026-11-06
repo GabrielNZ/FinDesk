@@ -367,7 +367,7 @@ test('FIN-047 / C30: migração inicial e rollback de uma migração que falha p
         },
       ]),
     );
-    assert.equal(db.prepare('PRAGMA user_version').get().user_version, 1);
+    assert.equal(db.prepare('PRAGMA user_version').get().user_version, 2);
     assert.equal(db.prepare('SELECT payload FROM demo_state').get().payload, '{}');
     assert.equal(
       db

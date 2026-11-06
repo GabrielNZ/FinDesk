@@ -2,6 +2,8 @@
 
 **F01c.2 implementa armazenamento da demonstração e preferências.** É a base local fictícia, não o MVP financeiro completo nem um banco de dados pessoais.
 
+F05b.1/D101–D103: demo.sqlite passa ao esquema 2. A migração cria `category_state` com singleton JSON versionado (`version: 1`, `categories`, `classifications`), sem alterar `demo_state`. Catálogo tem ID estável/nome/ícone/cor; classificação manual tem ID de movimento e categoria ou null explícito. Leitura não recria linha ausente/corrompida/futura. Operações públicas limitadas a ler catálogo, salvar uma categoria e classificar uma despesa existente. Campos extras, IDs inexistentes e tipos financeiros incompatíveis são recusados; nomes normalizados únicos e ícones/cores locais validados. Dados de origem preservados; apresentação aplica a classificação como sobreposição. Restauração demo repõe fatos e personalizações numa transação, preservando preferences.sqlite (esquema 3) e layouts. Critérios em [CATEGORIAS.md](financas/CATEGORIAS.md).
+
 F04a/D87: `layout.finance-statement.v1` em preferences.sqlite guarda `{version: 1, area: 'finance-statement', listShare, listHeight}`. Largura é fração finita de 0,2 a 0,85; altura é null (natural) ou número finito de 160 a 1.600 px. O renderer limita a exibição à janela sem regravar a preferência. Semear/ler não cria essa chave; só ajuste explícito grava. Validação fechada no principal/worker e formato desconhecido preservado, sem recriação. Restauração demo preserva a chave. Não altera esquema do SQLite, preferências financeiras ou layout do Geral; seleção/modo de visualização continuam apenas na execução.
 
 ## Ampliação de requisitos de Finanças

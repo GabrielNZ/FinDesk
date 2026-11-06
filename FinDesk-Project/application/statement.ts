@@ -49,12 +49,14 @@ export function categoryKey(movement: CashMovement): string | null {
   return movement.kind === 'expense' ? (movement.categoryId ?? UNCATEGORIZED) : null;
 }
 
-export function categoryLabel(key: string): string {
+export function categoryLabel(key: string, labels: Readonly<Record<string, string>> = {}): string {
   return key === UNCATEGORIZED
     ? 'Sem categoria'
-    : Object.hasOwn(CATEGORY_LABELS, key)
-      ? CATEGORY_LABELS[key]!
-      : key;
+    : Object.hasOwn(labels, key)
+      ? labels[key]!
+      : Object.hasOwn(CATEGORY_LABELS, key)
+        ? CATEGORY_LABELS[key]!
+        : key;
 }
 
 function normalized(value: string): string {
@@ -110,6 +112,7 @@ export function statementRows(
 export function filterStatement(
   rows: readonly StatementRow[],
   filters: StatementFilters,
+  labels: Readonly<Record<string, string>> = {},
 ): StatementRow[] {
   const words = normalized(filters.search).split(/\s+/).filter(Boolean);
   return rows.filter((row) => {
@@ -121,7 +124,7 @@ export function filterStatement(
         row.movement.description,
         row.accountName,
         MOVEMENT_TYPES[row.movement.kind].label,
-        row.category ? categoryLabel(row.category) : '',
+        row.category ? categoryLabel(row.category, labels) : '',
       ].join(' '),
     );
     return words.every((word) => searchable.includes(word));

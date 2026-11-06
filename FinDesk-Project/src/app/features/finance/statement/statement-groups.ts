@@ -10,6 +10,7 @@ import { NgTemplateOutlet } from '@angular/common';
 import type { GroupingRow, StatementGroup } from '../../../../../application/statement-grouping';
 import { formatMoney } from '../../../../../application/finance-context';
 import { MOVEMENT_TYPES } from '../../../../../application/statement';
+import type { Category } from '../../../../../shared/categories';
 
 export function groupToggleId(id: string): string {
   return `statement-group-toggle-${encodeURIComponent(id)}`;
@@ -36,6 +37,7 @@ export function statementGroupIcon(group: StatementGroup): string {
 })
 export class StatementGroups {
   readonly groups = input.required<readonly StatementGroup[]>();
+  readonly categories = input<readonly Category[]>([]);
   readonly openId = input<string | null>(null);
   readonly expandedHeight = input(400);
   readonly dragId = input<string | null>(null);
@@ -48,7 +50,15 @@ export class StatementGroups {
   readonly groupSelected = output<string>();
   readonly formatMoney = formatMoney;
   readonly toggleId = groupToggleId;
-  readonly icon = statementGroupIcon;
+  icon(group: StatementGroup): string {
+    return this.category(group)?.icon ?? statementGroupIcon(group);
+  }
+  category(group: StatementGroup): Category | undefined {
+    const filter = group.filter;
+    return filter.level !== 'kind'
+      ? this.categories().find((item) => item.id === filter.categoryId)
+      : undefined;
+  }
 
   contentId(id: string): string {
     return `statement-group-content-${encodeURIComponent(id)}`;

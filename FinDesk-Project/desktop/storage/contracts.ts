@@ -5,6 +5,7 @@ import { parseCardLayout } from '../../application/card-layout';
 import type { CardLayout } from '../../shared/card-layout';
 import { parseStatementLayout } from '../../application/statement-layout';
 import type { StatementLayout } from '../../shared/statement-layout';
+import { parseSaveCategory, parseClassification } from '../../application/categories';
 import type {
   DemoSnapshot,
   AccountCycleReference,
@@ -184,6 +185,9 @@ export function validateSnapshot(value: unknown): DemoSnapshot {
 }
 
 export type StorageOperation =
+  | 'read-categories'
+  | 'save-category'
+  | 'classify-movement'
   | 'read-demo'
   | 'read-preferences'
   | 'save-preferences'
@@ -198,6 +202,20 @@ export type StorageOperation =
 export function parseLayoutRequest(value: unknown): CardLayout {
   try {
     return parseCardLayout(value);
+  } catch {
+    throw new StorageFailure('invalid-request');
+  }
+}
+export function parseCategoryRequest(value: unknown) {
+  try {
+    return parseSaveCategory(value);
+  } catch {
+    throw new StorageFailure('invalid-request');
+  }
+}
+export function parseClassificationRequest(value: unknown) {
+  try {
+    return parseClassification(value);
   } catch {
     throw new StorageFailure('invalid-request');
   }
@@ -225,6 +243,9 @@ export function validateRequest(value: unknown): WorkerRequest {
     !Number.isSafeInteger(data['id']) ||
     (data['id'] as number) < 1 ||
     ![
+      'read-categories',
+      'save-category',
+      'classify-movement',
       'read-demo',
       'read-preferences',
       'save-preferences',
@@ -239,7 +260,9 @@ export function validateRequest(value: unknown): WorkerRequest {
     Object.keys(data).some((key) => !['id', 'operation', 'payload'].includes(key))
   )
     throw new StorageFailure('invalid-request');
-  if (data['operation'] === 'save-preferences') parsePreferences(data['payload']);
+  if (data['operation'] === 'save-category') parseCategoryRequest(data['payload']);
+  else if (data['operation'] === 'classify-movement') parseClassificationRequest(data['payload']);
+  else if (data['operation'] === 'save-preferences') parsePreferences(data['payload']);
   else if (data['operation'] === 'save-card-layout') parseLayoutRequest(data['payload']);
   else if (data['operation'] === 'save-statement-layout')
     parseStatementLayoutRequest(data['payload']);

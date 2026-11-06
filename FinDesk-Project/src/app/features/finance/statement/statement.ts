@@ -17,7 +17,6 @@ import {
   filterStatement,
   statementRows,
   statementAmount,
-  categoryLabel,
   MOVEMENT_TYPES,
   keepStatementSelection,
   statementSelectionTotals,
@@ -38,10 +37,19 @@ import { groupStatement } from '../../../../../application/statement-grouping';
 import { DEMO_MERCHANT_LABELS } from '../../../../../fixtures/financas/labels';
 import { StatementGroups, groupToggleId, statementGroupIcon } from './statement-groups';
 import { StatementSourceSwitch } from './statement-source-switch';
+import { CategoryStore } from './category-store.service';
+import { CategoryPanel } from './category-panel';
+import { categorizedMovements } from '../../../../../application/categories';
 
 @Component({
   selector: 'fd-statement',
-  imports: [StatementDetails, StatementGroups, StatementSourceSwitch, NgTemplateOutlet],
+  imports: [
+    StatementDetails,
+    StatementGroups,
+    StatementSourceSwitch,
+    CategoryPanel,
+    NgTemplateOutlet,
+  ],
   host: { '(window:resize)': 'updateFocusBounds()' },
   templateUrl: './statement.html',
   styleUrl: './statement.scss',
@@ -51,6 +59,10 @@ export class Statement {
   readonly context = inject(FinanceContext);
   readonly state = inject(StatementState);
   readonly layout = inject(StatementLayoutState);
+  readonly catalogue = inject(CategoryStore);
+  readonly categoryPanel = signal(false);
+  readonly editingRow = signal<StatementRow | null>(null);
+  private categoryReturn: HTMLElement | null = null;
   readonly resizing = signal(false);
   readonly focusHeight = signal(400);
   readonly groupHeight = signal(400);
@@ -99,7 +111,7 @@ export class Statement {
   private readonly selectionArea = viewChild<ElementRef<HTMLElement>>('selectionArea');
   private ignoreClickUntil = 0;
   private readonly drag = new StatementDrag(
-    () => this.selectionArea()?.nativeElement,
+    () => (this.categoryPanel() ? undefined : this.selectionArea()?.nativeElement),
     (id, valid) => {
       this.activeDrag.set(id);
       this.dropReady.set(valid);
@@ -110,7 +122,7 @@ export class Statement {
     },
   );
   private readonly groupDrag = new StatementDrag(
-    () => this.selectionArea()?.nativeElement,
+    () => (this.categoryPanel() ? undefined : this.selectionArea()?.nativeElement),
     (id, valid) => {
       this.activeGroupDrag.set(id);
       this.dropReady.set(valid);
@@ -127,26 +139,43 @@ export class Statement {
     ...value,
   }));
   readonly typeInfo = MOVEMENT_TYPES;
-  readonly categoryLabel = categoryLabel;
+  readonly categoryLabel = (key: string) => this.catalogue.label(key);
   readonly formatMoney = formatMoney;
   readonly formatDate = formatCivilDate;
   readonly sourceLabels = { manual: 'Manual', file: 'Arquivo', integration: 'Integração' };
   readonly baseRows = computed(() => {
     const snapshot = this.context.snapshot();
     const range = this.context.range();
-    return snapshot && range ? statementRows(snapshot, this.context.accountId(), range) : [];
+    const catalogue = this.catalogue.value();
+    return snapshot && range && catalogue
+      ? statementRows(
+          {
+            ...snapshot,
+            facts: {
+              ...snapshot.facts,
+              movements: categorizedMovements(snapshot.facts.movements, catalogue),
+            },
+          },
+          this.context.accountId(),
+          range,
+        )
+      : [];
   });
   readonly categories = computed(() =>
     [...new Set(this.baseRows().flatMap((row) => (row.category ? [row.category] : [])))]
-      .map((key) => ({ key, label: categoryLabel(key) }))
+      .map((key) => ({ key, label: this.categoryLabel(key) }))
       .sort((a, b) => a.label.localeCompare(b.label, 'pt-BR')),
   );
   readonly rows = computed(() =>
-    filterStatement(this.baseRows(), {
-      search: this.state.search(),
-      kind: this.state.kind(),
-      category: this.state.category(),
-    }).map((row) => ({
+    filterStatement(
+      this.baseRows(),
+      {
+        search: this.state.search(),
+        kind: this.state.kind(),
+        category: this.state.category(),
+      },
+      this.catalogue.labels(),
+    ).map((row) => ({
       ...row,
       amount: statementAmount(
         row.movement.delta,
@@ -157,7 +186,12 @@ export class Statement {
     })),
   );
   readonly tree = computed(() =>
-    groupStatement(this.rows(), this.context.currencyMode(), DEMO_MERCHANT_LABELS),
+    groupStatement(
+      this.rows(),
+      this.context.currencyMode(),
+      DEMO_MERCHANT_LABELS,
+      this.catalogue.labels(),
+    ),
   );
   readonly expandedGroup = computed(
     () =>
@@ -199,8 +233,14 @@ export class Statement {
       .map((group) => {
         const ids = new Set(group.memberIds);
         const rows = this.selectedRows().filter((row) => ids.has(row.movement.id));
+        const current = this.tree().find((item) => item.id === group.id);
+        const categoryId = current?.filter.level !== 'kind' ? current?.filter.categoryId : null;
+        const category = this.catalogue.categories().find((item) => item.id === categoryId);
         return {
           ...group,
+          label: current?.label ?? group.label,
+          icon: category?.icon ?? group.icon,
+          color: category?.color,
           rows,
           totals: statementSelectionGrandTotals(rows, this.context.currencyMode()),
         };
@@ -216,10 +256,17 @@ export class Statement {
 
   constructor() {
     effect(() => {
+      this.context.snapshot();
+      untracked(() => {
+        void this.catalogue.load();
+      });
+    });
+    effect(() => {
       this.state.view();
       this.state.area();
       this.state.focus();
       this.state.openGroup();
+      this.categoryPanel();
       const rows = this.rows();
       const ids = this.state.selectedIds();
       const next = keepStatementSelection(ids, rows);
@@ -229,7 +276,12 @@ export class Statement {
       const groups = this.state.selectedGroups();
       const nextGroups = groups
         .map((group) => {
-          const memberIds = group.memberIds.filter((id) => kept.has(id));
+          const members = new Set(
+            this.tree()
+              .find((item) => item.id === group.id)
+              ?.rows.map((row) => row.movement.id) ?? [],
+          );
+          const memberIds = group.memberIds.filter((id) => kept.has(id) && members.has(id));
           return memberIds.length === group.memberIds.length ? group : { ...group, memberIds };
         })
         .filter((group) => group.memberIds.length);
@@ -255,6 +307,26 @@ export class Statement {
     if (this.state.focus() === 'selection') this.state.focus.set(null);
     this.state.area.set(area);
     this.panel.set(null);
+  }
+  openCategories(row: StatementRow | null = null): void {
+    this.categoryReturn = document.activeElement as HTMLElement | null;
+    this.editingRow.set(row);
+    this.state.focus.set(null);
+    this.categoryPanel.set(true);
+    this.panel.set(null);
+  }
+  closeCategories(): void {
+    this.categoryPanel.set(false);
+    this.editingRow.set(null);
+    afterNextRender(
+      () => {
+        (this.categoryReturn?.isConnected
+          ? this.categoryReturn
+          : this.grid()?.nativeElement
+        )?.focus({ preventScroll: true });
+      },
+      { injector: this.injector },
+    );
   }
   toggleGroup(id: string): void {
     if (performance.now() < this.ignoreClickUntil) return;
@@ -288,6 +360,12 @@ export class Statement {
     );
   }
   escape(event: Event): void {
+    if (this.categoryPanel()) {
+      event.preventDefault();
+      event.stopPropagation();
+      if (!this.catalogue.busy()) this.closeCategories();
+      return;
+    }
     if (this.panel()) {
       this.closePanel(event);
       return;

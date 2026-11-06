@@ -236,6 +236,14 @@ Fontes consultadas em 28/10/2026:
 
 **D100 — switch Extrato/Agrupamento, solicitado por Gabriel:** manter tamanho/tipografia atuais, substituindo a apresentação de abas sublinhadas por um controle com indicador deslizante. Alternar por clique, arraste e teclado; manter contexto/seleção, retorno/cancelamento do arraste e alternativa com movimento reduzido. No acabamento posterior solicitado, centralizar os rótulos e ampliar apenas o espaço horizontal, mantendo altura/fonte; foco interno sem invadir a opção vizinha. Sem nova preferência ou dependência.
 
+**D101 — primeira fatia de categorias, confirmada por Gabriel em 05/11/2026:** F05b.1 implementa catálogo com criação/renomeação, ícone/cor e classificação individual de despesas. Reclassificação por estabelecimento com prévia e regras futuras ficam para entregas posteriores, sem aplicação em massa nesta fatia.
+
+**D102 — acesso contextual a categorias, confirmado por Gabriel em 05/11/2026:** botão Categorias no Agrupamento abre painel à direita; detalhes da despesa permitem escolher/criar categoria. Painel ocupa temporariamente a Seleção, mantém os itens e os devolve ao fechar. Critérios em [CATEGORIAS.md](financas/CATEGORIAS.md).
+
+**D103 — restauração das personalizações fictícias, confirmada por Gabriel em 05/11/2026:** Restaurar dados de demonstração repõe também catálogo e classificações manuais da demo, mantendo preferências/layout. Confirmação identifica esse alcance; restauração atômica, sem afetar os arquivos pessoais futuros.
+
+**D104 — tamanho dos textos do switch, solicitado por Gabriel em 06/11/2026:** Extrato/Agrupamento usa fonte de 13 px, igual ao tamanho dos submenus de Finanças. Altura, espaçamento interno e comportamento do switch preservados. Acabamento aprovado junto da F05b.1 antes de commit/push.
+
 ## Perguntas aguardando resposta e pesquisas futuras
 
 Angular/PrimeNG e barra nativa continuam confirmados em D07/D08. A limpeza de conteúdo foi acordada em D12, e a logo original foi aplicada conforme D10. Em 29/10/2026, Gabriel aprovou explicitamente o conjunto atual (casca, ajustes, F00 e reorganização) e autorizou commit e push. F01a não foi iniciada por essa tarefa de registro Git.
