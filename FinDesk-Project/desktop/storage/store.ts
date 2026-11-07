@@ -7,7 +7,12 @@ import {
   classifyMovement,
 } from '../../application/categories';
 import type { CategoryState } from '../../shared/categories';
-import { parseCategoryRequest, parseClassificationRequest } from './contracts';
+import {
+  parseCategoryRequest,
+  parseClassificationRequest,
+  parseMerchantRequest,
+} from './contracts';
+import { classifyMerchant } from '../../application/merchant-classification';
 import { mkdirSync } from 'node:fs';
 import { isAbsolute, join } from 'node:path';
 import { createDemoScenario } from '../../fixtures/financas/demo';
@@ -179,6 +184,11 @@ export class DemoStore {
     return this.changeCategories((state) =>
       classifyMovement(state, input, this.readDemo().facts.movements),
     );
+  }
+
+  classifyMerchant(value: unknown): CategoryState {
+    const input = parseMerchantRequest(value);
+    return this.changeCategories((state) => classifyMerchant(this.readDemo(), state, input));
   }
 
   private changeCategories(change: (state: CategoryState) => CategoryState): CategoryState {

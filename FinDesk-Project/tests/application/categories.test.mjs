@@ -13,7 +13,205 @@ const {
 } = require('../../out/application/categories.js');
 const { createDemoScenario } = require('../../out/fixtures/financas/demo.js');
 const { statementRows, filterStatement } = require('../../out/application/statement.js');
+const { statementSelectionGrandTotals } = require('../../out/application/statement.js');
 const { groupStatement } = require('../../out/application/statement-grouping.js');
+const {
+  previewMerchantClassification,
+  classifyMerchant,
+  parseClassifyMerchant,
+} = require('../../out/application/merchant-classification.js');
+
+const query = {
+  accountId: 'demo-a',
+  start: '2026-10-01',
+  end: '2026-10-31',
+  search: '',
+  kind: null,
+  category: null,
+};
+function merchantInput(snapshot, state, patch = {}) {
+  const input = { merchantId: 'uber', categoryId: 'casa', includeManual: false, query, ...patch };
+  return {
+    ...input,
+    expected: previewMerchantClassification(
+      snapshot,
+      state,
+      input.query,
+      input.merchantId,
+      input.categoryId,
+      input.includeManual,
+    ).map((item) => item.expected),
+  };
+}
+
+test('F05b.2/D105: lote obedece conta, período, busca, tipo e categoria sem unir estabelecimentos', () => {
+  const scenario = createDemoScenario();
+  const first = scenario.facts.movements.find((m) => m.id === 'mov-uber-1');
+  const snapshot = {
+    seedId: 'demo-financas-v1',
+    facts: {
+      ...scenario.facts,
+      movements: [
+        ...scenario.facts.movements,
+        { ...first, id: 'out-month', on: '2026-09-30' },
+        { ...first, id: 'out-account', accountId: 'other' },
+        { ...first, id: 'homonym', merchantId: 'different-uber' },
+        { ...first, id: 'no-merchant', merchantId: null },
+      ],
+    },
+  };
+  const state = initialCategories();
+  const original = JSON.stringify(snapshot);
+  const base = merchantInput(snapshot, state);
+  assert.equal(base.expected.length, 2);
+  const changed = classifyMerchant(snapshot, state, base);
+  assert.deepEqual(changed.classifications.map((c) => c.movementId).sort(), [
+    'mov-uber-1',
+    'mov-uber-2',
+  ]);
+  for (const filters of [{ search: 'energia' }, { kind: 'income' }, { category: 'alimentacao' }])
+    assert.equal(
+      merchantInput(snapshot, state, { query: { ...query, ...filters } }).expected.length,
+      0,
+    );
+  const one = {
+    ...snapshot,
+    facts: {
+      ...snapshot.facts,
+      movements: snapshot.facts.movements.map((m) =>
+        m.id === 'mov-uber-2' ? { ...m, categoryId: 'alimentacao' } : m,
+      ),
+    },
+  };
+  assert.equal(
+    merchantInput(one, state, { query: { ...query, category: 'transporte', search: 'uber' } })
+      .expected.length,
+    1,
+  );
+  const narrow = merchantInput(snapshot, state, {
+    query: { ...query, start: '2026-10-22', end: '2026-10-31' },
+  });
+  assert.equal(narrow.expected.length, 0);
+  assert.equal(JSON.stringify(snapshot), original);
+});
+
+test('F05b.2: Todas as contas mantém moedas/IDs separados e prévia não soma BRL com USD', () => {
+  const facts = createDemoScenario().facts;
+  const expense = facts.movements.find((m) => m.id === 'mov-uber-1');
+  const snapshot = {
+    seedId: 'demo-financas-v1',
+    facts: {
+      ...facts,
+      movements: [
+        ...facts.movements,
+        {
+          ...expense,
+          id: 'uber-usd',
+          accountId: 'demo-u',
+          delta: { minorUnits: -1200, currency: 'USD' },
+        },
+      ],
+    },
+  };
+  const state = initialCategories();
+  const input = merchantInput(snapshot, state, { query: { ...query, accountId: 'all' } });
+  const preview = previewMerchantClassification(
+    snapshot,
+    state,
+    input.query,
+    'uber',
+    'casa',
+    false,
+  );
+  const totals = statementSelectionGrandTotals(
+    preview.map(({ row }) => ({ ...row, amount: row.movement.delta })),
+    'original',
+  );
+  assert.deepEqual(totals.map((t) => [t.currency, t.value.minorUnits]).sort(), [
+    ['BRL', -6000],
+    ['USD', -1200],
+  ]);
+  assert.equal(classifyMerchant(snapshot, state, input).classifications.length, 3);
+});
+
+test('F05b.2/D106: preserva manuais, inclusive null, e inclusão explícita altera somente a prévia confirmada', () => {
+  const snapshot = { seedId: 'demo-financas-v1', facts: createDemoScenario().facts };
+  let state = classifyMovement(
+    initialCategories(),
+    { movementId: 'mov-uber-1', categoryId: null },
+    snapshot.facts.movements,
+  );
+  const original = JSON.stringify(state);
+  const input = merchantInput(snapshot, state);
+  const preview = previewMerchantClassification(snapshot, state, query, 'uber', 'casa', false);
+  assert.equal(preview.filter((item) => item.status === 'preserved').length, 1);
+  const next = classifyMerchant(snapshot, state, input);
+  assert.deepEqual(
+    next.classifications.find((c) => c.movementId === 'mov-uber-1'),
+    { movementId: 'mov-uber-1', categoryId: null },
+  );
+  assert.equal(next.classifications.find((c) => c.movementId === 'mov-uber-2').categoryId, 'casa');
+  const included = classifyMerchant(
+    snapshot,
+    state,
+    merchantInput(snapshot, state, { includeManual: true }),
+  );
+  assert.equal(included.classifications.filter((c) => c.categoryId === 'casa').length, 2);
+  assert.equal(JSON.stringify(state), original);
+  state = classifyMovement(
+    state,
+    { movementId: 'mov-uber-1', categoryId: 'casa' },
+    snapshot.facts.movements,
+  );
+  assert.equal(
+    previewMerchantClassification(snapshot, state, query, 'uber', 'casa', true).filter(
+      (p) => p.status === 'unchanged',
+    ).length,
+    1,
+  );
+  const cleared = classifyMerchant(
+    snapshot,
+    included,
+    merchantInput(snapshot, included, { categoryId: null, includeManual: true }),
+  );
+  assert.equal(
+    cleared.classifications.every((c) => c.categoryId === null),
+    true,
+  );
+});
+
+test('F05b.2: recusa prévia obsoleta/incompleta, categoria/conta inválida e contratos arbitrários', () => {
+  const snapshot = { seedId: 'demo-financas-v1', facts: createDemoScenario().facts };
+  const state = initialCategories();
+  const input = merchantInput(snapshot, state);
+  const changed = classifyMovement(
+    state,
+    { movementId: 'mov-uber-1', categoryId: 'alimentacao' },
+    snapshot.facts.movements,
+  );
+  assert.throws(() => classifyMerchant(snapshot, changed, input), /consulta mudou/);
+  assert.throws(() =>
+    classifyMerchant(snapshot, state, { ...input, expected: input.expected.slice(1) }),
+  );
+  assert.throws(() => classifyMerchant(snapshot, state, { ...input, categoryId: 'missing' }));
+  assert.throws(() =>
+    classifyMerchant(snapshot, state, { ...input, query: { ...query, accountId: 'missing' } }),
+  );
+  assert.throws(() =>
+    classifyMerchant(snapshot, state, { ...input, query: { ...query, search: 'energia' } }),
+  );
+  for (const patch of [
+    { merchantId: '' },
+    { includeManual: 1 },
+    { expected: [] },
+    { expected: [input.expected[0], input.expected[0]] },
+    { sql: 'delete' },
+    { query: { ...query, end: '2026-02-30' } },
+    { query: { ...query, path: 'x' } },
+    { expected: [{ ...input.expected[0], extra: true }] },
+  ])
+    assert.throws(() => parseClassifyMerchant({ ...input, ...patch }));
+});
 
 test('F05b.1: catálogo valida campos fechados, nomes/ícones/cores e identidades estáveis', () => {
   const initial = initialCategories();

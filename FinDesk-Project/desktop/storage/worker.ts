@@ -17,6 +17,9 @@ try {
       id = request.id;
       let value: unknown;
       switch (request.operation) {
+        case 'classify-merchant':
+          value = store.classifyMerchant(request.payload);
+          break;
         case 'read-categories':
           value = store.readCategories();
           break;

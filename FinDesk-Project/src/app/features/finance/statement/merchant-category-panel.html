@@ -1,0 +1,125 @@
+<section class="category-panel" aria-labelledby="merchant-panel-title">
+  <header>
+    <h2 id="merchant-panel-title" tabindex="-1">Reclassificar estabelecimento</h2>
+    <button
+      type="button"
+      class="icon-button"
+      aria-label="Fechar reclassificação"
+      [disabled]="store.busy()"
+      (click)="closed.emit()"
+    >
+      <i class="pi pi-times" aria-hidden="true"></i>
+    </button>
+  </header>
+  <h3>{{ merchantName() }}</h3>
+  <p class="scope">
+    Consulta atual · {{ context.accountLabel() }}<br />{{ date(query().start) }} –
+    {{ date(query().end) }}
+  </p>
+  @if (filterDescription()) {
+    <p class="scope">{{ filterDescription() }}</p>
+  }
+  @if (store.error()) {
+    <p role="alert" class="error">{{ store.error() }}</p>
+  }
+  <h3>Categoria de destino</h3>
+  <div class="category-list" role="group" aria-label="Categoria de destino">
+    <button
+      type="button"
+      class="category-choice"
+      [disabled]="store.busy()"
+      [attr.aria-pressed]="destination() === null"
+      (click)="choose(null)"
+    >
+      <i class="pi pi-tag" aria-hidden="true"></i><span>Sem categoria</span
+      ><i class="pi pi-check choice-action" aria-hidden="true"></i>
+    </button>
+    @for (category of store.categories(); track category.id) {
+      <button
+        type="button"
+        class="category-choice"
+        [disabled]="store.busy()"
+        [attr.aria-pressed]="destination() === category.id"
+        (click)="choose(category.id)"
+      >
+        <i [class]="'pi ' + category.icon" [style.color]="category.color" aria-hidden="true"></i
+        ><span>{{ category.name }}</span
+        ><i class="pi pi-check choice-action" aria-hidden="true"></i>
+      </button>
+    }
+  </div>
+  <label class="include-manual">
+    <input
+      type="checkbox"
+      [checked]="includeManual()"
+      [disabled]="store.busy()"
+      (change)="includeManual.set($any($event.target).checked)"
+    />
+    <span>Incluir classificações manuais</span>
+  </label>
+  @if (destination() !== undefined) {
+    <section aria-label="Prévia da reclassificação" class="batch-preview" aria-live="polite">
+      <h3>Prévia</h3>
+      <p>
+        A alterar: {{ changes().length }} · Manuais preservadas: {{ preserved() }} · Já na
+        categoria: {{ unchanged() }}
+      </p>
+      @if (totals().length) {
+        <div class="batch-totals">
+          <span>Total original a reclassificar</span>
+          @for (total of totals(); track total.currency) {
+            <strong>{{
+              total.value ? money(total.value) : 'Total indisponível em ' + total.currency
+            }}</strong>
+          }
+        </div>
+      }
+      @if (previewState().error) {
+        <p role="alert" class="error">{{ previewState().error }}</p>
+      } @else if (!preview().length) {
+        <p>Nenhuma despesa deste estabelecimento na consulta atual.</p>
+      }
+      <ul class="batch-items" tabindex="0" aria-label="Lançamentos da prévia">
+        @for (item of preview(); track item.row.movement.id) {
+          <li [attr.data-status]="item.status">
+            <div>
+              <strong>{{ item.row.description }}</strong
+              ><span>{{ money(item.row.movement.delta) }}</span>
+            </div>
+            <p>{{ date(item.row.movement.on) }} · {{ item.row.accountName }}</p>
+            <p>
+              {{ store.label(item.row.category ?? 'uncategorized') }}
+              @if (item.status === 'change') {
+                → {{ destination() ? store.label(destination()!) : 'Sem categoria' }}
+              }
+            </p>
+            <span class="item-status">{{
+              item.status === 'change'
+                ? 'Será alterada'
+                : item.status === 'preserved'
+                  ? 'Manual preservada'
+                  : 'Já nesta categoria'
+            }}</span>
+          </li>
+        }
+      </ul>
+    </section>
+  } @else {
+    <p>Escolha a categoria para conferir a prévia.</p>
+  }
+  <div class="form-actions">
+    <button type="button" [disabled]="store.busy()" (click)="closed.emit()">Cancelar</button>
+    <button
+      type="button"
+      class="primary"
+      [disabled]="store.busy() || !changes().length"
+      (click)="apply()"
+    >
+      {{
+        store.busy()
+          ? 'Aplicando…'
+          : 'Aplicar a ' + changes().length + (changes().length === 1 ? ' despesa' : ' despesas')
+      }}
+    </button>
+  </div>
+</section>

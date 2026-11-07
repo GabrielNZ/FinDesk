@@ -39,6 +39,8 @@ import { StatementGroups, groupToggleId, statementGroupIcon } from './statement-
 import { StatementSourceSwitch } from './statement-source-switch';
 import { CategoryStore } from './category-store.service';
 import { CategoryPanel } from './category-panel';
+import { MerchantCategoryPanel } from './merchant-category-panel';
+import type { MerchantQuery } from '../../../../../shared/categories';
 import { categorizedMovements } from '../../../../../application/categories';
 
 @Component({
@@ -48,6 +50,7 @@ import { categorizedMovements } from '../../../../../application/categories';
     StatementGroups,
     StatementSourceSwitch,
     CategoryPanel,
+    MerchantCategoryPanel,
     NgTemplateOutlet,
   ],
   host: { '(window:resize)': 'updateFocusBounds()' },
@@ -62,6 +65,20 @@ export class Statement {
   readonly catalogue = inject(CategoryStore);
   readonly categoryPanel = signal(false);
   readonly editingRow = signal<StatementRow | null>(null);
+  readonly merchantRow = signal<StatementRow | null>(null);
+  readonly merchantQuery = computed<MerchantQuery | null>(() => {
+    const range = this.context.range();
+    return range
+      ? {
+          accountId: this.context.accountId(),
+          start: range.start,
+          end: range.end,
+          search: this.state.search(),
+          kind: this.state.kind(),
+          category: this.state.category(),
+        }
+      : null;
+  });
   private categoryReturn: HTMLElement | null = null;
   readonly resizing = signal(false);
   readonly focusHeight = signal(400);
@@ -309,8 +326,10 @@ export class Statement {
     this.panel.set(null);
   }
   openCategories(row: StatementRow | null = null): void {
+    if (this.catalogue.busy()) return;
     this.categoryReturn = document.activeElement as HTMLElement | null;
     this.editingRow.set(row);
+    this.merchantRow.set(null);
     this.state.focus.set(null);
     this.categoryPanel.set(true);
     this.panel.set(null);
@@ -318,6 +337,7 @@ export class Statement {
   closeCategories(): void {
     this.categoryPanel.set(false);
     this.editingRow.set(null);
+    this.merchantRow.set(null);
     afterNextRender(
       () => {
         (this.categoryReturn?.isConnected
@@ -327,6 +347,18 @@ export class Statement {
       },
       { injector: this.injector },
     );
+  }
+  openMerchant(row: StatementRow): void {
+    if (this.catalogue.busy() || row.movement.kind !== 'expense' || !row.movement.merchantId)
+      return;
+    this.openCategories();
+    this.merchantRow.set(row);
+  }
+  merchantApplied(count: number): void {
+    this.announcement.set(
+      count === 1 ? '1 despesa reclassificada.' : `${count} despesas reclassificadas.`,
+    );
+    this.closeCategories();
   }
   toggleGroup(id: string): void {
     if (performance.now() < this.ignoreClickUntil) return;

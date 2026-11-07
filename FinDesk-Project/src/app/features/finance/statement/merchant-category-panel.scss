@@ -1,0 +1,78 @@
+h3 {
+  font-size: 13px;
+  font-weight: 500;
+  margin: 16px 0 10px;
+}
+.scope {
+  line-height: 1.6;
+}
+.category-list {
+  max-height: 235px;
+  overflow-y: auto;
+  padding: 3px;
+}
+.include-manual {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  margin: 18px 0;
+  color: var(--fd-text);
+  line-height: 1.5;
+  cursor: pointer;
+}
+.include-manual input {
+  width: 16px;
+  height: 16px;
+  flex: 0 0 16px;
+  accent-color: var(--fd-accent);
+}
+.batch-items {
+  list-style: none;
+  margin: 12px 0 18px;
+  padding: 3px;
+  max-height: 340px;
+  overflow-y: auto;
+}
+.batch-items li {
+  padding: 12px 0;
+  border-bottom: 1px solid var(--fd-border);
+  font-size: 12px;
+}
+.batch-items li > div {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.batch-items strong {
+  font-weight: 500;
+  overflow-wrap: anywhere;
+}
+.batch-items p {
+  margin: 6px 0;
+}
+.batch-items:focus-visible {
+  outline: 2px solid var(--fd-accent);
+  outline-offset: 2px;
+}
+.item-status {
+  color: var(--fd-muted);
+}
+[data-status='change'] .item-status {
+  color: var(--fd-accent);
+}
+.batch-totals {
+  display: grid;
+  gap: 6px;
+  font-size: 12px;
+}
+.batch-totals span {
+  color: var(--fd-muted);
+}
+.batch-totals strong {
+  font-size: 18px;
+  font-weight: 500;
+}
+.form-actions {
+  margin-top: 18px;
+}

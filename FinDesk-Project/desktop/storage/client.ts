@@ -9,7 +9,12 @@ import type {
 import { failure, StorageFailure, type StorageOperation, type WorkerResponse } from './contracts';
 import type { CardLayout } from '../../shared/card-layout';
 import type { StatementLayout } from '../../shared/statement-layout';
-import type { CategoryState, SaveCategory, ClassifyMovement } from '../../shared/categories';
+import type {
+  CategoryState,
+  SaveCategory,
+  ClassifyMovement,
+  ClassifyMerchant,
+} from '../../shared/categories';
 
 /** Canal interno para um único worker; sem SQL, eval ou caminho em mensagens. */
 export class StorageClient {
@@ -99,6 +104,9 @@ export class StorageClient {
   }
   classifyMovement(value: ClassifyMovement): Promise<StorageResult<CategoryState>> {
     return this.request('classify-movement', value);
+  }
+  classifyMerchant(value: ClassifyMerchant): Promise<StorageResult<CategoryState>> {
+    return this.request('classify-merchant', value);
   }
   async getStatus(): Promise<StorageResult<StorageInfo>> {
     const result = await this.ready;

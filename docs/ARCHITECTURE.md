@@ -17,6 +17,8 @@ flowchart LR
 
 ## Código existente
 
+F05b.2/D105–D106 acrescenta `application/merchant-classification.ts`: a prévia reutiliza a consulta/filtros do extrato sobre fatos e sobreposições, por identidade de estabelecimento. `MerchantCategoryPanel` mantém destino e inclusão de manuais como estado temporário, sem gravar na escolha. Um único método `classifyMerchant` no preload conduz o contrato fechado ao principal e worker, com validação de remetente/argumentos e revalidação da consulta e classificações esperadas. O store recalcula e salva todo o lote na mesma transação de `category_state`; prévia obsoleta ou erro não grava parte do conjunto. Sem SQL, caminhos, operação genérica, biblioteca ou migração nova na interface. Estado de seleção segue as regras existentes ao atualizar o catálogo.
+
 Por solicitação de Gabriel em 29/10/2026, toda a aplicação e suas ferramentas foram agrupadas em `FinDesk-Project/`. `docs/`, anotações e contexto permanecem na raiz; `.git` também, preservando um único repositório. As relações internas entre Angular, Electron, contratos, scripts e assets não mudaram. Execute npm a partir de `FinDesk-Project/`.
 
 | Local                                             | Responsabilidade                                                                                          |

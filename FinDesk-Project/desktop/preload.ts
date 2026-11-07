@@ -9,6 +9,7 @@ const api: DesktopApi = Object.freeze({
     getCategories: () => ipcRenderer.invoke('findesk:categories-read'),
     saveCategory: (value) => ipcRenderer.invoke('findesk:category-save', value),
     classifyMovement: (value) => ipcRenderer.invoke('findesk:movement-classify', value),
+    classifyMerchant: (value) => ipcRenderer.invoke('findesk:merchant-classify', value),
     getStatus: () => ipcRenderer.invoke('findesk:storage-status'),
     getDemo: () => ipcRenderer.invoke('findesk:demo-read'),
     getPreferences: () => ipcRenderer.invoke('findesk:preferences-read'),

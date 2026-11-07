@@ -1,7 +1,11 @@
 import { Injectable, computed, signal } from '@angular/core';
 import { categoryLabel } from '../../../../../application/statement';
 import { parseCategoryState } from '../../../../../application/categories';
-import type { CategoryState, SaveCategory } from '../../../../../shared/categories';
+import type {
+  CategoryState,
+  SaveCategory,
+  ClassifyMerchant,
+} from '../../../../../shared/categories';
 
 @Injectable({ providedIn: 'root' })
 export class CategoryStore {
@@ -80,6 +84,30 @@ export class CategoryStore {
       return false;
     } finally {
       this.busy.set(false);
+    }
+  }
+  async classifyMerchant(input: ClassifyMerchant): Promise<boolean> {
+    if (!this.value() || this.busy() || this.loading) return false;
+    this.busy.set(true);
+    this.error.set(null);
+    try {
+      const result = await window.finDesk!.storage.classifyMerchant(input);
+      if (!result.ok) throw new Error();
+      this.value.set(parseCategoryState(result.value));
+      return true;
+    } catch {
+      this.error.set(
+        'Não foi possível aplicar a reclassificação. Confira a prévia e tente novamente.',
+      );
+      return false;
+    } finally {
+      this.busy.set(false);
+      // Uma outra gravação pode ter tornado a prévia obsoleta. Atualizar sem reaplicar.
+      if (this.error()) {
+        const error = this.error();
+        await this.load();
+        this.error.set(error);
+      }
     }
   }
 }

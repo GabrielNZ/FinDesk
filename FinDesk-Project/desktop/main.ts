@@ -22,6 +22,7 @@ import {
   parseStatementLayoutRequest,
   parseCategoryRequest,
   parseClassificationRequest,
+  parseMerchantRequest,
   StorageFailure,
 } from './storage/contracts';
 import { storageDirectory } from './storage/paths';
@@ -147,6 +148,18 @@ async function start(): Promise<void> {
     try {
       return (
         storage?.classifyMovement(parseClassificationRequest(args[0])) ??
+        failure(new StorageFailure('unavailable'))
+      );
+    } catch (error) {
+      return failure(error);
+    }
+  });
+  ipcMain.handle(STORAGE_CHANNELS.classifyMerchant, (event, ...args: unknown[]) => {
+    if (!trustedSender(event) || args.length !== 1)
+      return failure(new StorageFailure('invalid-request'));
+    try {
+      return (
+        storage?.classifyMerchant(parseMerchantRequest(args[0])) ??
         failure(new StorageFailure('unavailable'))
       );
     } catch (error) {

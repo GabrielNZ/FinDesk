@@ -182,6 +182,7 @@
   margin: 14px 0 18px;
 }
 .select-movement,
+.merchant-action,
 .remove-selection {
   display: grid;
   place-items: center;
@@ -198,8 +199,18 @@
   color: var(--fd-accent);
 }
 .select-movement .pi,
+.merchant-action .pi,
 .remove-selection .pi {
   font-size: 11px;
+}
+.merchant-action:hover,
+.merchant-action:focus-visible {
+  color: var(--fd-accent);
+}
+.movement-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
 }
 @keyframes reveal-selection {
   from {
@@ -545,7 +556,7 @@ h3 {
   width: 104px;
 }
 .statement-table .action-column {
-  width: 42px;
+  width: 70px;
 }
 .statement-table th {
   text-align: left;

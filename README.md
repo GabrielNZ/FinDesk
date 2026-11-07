@@ -2,7 +2,7 @@
 
 Projeto pessoal de finanças e investimentos para Windows, previsto em Angular, Electron e TypeScript.
 
-O aplicativo tem tema escuro, logo original e barra nativa do Windows. Finanças oferece saldo fictício, seletores de conta/moeda, calendário e ciclos configuráveis por conta. O Geral apresenta cards de protótipo organizáveis; Movimentações alterna extrato de caixa em cards/lista e grade de agrupamentos com extrato próprio na expansão, com busca/filtros e seleção manual por arraste à direita para detalhes e totais. Categorias podem ser criadas/renomeadas com ícone/cor; despesas têm classificação individual salva, preservando os dados de origem. Há persistência local e restauração explícita da demonstração em Configurações, incluindo suas categorias/classificações e mantendo preferências/layout. Compras do cartão, reclassificação em lote, regras futuras, análises e os demais conteúdos financeiros continuam nas etapas correspondentes. Nenhuma instituição está conectada.
+O aplicativo tem tema escuro, logo original e barra nativa do Windows. Finanças oferece saldo fictício, seletores de conta/moeda, calendário e ciclos configuráveis por conta. O Geral apresenta cards de protótipo organizáveis; Movimentações alterna extrato de caixa em cards/lista e grade de agrupamentos com extrato próprio na expansão, com busca/filtros e seleção manual por arraste à direita para detalhes e totais. Categorias podem ser criadas/renomeadas com ícone/cor; despesas têm classificação individual salva, preservando os dados de origem. Há persistência local e restauração explícita da demonstração em Configurações, incluindo suas categorias/classificações e mantendo preferências/layout. Reclassificação por estabelecimento oferece prévia na consulta atual e preserva manuais por padrão, com inclusão explícita. Compras do cartão, regras futuras, análises e os demais conteúdos financeiros continuam nas etapas correspondentes. Nenhuma instituição está conectada.
 
 ## Instalar e executar
 
@@ -41,6 +41,7 @@ O script inicia o Angular em `127.0.0.1:4200` e abre o Electron. Fechar a janela
 
 ## Conferir a entrega
 
+- **F05b.2 — Reclassificação por estabelecimento com prévia:** em Movimentações, clique no ícone de etiquetas entre a seta de expansão e o + da despesa (Reclassificar estabelecimento). Escolha a categoria à direita e confira os itens da consulta atual. Classificações manuais ficam preservadas, salvo ao marcar Incluir classificações manuais. Apenas Aplicar grava o lote; Cancelar/Escape preservam as categorias. Sem regra automática para lançamentos futuros. Reinicie o Electron após atualizar para carregar a nova operação da ponte.
 - Restaurar layout fica junto dos submenus no Geral. Ao redimensionar a altura perto da altura do vizinho, uma guia discreta ajuda a alinhar; continue arrastando para sair do encaixe. A navbar reconhece a borda pretendida mais cedo, sem exigir chegar tão perto.
 - Na própria linha, arraste o card para o espaço livre à esquerda, ao centro ou à direita; a posição é salva. Alt + setas laterais também ajusta. Trazer outro card de baixo mantém a reorganização e o empurrão existentes.
 - Sobrepor um card a outro propõe troca de lugar entre os dois. Continue além da borda do destino para inserir e empurrar os demais; voltar para cima dele retorna à troca. Borda contínua indica troca; tracejada, inserção.

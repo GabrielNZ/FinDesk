@@ -4,6 +4,8 @@ Gabriel confirmou manter a base visual da casca e enxugar o conteúdo. Tema escu
 
 ## Base visual
 
+F05b.2/D105–D106: D107 posiciona o ícone de etiquetas Reclassificar estabelecimento no cabeçalho da despesa, entre a seta de expansão e o +, abrindo o painel à direita, preservando a Seleção. Mostrar nome do estabelecimento, conta/período/filtros atuais, botões de categoria de destino e opção Incluir classificações manuais, inicialmente desligada. Prévia distingue Será alterada, Manual preservada e Já nesta categoria, com data/conta/categoria atual e destino apenas para alterações. Total original por moeda inclui somente alterações aplicáveis. Confirmar explicitamente em Aplicar a N despesas; cancelar/Escape não grava. Sem proposta de novas dimensões ou gravação do painel; lista da prévia tem rolagem e foco por teclado, usando os tokens existentes.
+
 D88: Total da seleção em destaque acima dos subtotais, com rótulo único e valores por moeda. Tipografia de título de 30 px, vermelho/verde conforme sinal e neutro em zero. Subtotais por tipo continuam abaixo; atualizar e limpar acompanham a seleção existente.
 
 D86/D87: ícones do extrato em tom neutro; cores restritas aos valores. Lista com canto de resize de 30 px, traço de 4 px e raio de 8 px, igual ao Geral. Ajustar largura/altura sem transições intermediárias de tamanho; captura alcança a borda externa do canto. Colunas usam a largura do próprio bloco; conta acompanha a descrição nos espaços menores. Botão de seleção precisa caber em sua coluna para não gerar rolagem falsa. Altura começa natural; rolagem aparece só quando conteúdo não cabe após redução. Tamanho salvo separadamente; painel de seleção mantém mínimo lateral e a janela estreita adapta a apresentação.

@@ -6,6 +6,7 @@ import type { CardLayout } from '../../shared/card-layout';
 import { parseStatementLayout } from '../../application/statement-layout';
 import type { StatementLayout } from '../../shared/statement-layout';
 import { parseSaveCategory, parseClassification } from '../../application/categories';
+import { parseClassifyMerchant } from '../../application/merchant-classification';
 import type {
   DemoSnapshot,
   AccountCycleReference,
@@ -188,6 +189,7 @@ export type StorageOperation =
   | 'read-categories'
   | 'save-category'
   | 'classify-movement'
+  | 'classify-merchant'
   | 'read-demo'
   | 'read-preferences'
   | 'save-preferences'
@@ -220,6 +222,13 @@ export function parseClassificationRequest(value: unknown) {
     throw new StorageFailure('invalid-request');
   }
 }
+export function parseMerchantRequest(value: unknown) {
+  try {
+    return parseClassifyMerchant(value);
+  } catch {
+    throw new StorageFailure('invalid-request');
+  }
+}
 export function parseStatementLayoutRequest(value: unknown): StatementLayout {
   try {
     return parseStatementLayout(value);
@@ -246,6 +255,7 @@ export function validateRequest(value: unknown): WorkerRequest {
       'read-categories',
       'save-category',
       'classify-movement',
+      'classify-merchant',
       'read-demo',
       'read-preferences',
       'save-preferences',
@@ -262,6 +272,7 @@ export function validateRequest(value: unknown): WorkerRequest {
     throw new StorageFailure('invalid-request');
   if (data['operation'] === 'save-category') parseCategoryRequest(data['payload']);
   else if (data['operation'] === 'classify-movement') parseClassificationRequest(data['payload']);
+  else if (data['operation'] === 'classify-merchant') parseMerchantRequest(data['payload']);
   else if (data['operation'] === 'save-preferences') parsePreferences(data['payload']);
   else if (data['operation'] === 'save-card-layout') parseLayoutRequest(data['payload']);
   else if (data['operation'] === 'save-statement-layout')

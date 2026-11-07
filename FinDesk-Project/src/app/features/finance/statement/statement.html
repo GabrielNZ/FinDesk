@@ -345,25 +345,31 @@
                       >
                     </td>
                     <td>
-                      <button
-                        type="button"
-                        class="select-movement"
-                        [id]="'select-' + row.movement.id"
-                        [attr.aria-label]="
-                          (selectedSet().has(row.movement.id) ? 'Retirar ' : 'Selecionar ') +
-                          row.description +
-                          ' para análise'
-                        "
-                        [attr.aria-pressed]="selectedSet().has(row.movement.id)"
-                        (click)="toggleSelection(row.movement.id)"
-                      >
-                        <i
-                          [class]="
-                            selectedSet().has(row.movement.id) ? 'pi pi-check' : 'pi pi-plus'
+                      <div class="movement-actions">
+                        <ng-container
+                          [ngTemplateOutlet]="merchantAction"
+                          [ngTemplateOutletContext]="{ $implicit: row }"
+                        />
+                        <button
+                          type="button"
+                          class="select-movement"
+                          [id]="'select-' + row.movement.id"
+                          [attr.aria-label]="
+                            (selectedSet().has(row.movement.id) ? 'Retirar ' : 'Selecionar ') +
+                            row.description +
+                            ' para análise'
                           "
-                          aria-hidden="true"
-                        ></i>
-                      </button>
+                          [attr.aria-pressed]="selectedSet().has(row.movement.id)"
+                          (click)="toggleSelection(row.movement.id)"
+                        >
+                          <i
+                            [class]="
+                              selectedSet().has(row.movement.id) ? 'pi pi-check' : 'pi pi-plus'
+                            "
+                            aria-hidden="true"
+                          ></i>
+                        </button>
+                      </div>
                     </td>
                   </tr>
                   @if (state.expanded() === row.movement.id) {
@@ -442,6 +448,10 @@
                       aria-hidden="true"
                     ></i>
                   </button>
+                  <ng-container
+                    [ngTemplateOutlet]="merchantAction"
+                    [ngTemplateOutletContext]="{ $implicit: row }"
+                  />
                   <button
                     type="button"
                     class="select-movement"
@@ -474,7 +484,18 @@
       }
     </div>
     @if (categoryPanel()) {
-      <fd-category-panel [movement]="editingRow()" (closed)="closeCategories()" />
+      @if (merchantRow(); as row) {
+        @if (merchantQuery(); as query) {
+          <fd-merchant-category-panel
+            [movement]="row"
+            [query]="query"
+            (closed)="closeCategories()"
+            (applied)="merchantApplied($event)"
+          />
+        }
+      } @else {
+        <fd-category-panel [movement]="editingRow()" (closed)="closeCategories()" />
+      }
     } @else {
       <section
         #selectionArea
@@ -680,6 +701,10 @@
           aria-hidden="true"
         ></i>
       </button>
+      <ng-container
+        [ngTemplateOutlet]="merchantAction"
+        [ngTemplateOutletContext]="{ $implicit: row }"
+      />
       <button
         type="button"
         class="select-movement"
@@ -715,6 +740,10 @@
         ><i [class]="'pi ' + movementIcon(row)"></i
       ></span>
       <strong>{{ row.description }}</strong>
+      <ng-container
+        [ngTemplateOutlet]="merchantAction"
+        [ngTemplateOutletContext]="{ $implicit: row }"
+      />
       <button
         type="button"
         class="remove-selection"
@@ -733,4 +762,19 @@
     </p>
     <fd-statement-details [row]="row" (categoryRequested)="openCategories($event)" />
   </article>
+</ng-template>
+
+<ng-template #merchantAction let-row>
+  @if (row.movement.kind === 'expense' && row.movement.merchantId) {
+    <button
+      type="button"
+      class="merchant-action"
+      aria-label="Reclassificar estabelecimento"
+      title="Reclassificar estabelecimento"
+      [disabled]="catalogue.busy()"
+      (click)="openMerchant(row)"
+    >
+      <i class="pi pi-tags" aria-hidden="true"></i>
+    </button>
+  }
 </ng-template>

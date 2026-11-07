@@ -4,6 +4,8 @@ Resultados efetivamente executados ficam em [PROJECT_STATUS.md](../PROJECT_STATU
 
 ## Frequência e seleção
 
+F05b.2: testes de aplicação em `tests/application/categories.test.mjs` cobrem conta/período/busca/tipo/categoria, identidade, manuais/nulas, inclusão explícita, moedas separadas, prévia obsoleta e contrato fechado. `tests/persistence/categories.test.mjs` cobre lote transacional, falha após UPDATE com rollback, reabertura, restauração e validação no worker sem alterar fatos/preferências. `npx playwright test tests/desktop/categories.spec.ts -g F05b.2` verifica prévia/cancelamento, preservação/inclusão, teclado, seleção, filtros ao vivo, falha/repetição, outra janela IPC, Cards/Lista/Agrupamento/Seleção e janela estreita. Somente perfis temporários; resultados efetivos no PROJECT_STATUS. Fluxos F05b.1 e regressões D88/D97–D98 permanecem pertinentes à área alterada.
+
 Agrupar pequenas mudanças e verificar o conjunto. Não executar todos os comandos abaixo após cada alteração.
 
 - Texto, estilos e formatação: revisar o diff; conferir compilação e layout uma vez ao concluir o grupo, quando pertinente. Não criar testes triviais para espelhar a mudança.

@@ -11,6 +11,112 @@ const { StorageClient } = require('../../out/desktop/storage/client.js');
 const { validateRequest } = require('../../out/desktop/storage/contracts.js');
 const { migrate, DEMO_MIGRATIONS } = require('../../out/desktop/storage/migrations.js');
 const { initialCategories } = require('../../out/application/categories.js');
+const {
+  previewMerchantClassification,
+} = require('../../out/application/merchant-classification.js');
+function merchantInput(snapshot, state, patch = {}) {
+  const query = {
+    accountId: 'demo-a',
+    start: '2026-10-01',
+    end: '2026-10-31',
+    search: 'uber',
+    kind: null,
+    category: null,
+  };
+  const input = { merchantId: 'uber', categoryId: 'casa', includeManual: false, query, ...patch };
+  return {
+    ...input,
+    expected: previewMerchantClassification(
+      snapshot,
+      state,
+      input.query,
+      input.merchantId,
+      input.categoryId,
+      input.includeManual,
+    ).map((p) => p.expected),
+  };
+}
+
+test('F05b.2: lote reabre, preserva manuais/fatos/preferências e falha reverte todas as classificações', async (t) => {
+  const root = await temporary(t);
+  let store = new DemoStore(root);
+  try {
+    const snapshot = store.readDemo(),
+      prefs = store.readPreferences();
+    store.classifyMovement({ movementId: 'mov-uber-1', categoryId: null });
+    const state = store.readCategories();
+    const input = merchantInput(snapshot, state, { includeManual: true });
+    const db = new DatabaseSync(join(root, 'demo.sqlite'));
+    try {
+      db.exec(
+        "CREATE TRIGGER fail_batch AFTER UPDATE ON category_state BEGIN SELECT RAISE(ABORT, 'falha simulada'); END",
+      );
+      assert.throws(() => store.classifyMerchant(input));
+      assert.deepEqual(store.readCategories(), state);
+      db.exec('DROP TRIGGER fail_batch');
+    } finally {
+      db.close();
+    }
+    const saved = store.classifyMerchant(input);
+    assert.equal(saved.classifications.length, 2);
+    assert.equal(
+      saved.classifications.every((c) => c.categoryId === 'casa'),
+      true,
+    );
+    assert.deepEqual(store.readDemo(), snapshot);
+    assert.deepEqual(store.readPreferences(), prefs);
+    store.close();
+    store = new DemoStore(root);
+    assert.deepEqual(store.readCategories(), saved);
+    assert.deepEqual(store.readDemo(), snapshot);
+    assert.deepEqual(store.readPreferences(), prefs);
+    store.restoreDemo();
+    assert.deepEqual(store.readCategories(), initialCategories());
+  } finally {
+    store.close();
+  }
+});
+
+test('F05b.2: worker valida consulta, conjunto da prévia, identidade e preservação manual sem gravar parcialmente', async (t) => {
+  const root = await temporary(t);
+  const client = new StorageClient(root);
+  try {
+    const { value: snapshot } = await client.getDemo();
+    const { value: state } = await client.getCategories();
+    const input = merchantInput(snapshot, state);
+    for (const patch of [
+      { path: 'x' },
+      { merchantId: '' },
+      { expected: [...input.expected, { movementId: 'mov-sal', categoryId: null, manual: false }] },
+      { query: { ...input.query, category: 'alimentacao' } },
+      { merchantId: 'energia' },
+      { expected: input.expected.slice(1) },
+    ]) {
+      assert.equal(
+        (await client.classifyMerchant({ ...input, ...patch })).error.code,
+        'invalid-request',
+      );
+      assert.deepEqual((await client.getCategories()).value, state);
+    }
+    await client.classifyMovement({ movementId: 'mov-uber-1', categoryId: null });
+    const manual = (await client.getCategories()).value;
+    assert.equal((await client.classifyMerchant(input)).error.code, 'invalid-request');
+    const current = merchantInput(snapshot, manual);
+    assert.equal((await client.classifyMerchant(current)).ok, true);
+    assert.equal(
+      (await client.getCategories()).value.classifications.find(
+        (c) => c.movementId === 'mov-uber-1',
+      ).categoryId,
+      null,
+    );
+    assert.deepEqual((await client.getDemo()).value, snapshot);
+    assert.throws(() =>
+      validateRequest({ id: 1, operation: 'classify-merchant', payload: { ...input, sql: 'x' } }),
+    );
+  } finally {
+    await client.close();
+  }
+});
 const input = { id: null, name: 'Saúde', icon: 'pi-heart', color: '#8fb8de' };
 async function temporary(t) {
   const directory = await mkdtemp(join(tmpdir(), 'findesk-categories-'));

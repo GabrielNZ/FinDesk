@@ -244,6 +244,12 @@ Fontes consultadas em 28/10/2026:
 
 **D104 — tamanho dos textos do switch, solicitado por Gabriel em 06/11/2026:** Extrato/Agrupamento usa fonte de 13 px, igual ao tamanho dos submenus de Finanças. Altura, espaçamento interno e comportamento do switch preservados. Acabamento aprovado junto da F05b.1 antes de commit/push.
 
+**D105 — alcance da F05b.2, confirmado por Gabriel em 07/11/2026:** reclassificação por estabelecimento somente na consulta atual, respeitando todos os filtros de conta/período/busca/tipo/categoria. Lançamentos fora dela não são incluídos. Prévia antes de aplicar; regras futuras continuam separadas.
+
+**D106 — preservação na F05b.2, confirmada por Gabriel em 07/11/2026:** preservar classificações manuais por padrão, com opção explícita de incluí-las na prévia, inclusive a escolha manual Sem categoria. Critérios em [CATEGORIAS.md](financas/CATEGORIAS.md).
+
+**D107 — acesso da reclassificação, solicitado por Gabriel em 07/11/2026:** substituir o texto clicável nos detalhes por ícone entre a seta de expansão e o + da despesa, mantendo toda a lógica e o painel existentes. Aplicar em Cards/Agrupamento e disponibilizar na área de ações da Lista; na Seleção, junto da remoção. Nome acessível e tooltip Reclassificar estabelecimento; não exigir expansão prévia.
+
 ## Perguntas aguardando resposta e pesquisas futuras
 
 Angular/PrimeNG e barra nativa continuam confirmados em D07/D08. A limpeza de conteúdo foi acordada em D12, e a logo original foi aplicada conforme D10. Em 29/10/2026, Gabriel aprovou explicitamente o conjunto atual (casca, ajustes, F00 e reorganização) e autorizou commit e push. F01a não foi iniciada por essa tarefa de registro Git.
