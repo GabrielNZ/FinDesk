@@ -49,14 +49,14 @@ test('F05b.3: migração v2 marca IDs existentes, conserva bytes e regras/atribu
   const before = db.prepare('SELECT payload FROM demo_state').get().payload;
   const categoryBytes = db.prepare('SELECT payload FROM category_state').get().payload;
   db.exec(
-    'DROP TABLE expense_edits; DROP TABLE merchant_state; DROP TABLE expense_requests; DROP TABLE category_rules; PRAGMA user_version = 2',
+    'DROP TABLE expense_lifecycle_requests; DROP TABLE expense_trash; DROP TABLE expense_edits; DROP TABLE merchant_state; DROP TABLE expense_requests; DROP TABLE category_rules; PRAGMA user_version = 2',
   );
   db.close();
   store = new DemoStore(root);
   try {
     const check = new DatabaseSync(join(root, 'demo.sqlite'));
     try {
-      assert.equal(check.prepare('PRAGMA user_version').get().user_version, 5);
+      assert.equal(check.prepare('PRAGMA user_version').get().user_version, 6);
       assert.equal(check.prepare('SELECT payload FROM demo_state').get().payload, before);
       assert.equal(
         check.prepare('SELECT payload FROM category_state').get().payload,
@@ -215,7 +215,7 @@ test('F05b.3: migração inválida faz rollback e regras ausentes/corrompidas/fu
     const categoryBytes = db.prepare('SELECT payload FROM category_state').get().payload;
     db.prepare('UPDATE category_state SET payload = ?').run(JSON.stringify({ version: 99 }));
     db.exec(
-      'DROP TABLE expense_edits; DROP TABLE merchant_state; DROP TABLE expense_requests; DROP TABLE category_rules; PRAGMA user_version = 2',
+      'DROP TABLE expense_lifecycle_requests; DROP TABLE expense_trash; DROP TABLE expense_edits; DROP TABLE merchant_state; DROP TABLE expense_requests; DROP TABLE category_rules; PRAGMA user_version = 2',
     );
     assert.throws(() => new DemoStore(root));
     assert.equal(db.prepare('PRAGMA user_version').get().user_version, 2);
@@ -356,7 +356,7 @@ test('F05b.1: migração da demo v1 preserva fatos/preferências e inicializa ca
   store.close();
   const db = new DatabaseSync(join(root, 'demo.sqlite'));
   db.exec(
-    'DROP TABLE expense_edits; DROP TABLE merchant_state; DROP TABLE expense_requests; DROP TABLE category_rules; DROP TABLE category_state; PRAGMA user_version = 1',
+    'DROP TABLE expense_lifecycle_requests; DROP TABLE expense_trash; DROP TABLE expense_edits; DROP TABLE merchant_state; DROP TABLE expense_requests; DROP TABLE category_rules; DROP TABLE category_state; PRAGMA user_version = 1',
   );
   db.close();
   store = new DemoStore(root);

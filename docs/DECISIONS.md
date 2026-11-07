@@ -274,6 +274,14 @@ Fontes consultadas em 28/10/2026:
 
 **D119 — categoria na edição, confirmada por Gabriel em 07/11/2026:** iniciar em Manter categoria atual, com escolha manual explícita de outra categoria ou Sem categoria. Trocar estabelecimento ou editar valor/data não reaplica regras futuras. Não acrescentar Usar regra atual nesta fatia; atribuições já aplicadas e regras dos próximos registros continuam preservadas.
 
+**D120 — acesso à F06c, confirmado por Gabriel em 07/11/2026:** lixeira no cabeçalho das despesas manuais do FinDesk, junto do lápis e antes do + de seleção. Não oferecer exclusão de fatos de arquivo/integração ou outros tipos nesta fatia.
+
+**D121 — confirmação da exclusão, confirmada por Gabriel em 07/11/2026:** prévia no painel direito com descrição/data/conta/valor/categoria salvos e efeito no saldo; somente Confirmar exclusão executa. Cancelar/Escape mantém o registro. Não excluir por segundo clique sem prévia.
+
+**D122 — recuperação persistente, confirmada por Gabriel em 07/11/2026:** área Excluídas acessível por botão em Movimentações, com lista no painel direito e Recuperar inclusive após reabrir. Dados guardados localmente ficam fora de saldo/totais enquanto excluídos. Recuperação devolve mesmo lançamento/classificação, sem reaplicar regra nova. Não remover definitivamente nesta fatia.
+
+**D123 — ações compactas de despesas, confirmado por Gabriel em 07/11/2026:** Nova despesa e Excluídas aparecem apenas como + e lixeira, lado a lado em Movimentações (Extrato e Agrupamento). Nomes no hover e no foco por teclado, com rótulos acessíveis. Comportamento preservado.
+
 ## Perguntas aguardando resposta e pesquisas futuras
 
 Angular/PrimeNG e barra nativa continuam confirmados em D07/D08. A limpeza de conteúdo foi acordada em D12, e a logo original foi aplicada conforme D10. Em 29/10/2026, Gabriel aprovou explicitamente o conjunto atual (casca, ajustes, F00 e reorganização) e autorizou commit e push. F01a não foi iniciada por essa tarefa de registro Git.

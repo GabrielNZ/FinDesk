@@ -10,6 +10,7 @@ import { parseClassifyMerchant } from '../../application/merchant-classification
 import { parseSaveCategoryRule } from '../../application/category-rules';
 import { parseCreateExpense } from '../../application/expenses';
 import { parseExpenseEditId, parseEditExpense } from '../../application/expense-editing';
+import { parseExpenseLifecycle } from '../../application/expense-deletion';
 import type {
   DemoSnapshot,
   AccountCycleReference,
@@ -189,6 +190,9 @@ export function validateSnapshot(value: unknown): DemoSnapshot {
 }
 
 export type StorageOperation =
+  | 'read-expense-trash'
+  | 'delete-expense'
+  | 'recover-expense'
   | 'read-expense-edit'
   | 'edit-expense'
   | 'read-merchants'
@@ -259,6 +263,13 @@ export function parseExpenseEditRead(value: unknown) {
     throw new StorageFailure('invalid-request');
   }
 }
+export function parseExpenseLifecycleRequest(value: unknown) {
+  try {
+    return parseExpenseLifecycle(value);
+  } catch {
+    throw new StorageFailure('invalid-request');
+  }
+}
 export function parseExpenseEditRequest(value: unknown) {
   try {
     return parseEditExpense(value);
@@ -289,6 +300,9 @@ export function validateRequest(value: unknown): WorkerRequest {
     !Number.isSafeInteger(data['id']) ||
     (data['id'] as number) < 1 ||
     ![
+      'read-expense-trash',
+      'delete-expense',
+      'recover-expense',
       'read-expense-edit',
       'edit-expense',
       'read-merchants',
@@ -313,7 +327,9 @@ export function validateRequest(value: unknown): WorkerRequest {
     Object.keys(data).some((key) => !['id', 'operation', 'payload'].includes(key))
   )
     throw new StorageFailure('invalid-request');
-  if (data['operation'] === 'read-expense-edit') parseExpenseEditRead(data['payload']);
+  if (data['operation'] === 'delete-expense' || data['operation'] === 'recover-expense')
+    parseExpenseLifecycleRequest(data['payload']);
+  else if (data['operation'] === 'read-expense-edit') parseExpenseEditRead(data['payload']);
   else if (data['operation'] === 'edit-expense') parseExpenseEditRequest(data['payload']);
   else if (data['operation'] === 'create-expense') parseExpenseRequest(data['payload']);
   else if (data['operation'] === 'save-category-rule') parseRuleRequest(data['payload']);

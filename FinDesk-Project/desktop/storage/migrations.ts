@@ -87,6 +87,11 @@ export const DEMO_MIGRATIONS: readonly Migration[] = [
     version: 5,
     sql: `CREATE TABLE expense_edits (request_id TEXT PRIMARY KEY, movement_id TEXT NOT NULL, payload TEXT NOT NULL CHECK (json_valid(payload)), revision INTEGER NOT NULL CHECK (revision > 0), UNIQUE(movement_id, revision)) STRICT;`,
   },
+  {
+    version: 6,
+    sql: `CREATE TABLE expense_trash (movement_id TEXT PRIMARY KEY, payload TEXT NOT NULL CHECK (json_valid(payload)), position INTEGER NOT NULL CHECK (position >= 0), revision INTEGER NOT NULL CHECK (revision > 0), deleted INTEGER NOT NULL CHECK (deleted IN (0, 1))) STRICT;
+      CREATE TABLE expense_lifecycle_requests (request_id TEXT PRIMARY KEY, operation TEXT NOT NULL CHECK (operation IN ('delete', 'recover')), movement_id TEXT NOT NULL, payload TEXT NOT NULL CHECK (json_valid(payload))) STRICT;`,
+  },
 ];
 export const PREFERENCE_MIGRATIONS: readonly Migration[] = [
   {

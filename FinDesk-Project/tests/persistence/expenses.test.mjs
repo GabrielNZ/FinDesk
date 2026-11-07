@@ -49,6 +49,246 @@ function edit(store, id, patch = {}) {
     ...patch,
   };
 }
+function deletion(store, id) {
+  return { requestId: randomUUID(), movementId: id, expectedToken: store.getExpenseEdit(id).token };
+}
+function recovery(store, id) {
+  return {
+    requestId: randomUUID(),
+    movementId: id,
+    expectedToken: store.getExpenseTrash().trash.find((item) => item.movement.id === id).token,
+  };
+}
+test('F06c: exclusão persiste, recuperação preserva classificação e pedidos antigos não recriam nem removem de novo', async (t) => {
+  const root = await profile(t);
+  let store = new DemoStore(root);
+  try {
+    store.saveCategoryRule({
+      merchantId: 'uber',
+      categoryId: 'casa',
+      active: true,
+      expectedRevision: null,
+    });
+    const creation = request(),
+      id = store.createExpense(creation).movementId;
+    const oldEdit = edit(store, id, { description: 'Café editado antes de excluir' });
+    store.editExpense(oldEdit);
+    const before = store.readDemo(),
+      rules = store.getCategoryRules(),
+      command = deletion(store, id);
+    assert.equal(store.deleteExpense(command).deleted, true);
+    assert.equal(store.deleteExpense(command).trash.length, 1);
+    assert.equal(
+      store.readDemo().facts.movements.some((m) => m.id === id),
+      false,
+    );
+    assert.throws(
+      () => store.createExpense(creation),
+      (error) => error.code === 'invalid-request',
+    );
+    assert.throws(
+      () => store.editExpense(oldEdit),
+      (error) => error.code === 'invalid-request',
+    );
+    assert.throws(
+      () => store.saveDemo(before),
+      (error) => error.code === 'invalid-request',
+    );
+    store.close();
+    store = new DemoStore(root);
+    assert.equal(store.getExpenseTrash().trash[0].effectiveCategoryId, 'casa');
+    store.saveCategoryRule({
+      merchantId: 'uber',
+      categoryId: 'transporte',
+      active: true,
+      expectedRevision: 1,
+    });
+    const restore = recovery(store, id);
+    store.recoverExpense(restore);
+    assert.deepEqual(store.readDemo(), before);
+    assert.deepEqual(store.getCategoryRules().assignments, rules.assignments);
+    assert.equal(store.getExpenseEdit(id).effectiveCategoryId, 'casa');
+    assert.equal(store.deleteExpense(command).deleted, false);
+    assert.equal(store.getExpenseTrash().trash.length, 0);
+    store.deleteExpense(deletion(store, id));
+    assert.equal(store.recoverExpense(restore).deleted, true);
+    assert.equal(store.getExpenseTrash().trash.length, 1);
+    assert.equal(store.getExpenseTrash().categories.categories.length, 4);
+  } finally {
+    store.close();
+  }
+});
+test('F06c: categoria manual null/USD e ciclo excluir/recuperar invalidam edição antiga sem reaplicar regra', async (t) => {
+  const root = await profile(t),
+    store = new DemoStore(root);
+  try {
+    store.saveCategoryRule({
+      merchantId: 'uber',
+      categoryId: 'casa',
+      active: true,
+      expectedRevision: null,
+    });
+    const id = store.createExpense(
+      request({ accountId: 'demo-u', classification: { mode: 'manual', categoryId: null } }),
+    ).movementId;
+    const old = edit(store, id, { amountMinor: 2500 }),
+      staleDelete = deletion(store, id);
+    store.classifyMovement({ movementId: id, categoryId: 'alimentacao' });
+    assert.throws(() => store.deleteExpense(staleDelete));
+    store.classifyMovement({ movementId: id, categoryId: null });
+    const priorEdit = edit(store, id),
+      snapshot = store.readDemo();
+    store.deleteExpense(deletion(store, id));
+    const trash = store.getExpenseTrash();
+    assert.equal(trash.trash[0].effectiveCategoryId, null);
+    assert.equal(trash.trash[0].movement.delta.currency, 'USD');
+    store.recoverExpense(recovery(store, id));
+    assert.deepEqual(store.readDemo(), snapshot);
+    assert.throws(() => store.editExpense(priorEdit));
+    assert.throws(() => store.editExpense(old));
+    assert.equal(store.getExpenseEdit(id).effectiveCategoryId, null);
+  } finally {
+    store.close();
+  }
+});
+test('F06c: falha no recibo reverte exclusão/recuperação e restauração reverte a lixeira junto dos fatos', async (t) => {
+  const root = await profile(t),
+    store = new DemoStore(root),
+    db = new DatabaseSync(join(root, 'demo.sqlite'));
+  try {
+    const id = store.createExpense(request()).movementId;
+    const bytes = () =>
+      JSON.stringify(
+        ['demo_state', 'category_state', 'category_rules', 'merchant_state']
+          .map((table) => db.prepare(`SELECT payload FROM ${table}`).get().payload)
+          .concat([
+            db.prepare('SELECT * FROM expense_trash ORDER BY movement_id').all(),
+            db.prepare('SELECT * FROM expense_lifecycle_requests ORDER BY request_id').all(),
+          ]),
+      );
+    const before = bytes(),
+      command = deletion(store, id);
+    db.exec(
+      "CREATE TRIGGER fail_lifecycle AFTER INSERT ON expense_lifecycle_requests BEGIN SELECT RAISE(ABORT,'falha simulada'); END",
+    );
+    assert.throws(() => store.deleteExpense(command));
+    assert.equal(bytes(), before);
+    db.exec('DROP TRIGGER fail_lifecycle');
+    store.deleteExpense(command);
+    const deleted = bytes(),
+      restore = recovery(store, id);
+    db.exec(
+      "CREATE TRIGGER fail_lifecycle AFTER INSERT ON expense_lifecycle_requests BEGIN SELECT RAISE(ABORT,'falha simulada'); END",
+    );
+    assert.throws(() => store.recoverExpense(restore));
+    assert.equal(bytes(), deleted);
+    db.exec('DROP TRIGGER fail_lifecycle');
+    store.recoverExpense(restore);
+    assert.equal(store.getExpenseTrash().trash.length, 0);
+    store.deleteExpense(deletion(store, id));
+    const saved = bytes();
+    db.exec(
+      "CREATE TRIGGER fail_trash_reset AFTER DELETE ON expense_trash BEGIN SELECT RAISE(ABORT,'falha simulada'); END",
+    );
+    assert.throws(() => store.restoreDemo());
+    assert.equal(bytes(), saved);
+    db.exec('DROP TRIGGER fail_trash_reset');
+    const prefs = store.readPreferences();
+    store.restoreDemo();
+    assert.equal(store.getExpenseTrash().trash.length, 0);
+    assert.equal(db.prepare('SELECT count(*) AS n FROM expense_lifecycle_requests').get().n, 0);
+    assert.deepEqual(store.readPreferences(), prefs);
+  } finally {
+    db.close();
+    store.close();
+  }
+});
+test('F06c: migração v5 preserva bytes/recibos e excluídas inválidas ou ausentes não são recriadas', async (t) => {
+  const root = await profile(t);
+  let store = new DemoStore(root);
+  const id = store.createExpense(request()).movementId;
+  store.editExpense(edit(store, id));
+  store.close();
+  const db = new DatabaseSync(join(root, 'demo.sqlite'));
+  const bytes = () =>
+    JSON.stringify(
+      ['demo_state', 'category_state', 'category_rules', 'merchant_state']
+        .map((table) => db.prepare(`SELECT payload FROM ${table}`).get().payload)
+        .concat([
+          db.prepare('SELECT * FROM expense_requests').all(),
+          db.prepare('SELECT * FROM expense_edits').all(),
+        ]),
+    );
+  try {
+    const before = bytes();
+    db.exec(
+      'DROP TABLE expense_trash; DROP TABLE expense_lifecycle_requests; PRAGMA user_version = 5',
+    );
+    store = new DemoStore(root);
+    assert.equal(store.info().schemaVersion, 6);
+    assert.equal(bytes(), before);
+    store.deleteExpense(deletion(store, id));
+    store.close();
+    const archived = db.prepare('SELECT payload FROM expense_trash').get().payload;
+    db.prepare('UPDATE expense_trash SET payload = ?').run('{}');
+    assert.throws(() => new DemoStore(root));
+    assert.equal(db.prepare('SELECT payload FROM expense_trash').get().payload, '{}');
+    db.prepare('UPDATE expense_trash SET payload = ?').run(archived);
+    db.exec('DROP TABLE expense_trash');
+    assert.throws(() => new DemoStore(root));
+    assert.equal(
+      db.prepare("SELECT count(*) AS n FROM sqlite_master WHERE name = 'expense_trash'").get().n,
+      0,
+    );
+  } finally {
+    db.close();
+  }
+});
+test('F06c: worker aceita somente operações específicas e recuperação usa versão esperada', async (t) => {
+  const root = await profile(t),
+    client = new StorageClient(root);
+  try {
+    const created = await client.createExpense(request());
+    assert.equal(created.ok, true);
+    const id = created.value.movementId;
+    const draft = await client.getExpenseEdit(id),
+      command = { requestId: randomUUID(), movementId: id, expectedToken: draft.value.token };
+    assert.equal((await client.deleteExpense({ ...command, sql: 'delete' })).ok, false);
+    assert.equal((await client.deleteExpense(command)).ok, true);
+    const trash = await client.getExpenseTrash();
+    assert.equal(trash.value.trash.length, 1);
+    assert.equal(
+      (
+        await client.recoverExpense({
+          requestId: randomUUID(),
+          movementId: id,
+          expectedToken: draft.value.token,
+        })
+      ).ok,
+      false,
+    );
+    assert.equal(
+      (
+        await client.recoverExpense({
+          requestId: randomUUID(),
+          movementId: id,
+          expectedToken: trash.value.trash[0].token,
+        })
+      ).ok,
+      true,
+    );
+    assert.throws(() => validateRequest({ id: 1, operation: 'read-expense-trash', payload: {} }));
+    assert.throws(() =>
+      validateRequest({
+        id: 1,
+        operation: 'delete-expense',
+        payload: { ...command, permanent: true },
+      }),
+    );
+  } finally {
+    await client.close();
+  }
+});
 test('F06b: edição não reaplica regra, preserva recibo de criação e repetição não desfaz edição posterior', async (t) => {
   const root = await profile(t);
   let store = new DemoStore(root);
@@ -176,9 +416,11 @@ test('F06b: migração v4 mantém bytes e recibos; worker recusa edição inexis
   try {
     const before = bytes(),
       receipt = db.prepare('SELECT * FROM expense_requests').all();
-    db.exec('DROP TABLE expense_edits; PRAGMA user_version = 4');
+    db.exec(
+      'DROP TABLE expense_lifecycle_requests; DROP TABLE expense_trash; DROP TABLE expense_edits; PRAGMA user_version = 4',
+    );
     store = new DemoStore(root);
-    assert.equal(store.info().schemaVersion, 5);
+    assert.equal(store.info().schemaVersion, 6);
     assert.deepEqual(bytes(), before);
     assert.deepEqual(db.prepare('SELECT * FROM expense_requests').all(), receipt);
     store.close();
@@ -314,11 +556,11 @@ test('F06a: migração v3 preserva payloads e catálogo ausente/corrompido/futur
     (table) => db.prepare(`SELECT payload FROM ${table}`).get().payload,
   );
   db.exec(
-    'DROP TABLE expense_edits; DROP TABLE merchant_state; DROP TABLE expense_requests; PRAGMA user_version = 3',
+    'DROP TABLE expense_lifecycle_requests; DROP TABLE expense_trash; DROP TABLE expense_edits; DROP TABLE merchant_state; DROP TABLE expense_requests; PRAGMA user_version = 3',
   );
   db.close();
   store = new DemoStore(root);
-  assert.equal(store.info().schemaVersion, 5);
+  assert.equal(store.info().schemaVersion, 6);
   store.close();
   db = new DatabaseSync(join(root, 'demo.sqlite'));
   try {

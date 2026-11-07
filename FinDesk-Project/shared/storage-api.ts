@@ -5,6 +5,11 @@ import type { StatementLayout } from './statement-layout';
 import type { CategoryState, ClassifyMovement, ClassifyMerchant, SaveCategory } from './categories';
 import type { RuleCatalogue, SaveCategoryRule } from './category-rules';
 import type {
+  ExpenseLifecycleRequest,
+  ExpenseLifecycleResult,
+  ExpenseTrashState,
+} from './expenses';
+import type {
   CreateExpense,
   EditExpense,
   ExpenseCreated,
@@ -47,10 +52,13 @@ export type StorageResult<T> =
 
 export interface StorageInfo {
   readonly environment: 'demo';
-  readonly schemaVersion: 5;
+  readonly schemaVersion: 6;
 }
 
 export interface StorageApi {
+  getExpenseTrash(): Promise<StorageResult<ExpenseTrashState>>;
+  deleteExpense(value: ExpenseLifecycleRequest): Promise<StorageResult<ExpenseLifecycleResult>>;
+  recoverExpense(value: ExpenseLifecycleRequest): Promise<StorageResult<ExpenseLifecycleResult>>;
   getExpenseEdit(movementId: string): Promise<StorageResult<ExpenseEditDraft>>;
   editExpense(value: EditExpense): Promise<StorageResult<ExpenseCreated>>;
   getMerchants(): Promise<StorageResult<MerchantCatalogue>>;
@@ -74,6 +82,9 @@ export interface StorageApi {
 }
 
 export const STORAGE_CHANNELS = {
+  readExpenseTrash: 'findesk:expense-trash-read',
+  deleteExpense: 'findesk:expense-delete',
+  recoverExpense: 'findesk:expense-recover',
   readExpenseEdit: 'findesk:expense-edit-read',
   editExpense: 'findesk:expense-edit',
   readMerchants: 'findesk:merchants-read',

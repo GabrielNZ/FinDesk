@@ -27,6 +27,7 @@ import {
   parseExpenseRequest,
   parseExpenseEditRead,
   parseExpenseEditRequest,
+  parseExpenseLifecycleRequest,
   StorageFailure,
 } from './storage/contracts';
 import { storageDirectory } from './storage/paths';
@@ -120,6 +121,7 @@ async function start(): Promise<void> {
   }
 
   const readOperations = {
+    [STORAGE_CHANNELS.readExpenseTrash]: () => storage?.getExpenseTrash(),
     [STORAGE_CHANNELS.readMerchants]: () => storage?.getMerchants(),
     [STORAGE_CHANNELS.readCategories]: () => storage?.getCategories(),
     [STORAGE_CHANNELS.readCardLayout]: () => storage?.getCardLayout(),
@@ -133,6 +135,26 @@ async function start(): Promise<void> {
       if (!trustedSender(event) || args.length !== 0)
         return failure(new StorageFailure('invalid-request'));
       return operation() ?? failure(new StorageFailure('unavailable'));
+    });
+  }
+  for (const [channel, operation] of [
+    [
+      STORAGE_CHANNELS.deleteExpense,
+      (value: unknown) => storage?.deleteExpense(parseExpenseLifecycleRequest(value)),
+    ],
+    [
+      STORAGE_CHANNELS.recoverExpense,
+      (value: unknown) => storage?.recoverExpense(parseExpenseLifecycleRequest(value)),
+    ],
+  ] as const) {
+    ipcMain.handle(channel, (event, ...args: unknown[]) => {
+      if (!trustedSender(event) || args.length !== 1)
+        return failure(new StorageFailure('invalid-request'));
+      try {
+        return operation(args[0]) ?? failure(new StorageFailure('unavailable'));
+      } catch (error) {
+        return failure(error);
+      }
     });
   }
   ipcMain.handle(STORAGE_CHANNELS.readExpenseEdit, (event, ...args: unknown[]) => {

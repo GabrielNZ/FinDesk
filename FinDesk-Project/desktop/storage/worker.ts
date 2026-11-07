@@ -17,6 +17,15 @@ try {
       id = request.id;
       let value: unknown;
       switch (request.operation) {
+        case 'read-expense-trash':
+          value = store.getExpenseTrash();
+          break;
+        case 'delete-expense':
+          value = store.deleteExpense(request.payload);
+          break;
+        case 'recover-expense':
+          value = store.recoverExpense(request.payload);
+          break;
         case 'read-expense-edit':
           value = store.getExpenseEdit(request.payload);
           break;

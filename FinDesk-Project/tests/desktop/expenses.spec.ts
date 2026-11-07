@@ -11,9 +11,10 @@ import { basename, dirname, join, resolve } from 'node:path';
 import { DatabaseSync } from 'node:sqlite';
 
 async function launch(profile: string, count = 10) {
-  const env: Record<string, string> = { FINDESK_TEST_MODE: '1' };
+  const env: Record<string, string> = {};
   for (const [key, value] of Object.entries(process.env))
     if (value !== undefined && key !== 'ELECTRON_RUN_AS_NODE') env[key] = value;
+  env['FINDESK_TEST_MODE'] = '1';
   const app = await electron.launch({ args: ['.', `--user-data-dir=${profile}`], env });
   await app.evaluate(({ BrowserWindow }) => {
     BrowserWindow.getAllWindows()[0]?.show();
@@ -81,6 +82,255 @@ async function seedManual(page: Page, rule = true) {
 }
 const balanceMinor = async (page: Page) =>
   Number((await page.locator('.balance-value').innerText()).replace(/[^\d-]/gu, ''));
+
+test('F06c: prévia/cancelamento, lixeira nas quatro áreas, saldo/Seleção, recuperação após reabrir e restauração', async () => {
+  test.setTimeout(180_000);
+  const profile = await mkdtemp(join(tmpdir(), 'findesk-expenses-ui-'));
+  let app: ElectronApplication | undefined;
+  try {
+    let session = await launch(profile);
+    app = session.app;
+    let page = session.page;
+    const initial = await page.evaluate(() => window.finDesk!.storage.getDemo());
+    await expect(page.locator('.delete-expense')).toHaveCount(0);
+    const id = await seedManual(page),
+      beforeBalance = await balanceMinor(page),
+      prefs = await preferences(page);
+    const saved = await page.evaluate(() => window.finDesk!.storage.getDemo());
+    let row = page.locator(`[data-movement-id="${id}"]`);
+    await row.locator('.select-movement').click();
+    await page.locator('[data-movement-id="mov-uber-1"]').locator('.select-movement').click();
+    await row.getByRole('button', { name: 'Excluir despesa', exact: true }).click();
+    let panel = page.locator('fd-expense-trash-panel');
+    await expect(
+      panel.getByRole('heading', { name: 'Excluir despesa', exact: true }),
+    ).toBeFocused();
+    await expect(panel).toContainText('Efeito no saldo da conta: +R$ 20,00');
+    await expect(panel).toContainText('Casa');
+    expect(await page.evaluate(() => window.finDesk!.storage.getDemo())).toEqual(saved);
+    await panel.getByRole('button', { name: 'Cancelar', exact: true }).click();
+    await expect(row.getByRole('button', { name: 'Excluir despesa', exact: true })).toBeFocused();
+    await expect(page.locator('.selected-movement')).toHaveCount(2);
+    await page.getByRole('button', { name: 'Visualizar como lista', exact: true }).click();
+    await expect(page.locator('.statement-table')).toBeVisible();
+    const pencil = await row.locator('.edit-expense').boundingBox(),
+      trash = await row.locator('.delete-expense').boundingBox(),
+      plus = await row.locator('.select-movement').boundingBox();
+    expect(trash!.x).toBeGreaterThan(pencil!.x);
+    expect(trash!.x + trash!.width).toBeLessThanOrEqual(plus!.x);
+    await row.getByRole('button', { name: 'Excluir despesa', exact: true }).click();
+    await panel
+      .getByRole('heading', { name: 'Excluir despesa', exact: true })
+      .scrollIntoViewIfNeeded();
+    await panel.screenshot({ path: 'test-results/expense-delete-preview.png' });
+    await panel.getByRole('button', { name: 'Confirmar exclusão', exact: true }).focus();
+    await expect(
+      panel.getByRole('button', { name: 'Confirmar exclusão', exact: true }),
+    ).toBeFocused();
+    await page.keyboard.press('Enter');
+    await expect(panel.getByRole('status')).toHaveText('Despesa excluída.');
+    await expect.poll(() => balanceMinor(page)).toBe(beforeBalance + 2000);
+    await expect(row).toHaveCount(0);
+    await expect(panel.locator(`[data-deleted-id="${id}"]`)).toContainText('Casa');
+    await page.keyboard.press('Escape');
+    await expect(page.locator('.selected-movement')).toHaveCount(1);
+    await page.evaluate(() =>
+      window.finDesk!.storage.saveCategoryRule({
+        merchantId: 'uber',
+        categoryId: 'transporte',
+        active: true,
+        expectedRevision: 1,
+      }),
+    );
+    await app.close();
+    app = undefined;
+    session = await launch(profile);
+    app = session.app;
+    page = session.page;
+    await page.getByRole('searchbox', { name: 'Buscar movimentações' }).fill('Uber');
+    await expect(page.locator('.movement')).toHaveCount(2);
+    await page.getByRole('button', { name: 'Excluídas', exact: true }).click();
+    panel = page.locator('fd-expense-trash-panel');
+    await expect(panel.locator(`[data-deleted-id="${id}"]`)).toContainText('Casa');
+    await app.evaluate(({ BrowserWindow }) => BrowserWindow.getAllWindows()[0]?.setSize(1180, 800));
+    await panel.getByRole('heading', { name: 'Excluídas', exact: true }).scrollIntoViewIfNeeded();
+    await panel.screenshot({ path: 'test-results/expense-trash-narrow.png' });
+    expect(await page.getByRole('main').evaluate((e) => e.scrollWidth <= e.clientWidth)).toBe(true);
+    await panel
+      .locator(`[data-deleted-id="${id}"]`)
+      .getByRole('button', { name: 'Recuperar', exact: true })
+      .click();
+    await expect(panel.getByRole('status')).toHaveText(
+      'Despesa recuperada fora dos filtros atuais.',
+    );
+    await expect(page.getByRole('searchbox', { name: 'Buscar movimentações' })).toHaveValue('Uber');
+    await expect.poll(() => balanceMinor(page)).toBe(beforeBalance);
+    await panel.getByRole('button', { name: 'Ver lançamento' }).click();
+    row = page.locator(`[data-movement-id="${id}"]`);
+    await expect(row).toContainText('Casa');
+    await expect(page.locator('.selected-movement')).toHaveCount(0);
+    const restored = await page.evaluate(() => window.finDesk!.storage.getDemo());
+    expect(restored).toEqual(saved);
+    await page.getByRole('tab', { name: 'Agrupamento', exact: true }).click();
+    await page.getByRole('button', { name: 'Expandir Casa', exact: true }).click();
+    await page
+      .locator(`[data-movement-id="${id}"]`)
+      .getByRole('button', { name: 'Excluir despesa', exact: true })
+      .click();
+    await expect(
+      panel.getByRole('heading', { name: 'Excluir despesa', exact: true }),
+    ).toBeVisible();
+    await page.keyboard.press('Escape');
+    await page.getByRole('tab', { name: 'Extrato', exact: true }).click();
+    await row.locator('.select-movement').click();
+    await page
+      .locator(`[data-selected-id="${id}"]`)
+      .getByRole('button', { name: 'Excluir despesa', exact: true })
+      .click();
+    await panel.getByRole('button', { name: 'Confirmar exclusão', exact: true }).click();
+    await expect(panel.getByRole('status')).toHaveText('Despesa excluída.');
+    expect(await preferences(page)).toEqual(prefs);
+    await page.getByRole('link', { name: 'Configurações', exact: true }).click();
+    const data = page.getByRole('region', { name: 'Dados de demonstração', exact: true });
+    await data.getByRole('button', { name: 'Restaurar dados', exact: true }).click();
+    await expect(data.getByText('A lista de Excluídas será esvaziada.')).toBeVisible();
+    await data.getByRole('button', { name: 'Restaurar', exact: true }).click();
+    await expect(
+      data.getByText('Dados de demonstração restaurados.', { exact: true }),
+    ).toBeVisible();
+    expect(await page.evaluate(() => window.finDesk!.storage.getDemo())).toEqual(initial);
+    const empty = await page.evaluate(() => window.finDesk!.storage.getExpenseTrash());
+    expect(empty.ok && empty.value.trash).toEqual([]);
+    expect(await preferences(page)).toEqual(prefs);
+  } finally {
+    await app?.close();
+    await clean(profile);
+  }
+});
+
+test('F06c: prévia obsoleta, falha/repetição na exclusão/recuperação e IPC recusa outra janela', async () => {
+  test.setTimeout(150_000);
+  const profile = await mkdtemp(join(tmpdir(), 'findesk-expenses-ui-'));
+  let app: ElectronApplication | undefined;
+  let db: DatabaseSync | undefined;
+  try {
+    const session = await launch(profile);
+    app = session.app;
+    const page = session.page;
+    const id = await seedManual(page, false);
+    await page
+      .locator(`[data-movement-id="${id}"]`)
+      .getByRole('button', { name: 'Excluir despesa', exact: true })
+      .click();
+    const panel = page.locator('fd-expense-trash-panel');
+    await expect(
+      panel.getByRole('heading', { name: 'Excluir despesa', exact: true }),
+    ).toBeFocused();
+    await page.evaluate(async (id) => {
+      const draft = await window.finDesk!.storage.getExpenseEdit(id);
+      if (!draft.ok) throw new Error();
+      const movement = draft.value.snapshot.facts.movements.find((m) => m.id === id)!;
+      const result = await window.finDesk!.storage.editExpense({
+        requestId: crypto.randomUUID(),
+        movementId: id,
+        expectedToken: draft.value.token,
+        accountId: movement.accountId,
+        on: movement.on,
+        amountMinor: 3500,
+        description: 'Prévia atualizada fictícia',
+        merchant: { mode: 'none' },
+        classification: { mode: 'keep' },
+      });
+      if (!result.ok) throw new Error();
+    }, id);
+    await panel.getByRole('button', { name: 'Confirmar exclusão' }).click();
+    await expect(panel.getByRole('alert')).toContainText('Este lançamento foi alterado');
+    await expect(panel.getByRole('button', { name: 'Confirmar exclusão' })).toBeDisabled();
+    await panel.getByRole('button', { name: 'Recarregar prévia' }).click();
+    await expect(panel).toContainText('Prévia atualizada fictícia');
+    const before = await page.evaluate(() => window.finDesk!.storage.getDemo());
+    db = new DatabaseSync(join(profile, 'storage', 'demo.sqlite'));
+    db.exec(
+      "CREATE TRIGGER fail_lifecycle_ui AFTER INSERT ON expense_lifecycle_requests BEGIN SELECT RAISE(ABORT,'falha simulada'); END",
+    );
+    await panel.getByRole('button', { name: 'Confirmar exclusão' }).click();
+    await expect(panel.getByRole('alert')).toContainText('Não foi possível excluir');
+    expect(await page.evaluate(() => window.finDesk!.storage.getDemo())).toEqual(before);
+    db.exec('DROP TRIGGER fail_lifecycle_ui');
+    await panel.getByRole('button', { name: 'Confirmar exclusão' }).click();
+    await expect(panel.getByRole('status')).toHaveText('Despesa excluída.');
+    db.exec(
+      "CREATE TRIGGER fail_lifecycle_ui AFTER INSERT ON expense_lifecycle_requests BEGIN SELECT RAISE(ABORT,'falha simulada'); END",
+    );
+    await panel.getByRole('button', { name: 'Recuperar', exact: true }).click();
+    await expect(panel.getByRole('alert')).toContainText('Não foi possível recuperar');
+    await expect(panel.locator(`[data-deleted-id="${id}"]`)).toBeVisible();
+    db.exec('DROP TRIGGER fail_lifecycle_ui');
+    db.close();
+    db = undefined;
+    await panel.getByRole('button', { name: 'Recuperar', exact: true }).click();
+    await expect(panel.getByRole('status')).toHaveText('Despesa recuperada.');
+    expect(await page.evaluate(() => window.finDesk!.storage.getDemo())).toEqual(before);
+    const requests = await page.evaluate(async (id) => {
+      const draft = await window.finDesk!.storage.getExpenseEdit(id);
+      if (!draft.ok) throw new Error();
+      const remove = {
+        requestId: crypto.randomUUID(),
+        movementId: id,
+        expectedToken: draft.value.token,
+      };
+      const deleted = await window.finDesk!.storage.deleteExpense(remove);
+      if (!deleted.ok) throw new Error();
+      const item = deleted.value.trash.find((item) => item.movement.id === id)!;
+      const active = await window.finDesk!.storage.createExpense({
+        requestId: crypto.randomUUID(),
+        accountId: item.movement.accountId,
+        on: item.movement.on,
+        amountMinor: 1000,
+        description: 'Outra manual fictícia',
+        merchant: { mode: 'none' },
+        classification: { mode: 'automatic' },
+      });
+      if (!active.ok) throw new Error();
+      const activeDraft = await window.finDesk!.storage.getExpenseEdit(active.value.movementId);
+      if (!activeDraft.ok) throw new Error();
+      return {
+        remove: {
+          requestId: crypto.randomUUID(),
+          movementId: active.value.movementId,
+          expectedToken: activeDraft.value.token,
+        },
+        recover: { requestId: crypto.randomUUID(), movementId: id, expectedToken: item.token },
+      };
+    }, id);
+    const rejected = await app.evaluate(async ({ BrowserWindow, app }, requests) => {
+      const other = new BrowserWindow({
+        show: false,
+        webPreferences: {
+          preload: `${app.getAppPath()}/out/desktop/preload.js`,
+          sandbox: true,
+          contextIsolation: true,
+          nodeIntegration: false,
+        },
+      });
+      try {
+        await other.loadURL('findesk://app/#/visao-geral');
+        return await other.webContents.executeJavaScript(
+          `Promise.all([window.finDesk.storage.getExpenseTrash(),window.finDesk.storage.deleteExpense(${JSON.stringify(requests.remove)}),window.finDesk.storage.recoverExpense(${JSON.stringify(requests.recover)})])`,
+        );
+      } finally {
+        other.destroy();
+      }
+    }, requests);
+    expect(rejected.every((r: { ok: boolean }) => !r.ok)).toBe(true);
+    const end = await page.evaluate(() => window.finDesk!.storage.getExpenseTrash());
+    expect(end.ok && end.value.trash).toHaveLength(1);
+  } finally {
+    db?.close();
+    await app?.close();
+    await clean(profile);
+  }
+});
 
 test('F06b: lápis em Cards/Lista/Agrupamento/Seleção, edição mantém ID/categoria e move saldo sem duplicar', async () => {
   test.setTimeout(180_000);

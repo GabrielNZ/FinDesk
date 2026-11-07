@@ -1,0 +1,103 @@
+<section class="category-panel" aria-labelledby="expense-trash-title">
+  <header>
+    <h2 id="expense-trash-title" tabindex="-1">
+      {{ view() === 'preview' ? 'Excluir despesa' : 'Excluídas' }}
+    </h2>
+    <button
+      type="button"
+      class="icon-button"
+      aria-label="Fechar exclusão e recuperação"
+      [disabled]="store.busy()"
+      (click)="closed.emit()"
+    >
+      <i class="pi pi-times" aria-hidden="true"></i>
+    </button>
+  </header>
+  @if (loading()) {
+    <p role="status">{{ view() === 'preview' ? 'Carregando prévia…' : 'Carregando excluídas…' }}</p>
+  } @else if (view() === 'preview') {
+    @if (movement(); as movement) {
+      <h3>{{ movement.description }}</h3>
+      <dl>
+        <div>
+          <dt>Data</dt>
+          <dd>{{ date(movement.on) }}</dd>
+        </div>
+        <div>
+          <dt>Conta</dt>
+          <dd>{{ accountName(movement.accountId) }}</dd>
+        </div>
+        <div>
+          <dt>Valor</dt>
+          <dd>{{ money(movement.delta) }}</dd>
+        </div>
+        <div>
+          <dt>Categoria</dt>
+          <dd>{{ categoryId() ? store.label(categoryId()!) : 'Sem categoria' }}</dd>
+        </div>
+      </dl>
+      @if (effectValue(); as value) {
+        <p class="balance-effect">Efeito no saldo da conta: +{{ money(value) }}</p>
+      }
+      <p>A despesa sairá do extrato e dos totais. Ficará em Excluídas para recuperação.</p>
+    }
+    @if (error()) {
+      <p role="alert" class="error">{{ error() }}</p>
+    }
+    @if (conflict() || !draft()) {
+      <button type="button" [disabled]="store.busy()" (click)="loadPreview(movementId()!)">
+        Recarregar prévia
+      </button>
+    }
+    <div class="form-actions">
+      <button type="button" [disabled]="store.busy()" (click)="closed.emit()">Cancelar</button
+      ><button
+        type="button"
+        class="danger"
+        [disabled]="store.busy() || !draft() || conflict()"
+        (click)="confirm()"
+      >
+        {{ store.busy() ? 'Excluindo…' : 'Confirmar exclusão' }}
+      </button>
+    </div>
+  } @else {
+    <p>Todas as contas · Despesas manuais excluídas</p>
+    @if (message()) {
+      <p id="expense-trash-status" role="status" tabindex="-1">
+        {{ recoveredId() && outside() ? 'Despesa recuperada fora dos filtros atuais.' : message() }}
+      </p>
+    }
+    @if (recoveredId(); as id) {
+      <button type="button" class="primary" [disabled]="store.busy()" (click)="reveal.emit(id)">
+        Ver lançamento
+      </button>
+    }
+    @if (error()) {
+      <p role="alert" class="error">{{ error() }}</p>
+      <button type="button" [disabled]="store.busy()" (click)="loadList()">
+        Carregar excluídas
+      </button>
+    }
+    <div class="trash-list" aria-label="Despesas excluídas">
+      @for (item of trash(); track item.movement.id) {
+        <article [attr.data-deleted-id]="item.movement.id">
+          <h3>{{ item.movement.description }}</h3>
+          <p>{{ date(item.movement.on) }} · {{ accountName(item.movement.accountId) }}</p>
+          <p>
+            {{ item.effectiveCategoryId ? store.label(item.effectiveCategoryId) : 'Sem categoria' }}
+          </p>
+          <div class="trash-actions">
+            <strong>{{ money(item.movement.delta) }}</strong
+            ><button type="button" [disabled]="store.busy()" (click)="recover(item)">
+              Recuperar
+            </button>
+          </div>
+        </article>
+      } @empty {
+        @if (!error()) {
+          <p>Nenhuma despesa excluída.</p>
+        }
+      }
+    </div>
+  }
+</section>

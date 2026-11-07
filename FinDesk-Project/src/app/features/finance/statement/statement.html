@@ -7,14 +7,26 @@
   <div class="statement-toolbar">
     <div class="statement-heading">
       <fd-statement-source-switch [area]="state.area()" (areaChanged)="switchSource($event)" />
-      <button
-        type="button"
-        class="filter-toggle"
-        [disabled]="catalogue.busy() || !catalogue.merchants()"
-        (click)="openExpense()"
-      >
-        <i class="pi pi-plus" aria-hidden="true"></i> Nova despesa
-      </button>
+      <div class="expense-actions" role="group" aria-label="Ações de despesas">
+        <button
+          type="button"
+          aria-label="Nova despesa"
+          title="Nova despesa"
+          [disabled]="catalogue.busy() || !catalogue.merchants()"
+          (click)="openExpense()"
+        >
+          <i class="pi pi-plus" aria-hidden="true"></i>
+        </button>
+        <button
+          type="button"
+          aria-label="Excluídas"
+          title="Excluídas"
+          [disabled]="catalogue.busy()"
+          (click)="openTrash()"
+        >
+          <i class="pi pi-trash" aria-hidden="true"></i>
+        </button>
+      </div>
       @if (state.area() === 'statement') {
         <div class="view-modes" role="group" aria-label="Visualização do extrato">
           <button
@@ -492,7 +504,15 @@
       }
     </div>
     @if (categoryPanel()) {
-      @if (expensePanel()) {
+      @if (trashPanel()) {
+        <fd-expense-trash-panel
+          [movementId]="deletingExpenseId()"
+          [outside]="expenseOutside()"
+          (changed)="savedExpenseId.set($event.movementId)"
+          (reveal)="showExpense($event)"
+          (closed)="closeCategories()"
+        />
+      } @else if (expensePanel()) {
         <fd-expense-panel
           [editingId]="editingExpenseId()"
           [outside]="expenseOutside()"
@@ -803,6 +823,16 @@
       (click)="openExpenseEdit(row)"
     >
       <i class="pi pi-pencil" aria-hidden="true"></i>
+    </button>
+    <button
+      type="button"
+      class="merchant-action delete-expense"
+      aria-label="Excluir despesa"
+      title="Excluir despesa"
+      [disabled]="catalogue.busy()"
+      (click)="openTrash(row)"
+    >
+      <i class="pi pi-trash" aria-hidden="true"></i>
     </button>
   }
 </ng-template>

@@ -28,7 +28,20 @@ import {
   parseCreateExpense,
   planExpense,
 } from '../../application/expenses';
-import type { ExpenseCreated, ExpenseEditDraft, MerchantCatalogue } from '../../shared/expenses';
+import type {
+  ExpenseCreated,
+  ExpenseEditDraft,
+  ExpenseTrashState,
+  ExpenseLifecycleResult,
+  DeletedExpense,
+  MerchantCatalogue,
+} from '../../shared/expenses';
+import type { CashMovement } from '../../domain/finance-facts';
+import {
+  parseExpenseLifecycle,
+  planExpenseDeletion,
+  planExpenseRecovery,
+} from '../../application/expense-deletion';
 import {
   editableExpense,
   parseExpenseEditId,
@@ -133,6 +146,7 @@ export class DemoStore {
       this.readCategories();
       this.readRuleState();
       this.getMerchants();
+      this.getExpenseTrash();
     } catch (error) {
       this.close();
       throw error;
@@ -141,7 +155,7 @@ export class DemoStore {
 
   info(): StorageInfo {
     this.requireOpen();
-    return { environment: 'demo', schemaVersion: 5 };
+    return { environment: 'demo', schemaVersion: 6 };
   }
 
   private requireOpen(): [DatabaseSync, DatabaseSync] {
@@ -163,6 +177,9 @@ export class DemoStore {
     const payload = JSON.stringify(checked);
     validateSnapshot(parseStoredJson(payload));
     transaction(demo, () => {
+      const deleted = new Set(this.expenseTrashState().trash.map((item) => item.movement.id));
+      if (checked.facts.movements.some((m) => deleted.has(m.id)))
+        throw new StorageFailure('invalid-request');
       const rules = recordRuleArrivals(this.readRuleState(), checked.facts.movements);
       const result = demo
         .prepare('UPDATE demo_state SET payload = ? WHERE singleton = 1')
@@ -189,6 +206,8 @@ export class DemoStore {
       this.writeMerchants(initialMerchants(fresh));
       demo.exec('DELETE FROM expense_requests');
       demo.exec('DELETE FROM expense_edits');
+      demo.exec('DELETE FROM expense_trash');
+      demo.exec('DELETE FROM expense_lifecycle_requests');
     });
     return this.readDemo();
   }
@@ -232,6 +251,8 @@ export class DemoStore {
         .get(input.requestId);
       if (prior) {
         if (prior['payload'] !== payload) throw new StorageFailure('invalid-request');
+        if (this.expenseDeleted(prior['movement_id'] as string))
+          throw new StorageFailure('invalid-request');
         const snapshot = this.readDemo();
         if (
           !snapshot.facts.movements.some(
@@ -300,23 +321,13 @@ export class DemoStore {
     const receipt = demo
       .prepare('SELECT payload FROM expense_requests WHERE movement_id = ?')
       .get(id);
-    if (!movement || !editableExpense(movement) || !receipt)
+    if (!movement || !editableExpense(movement) || !receipt || this.expenseDeleted(id))
       throw new StorageFailure('invalid-request');
     const creation = parseCreateExpense(parseStoredJson(receipt['payload']));
     if (movement.origin.externalId !== creation.requestId) throw new StorageFailure('corrupt');
-    const revision = this.expenseEditRevision(id);
     const categories = this.readCategories(),
       rules = this.getCategoryRules();
-    const token = createHash('sha256')
-      .update(
-        JSON.stringify([
-          movement,
-          categories.classifications.find((c) => c.movementId === id) ?? null,
-          rules.assignments.find((a) => a.movementId === id) ?? null,
-          revision,
-        ]),
-      )
-      .digest('hex');
+    const token = this.expenseToken(movement, categories, rules);
     const effective = categorizedMovements([movement], categories, rules.assignments)[0]!;
     return {
       movementId: id,
@@ -327,6 +338,195 @@ export class DemoStore {
       token,
       effectiveCategoryId: effective.kind === 'expense' ? effective.categoryId : null,
     };
+  }
+  private expenseToken(
+    movement: CashMovement,
+    categories: CategoryState,
+    rules: RuleCatalogue,
+  ): string {
+    const id = movement.id;
+    return createHash('sha256')
+      .update(
+        JSON.stringify([
+          movement,
+          categories.classifications.find((c) => c.movementId === id) ?? null,
+          rules.assignments.find((a) => a.movementId === id) ?? null,
+          this.expenseEditRevision(id),
+          this.expenseLifecycleRevision(id),
+        ]),
+      )
+      .digest('hex');
+  }
+  private expenseDeleted(id: string): boolean {
+    return (
+      this.requireOpen()[0]
+        .prepare('SELECT deleted FROM expense_trash WHERE movement_id = ?')
+        .get(id)?.['deleted'] === 1
+    );
+  }
+  private expenseLifecycleRevision(id: string): number {
+    const revision =
+      this.requireOpen()[0]
+        .prepare('SELECT revision FROM expense_trash WHERE movement_id = ?')
+        .get(id)?.['revision'] ?? 0;
+    if (!Number.isSafeInteger(revision) || (revision as number) < 0)
+      throw new StorageFailure('corrupt');
+    return revision as number;
+  }
+  private expenseTrashState(): ExpenseTrashState {
+    const [demo] = this.requireOpen();
+    const snapshot = this.readDemo(),
+      categories = this.readCategories(),
+      rules = this.getCategoryRules();
+    const rows = demo
+      .prepare('SELECT movement_id, payload, position FROM expense_trash WHERE deleted = 1')
+      .all();
+    const movements = rows.map((row) => {
+      const movement = parseStoredJson(row['payload']) as CashMovement;
+      try {
+        if (
+          !movement ||
+          !editableExpense(movement) ||
+          movement.id !== row['movement_id'] ||
+          !Number.isSafeInteger(row['position']) ||
+          (row['position'] as number) < 0
+        )
+          throw new Error();
+        const receipt = demo
+          .prepare('SELECT payload FROM expense_requests WHERE movement_id = ?')
+          .get(movement.id);
+        if (
+          !receipt ||
+          parseCreateExpense(parseStoredJson(receipt['payload'])).requestId !==
+            movement.origin.externalId
+        )
+          throw new Error();
+        return movement;
+      } catch {
+        throw new StorageFailure('corrupt');
+      }
+    });
+    validateSnapshot({
+      ...snapshot,
+      facts: { ...snapshot.facts, movements: [...snapshot.facts.movements, ...movements] },
+    });
+    const effective = new Map(
+      categorizedMovements(movements, categories, rules.assignments).map((m) => [m.id, m]),
+    );
+    const trash: DeletedExpense[] = movements
+      .map((movement) => {
+        const current = effective.get(movement.id)!;
+        return {
+          movement,
+          token: this.expenseToken(movement, categories, rules),
+          effectiveCategoryId: current.kind === 'expense' ? current.categoryId : null,
+        };
+      })
+      .sort(
+        (a, b) =>
+          b.movement.on.localeCompare(a.movement.on) || a.movement.id.localeCompare(b.movement.id),
+      );
+    return { snapshot, categories, rules, merchants: this.getMerchants(), trash };
+  }
+  getExpenseTrash(): ExpenseTrashState {
+    return transaction(this.requireOpen()[0], () => this.expenseTrashState());
+  }
+  deleteExpense(value: unknown): ExpenseLifecycleResult {
+    return this.changeExpenseLifecycle(value, 'delete');
+  }
+  recoverExpense(value: unknown): ExpenseLifecycleResult {
+    return this.changeExpenseLifecycle(value, 'recover');
+  }
+  private changeExpenseLifecycle(
+    value: unknown,
+    operation: 'delete' | 'recover',
+  ): ExpenseLifecycleResult {
+    let input;
+    try {
+      input = parseExpenseLifecycle(value);
+    } catch {
+      throw new StorageFailure('invalid-request');
+    }
+    const payload = JSON.stringify(input),
+      [demo] = this.requireOpen();
+    return transaction(demo, () => {
+      const prior = demo
+        .prepare(
+          'SELECT payload, movement_id, operation FROM expense_lifecycle_requests WHERE request_id = ?',
+        )
+        .get(input.requestId);
+      if (prior) {
+        if (
+          prior['payload'] !== payload ||
+          prior['movement_id'] !== input.movementId ||
+          prior['operation'] !== operation
+        )
+          throw new StorageFailure('invalid-request');
+        return {
+          ...this.expenseTrashState(),
+          movementId: input.movementId,
+          deleted: this.expenseDeleted(input.movementId),
+        };
+      }
+      let snapshot: DemoSnapshot;
+      let movement: CashMovement;
+      let position: number;
+      if (operation === 'delete') {
+        const current = this.expenseEditDraft(input.movementId);
+        if (current.token !== input.expectedToken) throw new StorageFailure('invalid-request');
+        position = current.snapshot.facts.movements.findIndex((m) => m.id === input.movementId);
+        movement = current.snapshot.facts.movements[position]!;
+        try {
+          snapshot = planExpenseDeletion(current.snapshot, input.movementId);
+        } catch {
+          throw new StorageFailure('invalid-request');
+        }
+      } else {
+        const current = this.expenseTrashState(),
+          item = current.trash.find((item) => item.movement.id === input.movementId);
+        if (!item || item.token !== input.expectedToken)
+          throw new StorageFailure('invalid-request');
+        movement = item.movement;
+        position = demo
+          .prepare('SELECT position FROM expense_trash WHERE movement_id = ?')
+          .get(input.movementId)?.['position'] as number;
+        try {
+          snapshot = planExpenseRecovery(current.snapshot, movement, position);
+        } catch {
+          throw new StorageFailure('invalid-request');
+        }
+      }
+      const revision = this.expenseLifecycleRevision(input.movementId) + 1;
+      if (!Number.isSafeInteger(revision)) throw new StorageFailure('corrupt');
+      validateSnapshot(snapshot);
+      if (
+        Number(
+          demo
+            .prepare('UPDATE demo_state SET payload = ? WHERE singleton = 1')
+            .run(JSON.stringify(snapshot)).changes,
+        ) !== 1
+      )
+        throw new StorageFailure('corrupt');
+      demo
+        .prepare(
+          `INSERT INTO expense_trash VALUES (?, ?, ?, ?, ?) ON CONFLICT(movement_id) DO UPDATE SET payload = excluded.payload, position = excluded.position, revision = excluded.revision, deleted = excluded.deleted`,
+        )
+        .run(
+          input.movementId,
+          JSON.stringify(movement),
+          position,
+          revision,
+          operation === 'delete' ? 1 : 0,
+        );
+      demo
+        .prepare('INSERT INTO expense_lifecycle_requests VALUES (?, ?, ?, ?)')
+        .run(input.requestId, operation, input.movementId, payload);
+      return {
+        ...this.expenseTrashState(),
+        movementId: input.movementId,
+        deleted: operation === 'delete',
+      };
+    });
   }
   private expenseEditRevision(id: string): number {
     const [demo] = this.requireOpen();

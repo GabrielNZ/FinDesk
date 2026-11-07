@@ -1,4 +1,9 @@
 import { Worker } from 'node:worker_threads';
+import type {
+  ExpenseLifecycleRequest,
+  ExpenseLifecycleResult,
+  ExpenseTrashState,
+} from '../../shared/expenses';
 import { join } from 'node:path';
 import type {
   DemoSnapshot,
@@ -106,6 +111,15 @@ export class StorageClient {
   }
   getMerchants(): Promise<StorageResult<MerchantCatalogue>> {
     return this.request('read-merchants');
+  }
+  getExpenseTrash(): Promise<StorageResult<ExpenseTrashState>> {
+    return this.request('read-expense-trash');
+  }
+  deleteExpense(value: ExpenseLifecycleRequest): Promise<StorageResult<ExpenseLifecycleResult>> {
+    return this.request('delete-expense', value);
+  }
+  recoverExpense(value: ExpenseLifecycleRequest): Promise<StorageResult<ExpenseLifecycleResult>> {
+    return this.request('recover-expense', value);
   }
   getExpenseEdit(id: string): Promise<StorageResult<ExpenseEditDraft>> {
     return this.request('read-expense-edit', id);

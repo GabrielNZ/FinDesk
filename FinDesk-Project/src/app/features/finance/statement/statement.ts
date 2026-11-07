@@ -44,6 +44,7 @@ import { MerchantCategoryPanel } from './merchant-category-panel';
 import type { MerchantQuery } from '../../../../../shared/categories';
 import { categorizedMovements } from '../../../../../application/categories';
 import { editableExpense } from '../../../../../application/expense-editing';
+import { ExpenseTrashPanel } from './expense-trash-panel';
 
 @Component({
   selector: 'fd-statement',
@@ -54,6 +55,7 @@ import { editableExpense } from '../../../../../application/expense-editing';
     CategoryPanel,
     MerchantCategoryPanel,
     ExpensePanel,
+    ExpenseTrashPanel,
     NgTemplateOutlet,
   ],
   host: { '(window:resize)': 'updateFocusBounds()' },
@@ -69,6 +71,8 @@ export class Statement {
   readonly categoryPanel = signal(false);
   readonly expensePanel = signal(false);
   readonly editingExpenseId = signal<string | null>(null);
+  readonly trashPanel = signal(false);
+  readonly deletingExpenseId = signal<string | null>(null);
   readonly canEditExpense = editableExpense;
   readonly savedExpenseId = signal<string | null>(null);
   readonly expenseOutside = computed(
@@ -348,6 +352,8 @@ export class Statement {
     this.merchantRow.set(null);
     this.expensePanel.set(false);
     this.editingExpenseId.set(null);
+    this.trashPanel.set(false);
+    this.deletingExpenseId.set(null);
     this.state.focus.set(null);
     this.categoryPanel.set(true);
     this.panel.set(null);
@@ -358,6 +364,8 @@ export class Statement {
     this.merchantRow.set(null);
     this.expensePanel.set(false);
     this.editingExpenseId.set(null);
+    this.trashPanel.set(false);
+    this.deletingExpenseId.set(null);
     afterNextRender(
       () => {
         (this.categoryReturn?.isConnected
@@ -387,6 +395,13 @@ export class Statement {
     this.editingExpenseId.set(row.movement.id);
     this.savedExpenseId.set(null);
     this.expensePanel.set(true);
+  }
+  openTrash(row: StatementRow | null = null): void {
+    if (this.catalogue.busy() || (row && !editableExpense(row.movement))) return;
+    this.openCategories();
+    this.trashPanel.set(true);
+    this.deletingExpenseId.set(row?.movement.id ?? null);
+    this.savedExpenseId.set(null);
   }
   showExpense(id: string): void {
     const movement = this.context.snapshot()?.facts.movements.find((m) => m.id === id);

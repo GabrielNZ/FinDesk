@@ -13,6 +13,11 @@ const {
 } = require('../../out/application/expenses.js');
 const { accountBalanceAt } = require('../../out/domain/finance.js');
 const {
+  parseExpenseLifecycle,
+  planExpenseDeletion,
+  planExpenseRecovery,
+} = require('../../out/application/expense-deletion.js');
+const {
   planExpenseEdit,
   parseEditExpense,
   editableExpense,
@@ -35,6 +40,52 @@ const input = {
   merchant: { mode: 'none' },
   classification: { mode: 'automatic' },
 };
+test('F06c: excluir e recuperar preservam valor/moeda/ID/origem e recalculam somente o saldo da conta', () => {
+  for (const accountId of ['demo-a', 'demo-u']) {
+    const id = '00000000-0000-4000-8000-000000000002';
+    const created = planExpense(
+      snapshot,
+      initialCategories(),
+      initialMerchants(snapshot),
+      { ...input, accountId },
+      id,
+      'unused',
+    );
+    const movement = created.snapshot.facts.movements.at(-1),
+      before = JSON.stringify(created);
+    const removed = planExpenseDeletion(created.snapshot, id);
+    assert.deepEqual(removed, snapshot);
+    assert.equal(
+      accountBalanceAt(removed.facts, accountId, snapshot.asOf).minorUnits,
+      accountBalanceAt(created.snapshot.facts, accountId, snapshot.asOf).minorUnits + 2000,
+    );
+    const restored = planExpenseRecovery(removed, movement, snapshot.facts.movements.length);
+    assert.deepEqual(restored, created.snapshot);
+    assert.equal(JSON.stringify(created), before);
+    assert.throws(() => planExpenseRecovery(restored, movement, 0));
+    assert.throws(() => planExpenseRecovery(removed, { ...movement, on: '2026-10-30' }, 0));
+    assert.throws(() => planExpenseRecovery(removed, movement, -1));
+  }
+});
+test('F06c: operação fechada recusa extras/IDs/versões e exclusão não aceita fatos de outras origens', () => {
+  const request = {
+    requestId: input.requestId,
+    movementId: '00000000-0000-4000-8000-000000000002',
+    expectedToken: 'a'.repeat(64),
+  };
+  assert.deepEqual(parseExpenseLifecycle(request), request);
+  for (const patch of [
+    { movementId: 'mov-uber-1' },
+    { expectedToken: '' },
+    { requestId: 'x' },
+    { sql: 'delete' },
+    { permanent: true },
+    { ids: [] },
+  ])
+    assert.throws(() => parseExpenseLifecycle({ ...request, ...patch }));
+  assert.throws(() => planExpenseDeletion(snapshot, 'mov-uber-1'));
+  assert.throws(() => planExpenseDeletion(snapshot, request.movementId));
+});
 test('F06b: editar mantém ID/origem/ordem e move um único débito entre contas da mesma moeda', () => {
   const id = '00000000-0000-4000-8000-000000000002';
   const original = planExpense(

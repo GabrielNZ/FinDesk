@@ -22,6 +22,8 @@ Tema escuro primeiro, tokens semânticos e preparação para tema claro posterio
 
 ## Interações da interface
 
+F06c/D120–D122: lixeira no cabeçalho de despesa manual do FinDesk abre prévia no painel direito; só Confirmar exclusão retira o registro do extrato/totais/Seleção/saldo. Botão Excluídas em Movimentações abre lista recuperável após reabrir, com conta/data/categoria/moeda. Recuperar devolve mesmo ID/origem/classificação sem reaplicar regras, mantendo filtros e oferecendo Ver lançamento. Restauração demo esvazia Excluídas explicitamente e preserva preferências/layout. Critérios em [EXCLUSAO_DESPESAS.md](docs/financas/EXCLUSAO_DESPESAS.md).
+
 F06b/D117–D119: lápis no cabeçalho de despesas cadastradas manualmente no FinDesk, depois das etiquetas e antes do +. Painel completo de edição; conta pode mudar somente dentro da mesma moeda, preservando ID/origem e recalculando os saldos. Categoria atual mantida por padrão, com escolha manual explícita, sem reaplicar regra por editar o estabelecimento. Consulta/Seleção seguem D115/D82, datas seguem D116. Critérios em [EDICAO_DESPESAS.md](docs/financas/EDICAO_DESPESAS.md).
 
 F06a/D113–D116: cadastro de despesa em painel completo à direita, aberto por “+ Nova despesa” no Extrato/Agrupamento, com Seleção preservada ao fechar. Estabelecimento opcional permite escolher existentes ou criar novo explicitamente, sem associação automática pela descrição. Salvar mantém consulta; fora dos filtros, oferecer Ver lançamento com ajuste somente por essa ação. Referência fictícia fixa: data inicial/limite seguem snapshot.asOf, aceitando somente datas após abertura da conta. Critérios em [CADASTRO_DESPESAS.md](docs/financas/CADASTRO_DESPESAS.md).

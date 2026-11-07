@@ -1,0 +1,58 @@
+dl {
+  margin: 18px 0;
+  display: grid;
+  gap: 12px;
+}
+dt {
+  font-size: 11px;
+  color: var(--fd-muted);
+  margin-bottom: 4px;
+}
+dd {
+  margin: 0;
+  font-size: 13px;
+  overflow-wrap: anywhere;
+}
+h3 {
+  font-size: 14px;
+  font-weight: 500;
+  margin: 10px 0;
+  overflow-wrap: anywhere;
+}
+.balance-effect {
+  color: var(--fd-accent);
+  margin: 18px 0;
+}
+.danger {
+  border-color: var(--fd-danger, #ff9388);
+  color: var(--fd-danger, #ff9388);
+}
+.trash-list {
+  display: grid;
+  gap: 12px;
+  max-height: 520px;
+  overflow-y: auto;
+  margin-top: 16px;
+  padding: 3px;
+}
+.trash-list article {
+  border: 1px solid var(--fd-border);
+  border-radius: 10px;
+  padding: 12px;
+  min-width: 0;
+}
+.trash-list p {
+  line-height: 1.5;
+  margin: 7px 0;
+}
+.trash-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.trash-actions strong {
+  font-size: 13px;
+  font-weight: 500;
+}
