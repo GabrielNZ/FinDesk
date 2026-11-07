@@ -4,6 +4,7 @@ import type { DemoSnapshot } from '../shared/storage-api';
 import { categorizedMovements, parseCategoryState } from './categories';
 import { ALL_ACCOUNTS } from './finance-context';
 import { filterStatement, MOVEMENT_TYPES, statementRows } from './statement';
+import type { RuleAssignment } from '../shared/category-rules';
 
 function record(value: unknown, keys: string): Record<string, unknown> {
   if (
@@ -79,6 +80,7 @@ export function previewMerchantClassification(
   merchantId: string,
   categoryId: string | null,
   includeManual: boolean,
+  automatic: readonly RuleAssignment[] = [],
 ) {
   if (
     !identifier(merchantId) ||
@@ -95,7 +97,7 @@ export function previewMerchantClassification(
         ...snapshot,
         facts: {
           ...snapshot.facts,
-          movements: categorizedMovements(snapshot.facts.movements, state),
+          movements: categorizedMovements(snapshot.facts.movements, state, automatic),
         },
       },
       query.accountId,
@@ -125,6 +127,7 @@ export function classifyMerchant(
   snapshot: DemoSnapshot,
   state: CategoryState,
   input: ClassifyMerchant,
+  automatic: readonly RuleAssignment[] = [],
 ): CategoryState {
   const checked = parseClassifyMerchant(input);
   const preview = previewMerchantClassification(
@@ -134,6 +137,7 @@ export function classifyMerchant(
     checked.merchantId,
     checked.categoryId,
     checked.includeManual,
+    automatic,
   );
   if (JSON.stringify(preview.map((item) => item.expected)) !== JSON.stringify(checked.expected))
     throw new Error('A consulta mudou. Confira a prévia novamente.');

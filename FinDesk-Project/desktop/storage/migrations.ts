@@ -1,10 +1,13 @@
 import { DatabaseSync } from 'node:sqlite';
-import { initialCategories } from '../../application/categories';
+import { initialCategories, parseCategoryState } from '../../application/categories';
+import { initialCategoryRules } from '../../application/category-rules';
+import { createDemoScenario } from '../../fixtures/financas/demo';
 import {
   parseStoredJson,
   StorageFailure,
   upgradePreferencesV1,
   upgradePreferencesV2,
+  validateSnapshot,
 } from './contracts';
 
 export interface Migration {
@@ -34,6 +37,27 @@ export const DEMO_MIGRATIONS: readonly Migration[] = [
       database
         .prepare('INSERT INTO category_state VALUES (1, ?)')
         .run(JSON.stringify(initialCategories()));
+    },
+  },
+  {
+    version: 3,
+    sql: `CREATE TABLE category_rules (
+      singleton INTEGER PRIMARY KEY CHECK (singleton = 1),
+      payload TEXT NOT NULL CHECK (json_valid(payload))
+    ) STRICT;`,
+    apply(database) {
+      const row = database.prepare('SELECT payload FROM demo_state WHERE singleton = 1').get();
+      const categories = database
+        .prepare('SELECT payload FROM category_state WHERE singleton = 1')
+        .get();
+      if (!categories) throw new StorageFailure('corrupt');
+      parseCategoryState(parseStoredJson(categories['payload']));
+      const movements = row
+        ? validateSnapshot(parseStoredJson(row['payload'])).facts.movements
+        : createDemoScenario().facts.movements;
+      database
+        .prepare('INSERT INTO category_rules VALUES (1, ?)')
+        .run(JSON.stringify(initialCategoryRules(movements)));
     },
   },
 ];

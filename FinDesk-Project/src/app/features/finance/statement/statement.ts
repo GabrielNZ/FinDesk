@@ -170,7 +170,11 @@ export class Statement {
             ...snapshot,
             facts: {
               ...snapshot.facts,
-              movements: categorizedMovements(snapshot.facts.movements, catalogue),
+              movements: categorizedMovements(
+                snapshot.facts.movements,
+                catalogue,
+                this.catalogue.rules()?.assignments,
+              ),
             },
           },
           this.context.accountId(),

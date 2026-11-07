@@ -23,6 +23,7 @@ import {
   parseCategoryRequest,
   parseClassificationRequest,
   parseMerchantRequest,
+  parseRuleRequest,
   StorageFailure,
 } from './storage/contracts';
 import { storageDirectory } from './storage/paths';
@@ -130,6 +131,23 @@ async function start(): Promise<void> {
       return operation() ?? failure(new StorageFailure('unavailable'));
     });
   }
+  ipcMain.handle(STORAGE_CHANNELS.readCategoryRules, (event, ...args: unknown[]) => {
+    if (!trustedSender(event) || args.length !== 0)
+      return failure(new StorageFailure('invalid-request'));
+    return storage?.getCategoryRules() ?? failure(new StorageFailure('unavailable'));
+  });
+  ipcMain.handle(STORAGE_CHANNELS.saveCategoryRule, (event, ...args: unknown[]) => {
+    if (!trustedSender(event) || args.length !== 1)
+      return failure(new StorageFailure('invalid-request'));
+    try {
+      return (
+        storage?.saveCategoryRule(parseRuleRequest(args[0])) ??
+        failure(new StorageFailure('unavailable'))
+      );
+    } catch (error) {
+      return failure(error);
+    }
+  });
   ipcMain.handle(STORAGE_CHANNELS.saveCategory, (event, ...args: unknown[]) => {
     if (!trustedSender(event) || args.length !== 1)
       return failure(new StorageFailure('invalid-request'));

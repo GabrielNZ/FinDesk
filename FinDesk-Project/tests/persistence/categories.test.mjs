@@ -11,6 +11,219 @@ const { StorageClient } = require('../../out/desktop/storage/client.js');
 const { validateRequest } = require('../../out/desktop/storage/contracts.js');
 const { migrate, DEMO_MIGRATIONS } = require('../../out/desktop/storage/migrations.js');
 const { initialCategories } = require('../../out/application/categories.js');
+const { categorizedMovements } = require('../../out/application/categories.js');
+function incoming(snapshot, id, patch = {}) {
+  const base = snapshot.facts.movements.find((m) => m.id === 'mov-uber-1');
+  return { ...base, id, origin: { ...base.origin, externalId: id }, ...patch };
+}
+function addArrival(store, id, patch = {}) {
+  const snapshot = store.readDemo();
+  return store.saveDemo({
+    ...snapshot,
+    facts: {
+      ...snapshot.facts,
+      movements: [...snapshot.facts.movements, incoming(snapshot, id, patch)],
+    },
+  });
+}
+function setRule(store, patch = {}) {
+  const current = store.getCategoryRules().rules.find((r) => r.merchantId === 'uber');
+  return store.saveCategoryRule({
+    merchantId: 'uber',
+    categoryId: 'casa',
+    active: true,
+    expectedRevision: current?.revision ?? null,
+    ...patch,
+  });
+}
+
+test('F05b.3: migração v2 marca IDs existentes, conserva bytes e regras/atribuições sobrevivem à reabertura', async (t) => {
+  const root = await temporary(t);
+  let store = new DemoStore(root);
+  store.classifyMovement({ movementId: 'mov-uber-1', categoryId: null });
+  const snapshot = store.readDemo(),
+    categories = store.readCategories(),
+    prefs = store.readPreferences();
+  store.close();
+  const db = new DatabaseSync(join(root, 'demo.sqlite'));
+  const before = db.prepare('SELECT payload FROM demo_state').get().payload;
+  const categoryBytes = db.prepare('SELECT payload FROM category_state').get().payload;
+  db.exec('DROP TABLE category_rules; PRAGMA user_version = 2');
+  db.close();
+  store = new DemoStore(root);
+  try {
+    const check = new DatabaseSync(join(root, 'demo.sqlite'));
+    try {
+      assert.equal(check.prepare('PRAGMA user_version').get().user_version, 3);
+      assert.equal(check.prepare('SELECT payload FROM demo_state').get().payload, before);
+      assert.equal(
+        check.prepare('SELECT payload FROM category_state').get().payload,
+        categoryBytes,
+      );
+    } finally {
+      check.close();
+    }
+    setRule(store);
+    store.saveDemo(snapshot);
+    assert.deepEqual(store.getCategoryRules().assignments, []);
+    addArrival(store, 'late-arrival', {
+      on: '2026-09-12',
+      accountId: 'demo-u',
+      delta: { minorUnits: -1400, currency: 'USD' },
+    });
+    const state = store.getCategoryRules();
+    assert.equal(state.assignments.length, 1);
+    assert.equal(state.assignments[0].categoryId, 'casa');
+    assert.deepEqual(store.readCategories(), categories);
+    assert.deepEqual(store.readPreferences(), prefs);
+    store.close();
+    store = new DemoStore(root);
+    assert.deepEqual(store.getCategoryRules(), state);
+    store.restoreDemo();
+    assert.deepEqual(store.getCategoryRules(), { version: 1, rules: [], assignments: [] });
+    assert.deepEqual(store.readDemo(), snapshot);
+    assert.deepEqual(store.readPreferences(), prefs);
+  } finally {
+    store.close();
+  }
+});
+
+test('F05b.3: entrada atômica, pausa, revisão, reativação, manual null e atualização da fonte preservam categorias', async (t) => {
+  const root = await temporary(t);
+  const store = new DemoStore(root);
+  try {
+    setRule(store);
+    addArrival(store, 'first');
+    setRule(store, { categoryId: 'alimentacao' });
+    addArrival(store, 'second');
+    setRule(store, { categoryId: 'alimentacao', active: false });
+    addArrival(store, 'paused');
+    setRule(store, { categoryId: 'alimentacao' });
+    addArrival(store, 'third');
+    assert.deepEqual(
+      store.getCategoryRules().assignments.map((a) => [a.movementId, a.categoryId]),
+      [
+        ['first', 'casa'],
+        ['second', 'alimentacao'],
+        ['third', 'alimentacao'],
+      ],
+    );
+    const snapshot = store.readDemo();
+    const rules = store.getCategoryRules();
+    store.saveDemo({
+      ...snapshot,
+      facts: {
+        ...snapshot.facts,
+        movements: snapshot.facts.movements.map((m) =>
+          m.id === 'first' ? { ...m, categoryId: 'entretenimento' } : m,
+        ),
+      },
+    });
+    assert.deepEqual(store.getCategoryRules(), rules);
+    store.classifyMovement({ movementId: 'first', categoryId: null });
+    const effective = categorizedMovements(
+      store.readDemo().facts.movements,
+      store.readCategories(),
+      rules.assignments,
+    );
+    assert.equal(effective.find((m) => m.id === 'first').categoryId, null);
+    assert.equal(effective.find((m) => m.id === 'second').categoryId, 'alimentacao');
+    assert.equal(effective.find((m) => m.id === 'paused').categoryId, 'transporte');
+    const before = store.readDemo(),
+      beforeRules = store.getCategoryRules();
+    const db = new DatabaseSync(join(root, 'demo.sqlite'));
+    try {
+      db.exec(
+        "CREATE TRIGGER fail_rules AFTER UPDATE ON category_rules BEGIN SELECT RAISE(ABORT,'falha simulada'); END",
+      );
+      assert.throws(() => addArrival(store, 'failed'));
+      assert.deepEqual(store.readDemo(), before);
+      assert.deepEqual(store.getCategoryRules(), beforeRules);
+      assert.throws(() => setRule(store));
+      assert.deepEqual(store.getCategoryRules(), beforeRules);
+      assert.throws(() => store.restoreDemo());
+      assert.deepEqual(store.readDemo(), before);
+      assert.deepEqual(store.getCategoryRules(), beforeRules);
+      db.exec('DROP TRIGGER fail_rules');
+      addArrival(store, 'failed');
+      assert.equal(store.getCategoryRules().assignments.at(-1).movementId, 'failed');
+    } finally {
+      db.close();
+    }
+  } finally {
+    store.close();
+  }
+});
+
+test('F05b.3: worker limita leitura/gravação de regra e recusa revisão obsoleta, campos extras e estabelecimento inválido', async (t) => {
+  const root = await temporary(t);
+  const client = new StorageClient(root);
+  try {
+    const before = await client.getDemo(),
+      categories = await client.getCategories();
+    const input = { merchantId: 'uber', categoryId: 'casa', active: true, expectedRevision: null };
+    for (const patch of [
+      { path: 'x' },
+      { active: 'true' },
+      { merchantId: 'missing' },
+      { categoryId: 'missing' },
+      { expectedRevision: 1 },
+    ])
+      assert.equal(
+        (await client.saveCategoryRule({ ...input, ...patch })).error.code,
+        'invalid-request',
+      );
+    const saved = await client.saveCategoryRule(input);
+    assert.equal(saved.ok, true);
+    assert.equal((await client.saveCategoryRule(input)).error.code, 'invalid-request');
+    assert.deepEqual(await client.getCategoryRules(), saved);
+    assert.deepEqual(await client.getDemo(), before);
+    assert.deepEqual(await client.getCategories(), categories);
+    assert.throws(() =>
+      validateRequest({ id: 1, operation: 'read-category-rules', payload: 'sql' }),
+    );
+    assert.throws(() =>
+      validateRequest({ id: 1, operation: 'save-category-rule', payload: { ...input, sql: 'x' } }),
+    );
+  } finally {
+    await client.close();
+  }
+});
+
+test('F05b.3: migração inválida faz rollback e regras ausentes/corrompidas/futuras não são recriadas', async (t) => {
+  const root = await temporary(t);
+  const store = new DemoStore(root);
+  store.close();
+  const db = new DatabaseSync(join(root, 'demo.sqlite'));
+  try {
+    const original = db.prepare('SELECT payload FROM category_rules').get().payload;
+    for (const payload of [
+      JSON.stringify({ version: 2 }),
+      JSON.stringify({ version: 1, rules: [], assignments: [], knownMovementIds: [] }),
+      JSON.stringify({ version: 1, rules: [], assignments: [], knownMovementIds: ['x', 'x'] }),
+    ]) {
+      db.prepare('UPDATE category_rules SET payload = ?').run(payload);
+      assert.throws(() => new DemoStore(root));
+      assert.equal(db.prepare('SELECT payload FROM category_rules').get().payload, payload);
+    }
+    db.exec('DELETE FROM category_rules');
+    assert.throws(() => new DemoStore(root));
+    assert.equal(db.prepare('SELECT count(*) AS n FROM category_rules').get().n, 0);
+    db.prepare('INSERT INTO category_rules VALUES (1, ?)').run(original);
+    const categoryBytes = db.prepare('SELECT payload FROM category_state').get().payload;
+    db.prepare('UPDATE category_state SET payload = ?').run(JSON.stringify({ version: 99 }));
+    db.exec('DROP TABLE category_rules; PRAGMA user_version = 2');
+    assert.throws(() => new DemoStore(root));
+    assert.equal(db.prepare('PRAGMA user_version').get().user_version, 2);
+    assert.equal(
+      db.prepare("SELECT count(*) AS n FROM sqlite_master WHERE name = 'category_rules'").get().n,
+      0,
+    );
+    db.prepare('UPDATE category_state SET payload = ?').run(categoryBytes);
+  } finally {
+    db.close();
+  }
+});
 const {
   previewMerchantClassification,
 } = require('../../out/application/merchant-classification.js');
@@ -138,7 +351,7 @@ test('F05b.1: migração da demo v1 preserva fatos/preferências e inicializa ca
     prefs = store.readPreferences();
   store.close();
   const db = new DatabaseSync(join(root, 'demo.sqlite'));
-  db.exec('DROP TABLE category_state; PRAGMA user_version = 1');
+  db.exec('DROP TABLE category_rules; DROP TABLE category_state; PRAGMA user_version = 1');
   db.close();
   store = new DemoStore(root);
   const next = store.saveCategory(input);

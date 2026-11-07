@@ -3,6 +3,7 @@ import {
   ChangeDetectionStrategy,
   Component,
   computed,
+  effect,
   inject,
   input,
   output,
@@ -19,11 +20,13 @@ import { formatCivilDate, formatMoney } from '../../../../../application/finance
 import { DEMO_MERCHANT_LABELS } from '../../../../../fixtures/financas/labels';
 import { FinanceContext } from '../finance-context.service';
 import { CategoryStore } from './category-store.service';
+import { CategoryRuleEditor } from './category-rule-editor';
 
 @Component({
   selector: 'fd-merchant-category-panel',
+  imports: [CategoryRuleEditor],
   templateUrl: './merchant-category-panel.html',
-  styleUrls: ['./category-panel.scss', './merchant-category-panel.scss'],
+  styleUrls: ['./category-panel.scss', './merchant-category-panel.scss', './category-rules.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: { '(keydown.escape)': 'escape($event)' },
 })
@@ -36,6 +39,7 @@ export class MerchantCategoryPanel {
   readonly context = inject(FinanceContext);
   readonly destination = signal<string | null | undefined>(undefined);
   readonly includeManual = signal(false);
+  readonly mode = signal<'current' | 'future'>('current');
   readonly money = formatMoney;
   readonly date = formatCivilDate;
   readonly merchantId = computed(() => {
@@ -76,6 +80,7 @@ export class MerchantCategoryPanel {
           merchant,
           destination,
           this.includeManual(),
+          this.store.rules()?.assignments,
         ),
         error: null,
       };
@@ -102,6 +107,12 @@ export class MerchantCategoryPanel {
   );
 
   constructor() {
+    effect(() => {
+      this.merchantId();
+      this.destination.set(undefined);
+      this.includeManual.set(false);
+      this.mode.set('current');
+    });
     afterNextRender(() =>
       document.getElementById('merchant-panel-title')?.focus({ preventScroll: true }),
     );

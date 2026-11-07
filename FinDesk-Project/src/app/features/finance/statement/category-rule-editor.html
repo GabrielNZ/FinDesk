@@ -1,0 +1,48 @@
+<section aria-label="Regra para próximos lançamentos">
+  <h3>{{ store.merchantLabel(merchantId()) }}</h3>
+  <p>Todas as contas · Registros recebidos após salvar</p>
+  <p>Classificações individuais têm prioridade. Os lançamentos atuais serão mantidos.</p>
+  @if (success()) {
+    <p role="status">Regra salva.</p>
+  }
+  @if (current(); as rule) {
+    <p>
+      Regra {{ rule.active ? 'ativa' : 'pausada' }} ·
+      {{ rule.categoryId ? store.label(rule.categoryId) : 'Sem categoria' }}
+    </p>
+    @if (!rule.active) {
+      <p>Para reativar, use Categorias → Regras.</p>
+    }
+  }
+  <h3>Categoria dos próximos lançamentos</h3>
+  <div class="category-list" role="group" aria-label="Categoria da regra">
+    <button
+      type="button"
+      class="category-choice"
+      [disabled]="store.busy()"
+      [attr.aria-pressed]="destination() === null"
+      (click)="choose(null)"
+    >
+      <i class="pi pi-tag" aria-hidden="true"></i><span>Sem categoria</span
+      ><i class="pi pi-check choice-action" aria-hidden="true"></i>
+    </button>
+    @for (category of store.categories(); track category.id) {
+      <button
+        type="button"
+        class="category-choice"
+        [disabled]="store.busy()"
+        [attr.aria-pressed]="destination() === category.id"
+        (click)="choose(category.id)"
+      >
+        <i [class]="'pi ' + category.icon" [style.color]="category.color" aria-hidden="true"></i
+        ><span>{{ category.name }}</span
+        ><i class="pi pi-check choice-action" aria-hidden="true"></i>
+      </button>
+    }
+  </div>
+  <div class="form-actions">
+    <button type="button" class="primary" [disabled]="store.busy() || !changed()" (click)="save()">
+      {{ store.busy() ? 'Salvando…' : 'Salvar regra' }}
+    </button>
+  </div>
+</section>

@@ -17,6 +17,12 @@ try {
       id = request.id;
       let value: unknown;
       switch (request.operation) {
+        case 'read-category-rules':
+          value = store.getCategoryRules();
+          break;
+        case 'save-category-rule':
+          value = store.saveCategoryRule(request.payload);
+          break;
         case 'classify-merchant':
           value = store.classifyMerchant(request.payload);
           break;

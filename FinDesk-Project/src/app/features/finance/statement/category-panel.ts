@@ -18,12 +18,14 @@ import {
 import type { Category, SaveCategory } from '../../../../../shared/categories';
 import type { StatementRow } from '../../../../../application/statement';
 import { CategoryStore } from './category-store.service';
+import { CategoryRuleEditor } from './category-rule-editor';
+import type { CategoryRule } from '../../../../../shared/category-rules';
 
 @Component({
   selector: 'fd-category-panel',
-  imports: [FormsModule],
+  imports: [FormsModule, CategoryRuleEditor],
   templateUrl: './category-panel.html',
-  styleUrl: './category-panel.scss',
+  styleUrls: ['./category-panel.scss', './category-rules.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: { '(keydown.escape)': 'escape($event)' },
 })
@@ -32,6 +34,8 @@ export class CategoryPanel {
   readonly movement = input<StatementRow | null>(null);
   readonly closed = output<void>();
   readonly form = signal<SaveCategory | null>(null);
+  readonly tab = signal<'categories' | 'rules'>('categories');
+  readonly editingRule = signal<string | null>(null);
   readonly message = signal<string | null>(null);
   readonly icons = CATEGORY_ICONS;
   readonly colors = CATEGORY_COLORS;
@@ -51,6 +55,28 @@ export class CategoryPanel {
       category ? { ...category } : { id: null, name: '', icon: 'pi-tag', color: '#a9c8b5' },
     );
     setTimeout(() => document.getElementById('category-name')?.focus({ preventScroll: true }));
+  }
+  switchTab(tab: 'categories' | 'rules'): void {
+    this.tab.set(tab);
+    this.editingRule.set(null);
+    this.message.set(null);
+    this.store.error.set(null);
+  }
+  async toggleRule(rule: CategoryRule): Promise<void> {
+    this.message.set(null);
+    if (
+      await this.store.saveRule({
+        merchantId: rule.merchantId,
+        categoryId: rule.categoryId,
+        active: !rule.active,
+        expectedRevision: rule.revision,
+      })
+    )
+      this.message.set(rule.active ? 'Regra pausada.' : 'Regra ativada.');
+  }
+  ruleSaved(): void {
+    this.editingRule.set(null);
+    this.message.set('Regra salva.');
   }
   change(changes: Partial<SaveCategory>): void {
     this.form.update((value) => (value ? { ...value, ...changes } : null));
@@ -95,7 +121,8 @@ export class CategoryPanel {
     event.preventDefault();
     event.stopPropagation();
     if (this.store.busy()) return;
-    if (this.form()) this.cancelForm();
+    if (this.editingRule()) this.editingRule.set(null);
+    else if (this.form()) this.cancelForm();
     else this.closed.emit();
   }
 }

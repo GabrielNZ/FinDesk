@@ -13,6 +13,26 @@
       <i class="pi pi-times" aria-hidden="true"></i>
     </button>
   </header>
+  @if (!movement() && !form()) {
+    <div class="category-tabs" role="group" aria-label="Gestão de categorias">
+      <button
+        type="button"
+        [disabled]="store.busy()"
+        [attr.aria-pressed]="tab() === 'categories'"
+        (click)="switchTab('categories')"
+      >
+        Categorias
+      </button>
+      <button
+        type="button"
+        [disabled]="store.busy()"
+        [attr.aria-pressed]="tab() === 'rules'"
+        (click)="switchTab('rules')"
+      >
+        Regras
+      </button>
+    </div>
+  }
   @if (movement(); as row) {
     <p class="movement-name">{{ row.description }}</p>
   }
@@ -24,6 +44,42 @@
   }
   @if (!store.value()) {
     <button type="button" (click)="store.load()">Carregar categorias</button>
+  } @else if (!movement() && tab() === 'rules') {
+    @if (editingRule(); as merchant) {
+      <fd-category-rule-editor [merchantId]="merchant" (saved)="ruleSaved()" />
+      <button type="button" [disabled]="store.busy()" (click)="editingRule.set(null)">
+        Voltar às regras
+      </button>
+    } @else {
+      <div class="rule-list" aria-label="Regras de categorias">
+        @for (rule of store.rules()?.rules; track rule.merchantId) {
+          <section class="rule-row" [attr.aria-label]="store.merchantLabel(rule.merchantId)">
+            <strong
+              >{{ store.merchantLabel(rule.merchantId) }} →
+              {{ rule.categoryId ? store.label(rule.categoryId) : 'Sem categoria' }}</strong
+            >
+            <p>Todas as contas · {{ rule.active ? 'Ativa' : 'Pausada' }}</p>
+            <div class="rule-actions">
+              <button
+                type="button"
+                [disabled]="store.busy()"
+                (click)="editingRule.set(rule.merchantId); message.set(null)"
+              >
+                Editar
+              </button>
+              <button type="button" [disabled]="store.busy()" (click)="toggleRule(rule)">
+                {{ rule.active ? 'Pausar' : 'Ativar' }}
+              </button>
+            </div>
+          </section>
+        } @empty {
+          <p>
+            Nenhuma regra salva. Use o ícone de etiquetas de uma despesa e escolha Próximos
+            lançamentos.
+          </p>
+        }
+      </div>
+    }
   } @else if (form(); as draft) {
     <form (ngSubmit)="save()">
       <label for="category-name">Nome</label>

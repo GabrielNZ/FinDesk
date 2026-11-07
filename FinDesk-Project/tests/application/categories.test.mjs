@@ -16,6 +16,199 @@ const { statementRows, filterStatement } = require('../../out/application/statem
 const { statementSelectionGrandTotals } = require('../../out/application/statement.js');
 const { groupStatement } = require('../../out/application/statement-grouping.js');
 const {
+  initialCategoryRules,
+  saveCategoryRule,
+  recordRuleArrivals,
+  parseRuleCatalogue,
+  parseCategoryRuleState,
+  parseSaveCategoryRule,
+  ruleCatalogue,
+} = require('../../out/application/category-rules.js');
+
+function futureExpense(id, patch = {}) {
+  const base = createDemoScenario().facts.movements.find((m) => m.id === 'mov-uber-1');
+  return { ...base, id, origin: { ...base.origin, externalId: id }, ...patch };
+}
+function changeRule(state, patch = {}) {
+  return saveCategoryRule(
+    state,
+    {
+      merchantId: 'uber',
+      categoryId: 'casa',
+      active: true,
+      expectedRevision: state.rules.find((r) => r.merchantId === 'uber')?.revision ?? null,
+      ...patch,
+    },
+    initialCategories(),
+    createDemoScenario().facts.movements,
+  );
+}
+
+test('F05b.3/D108–D110: novos IDs de todas as contas/datas recebem regra; manuais prevalecem e origem fica intacta', () => {
+  const facts = createDemoScenario().facts;
+  const initial = initialCategoryRules(facts.movements);
+  const rule = changeRule(initial);
+  assert.deepEqual(rule.assignments, []);
+  const arrivals = [
+    ...facts.movements,
+    futureExpense('old-usd', {
+      accountId: 'demo-u',
+      on: '2026-09-12',
+      delta: { minorUnits: -1300, currency: 'USD' },
+    }),
+    futureExpense('without-rule', { merchantId: 'mercado', categoryId: 'alimentacao' }),
+    futureExpense('unknown-category', { merchantId: null, categoryId: null }),
+  ];
+  const original = JSON.stringify(arrivals);
+  const state = recordRuleArrivals(rule, arrivals);
+  assert.equal(state.assignments.length, 1);
+  assert.equal(state.assignments[0].movementId, 'old-usd');
+  let presented = categorizedMovements(arrivals, initialCategories(), state.assignments);
+  assert.equal(presented.find((m) => m.id === 'old-usd').categoryId, 'casa');
+  assert.equal(presented.find((m) => m.id === 'mov-uber-1').categoryId, 'transporte');
+  assert.equal(presented.find((m) => m.id === 'without-rule').categoryId, 'alimentacao');
+  assert.equal(presented.find((m) => m.id === 'unknown-category').categoryId, null);
+  const manual = classifyMovement(
+    initialCategories(),
+    { movementId: 'old-usd', categoryId: null },
+    arrivals,
+  );
+  presented = categorizedMovements(arrivals, manual, state.assignments);
+  assert.equal(presented.find((m) => m.id === 'old-usd').categoryId, null);
+  assert.equal(JSON.stringify(arrivals), original);
+  assert.deepEqual(recordRuleArrivals(state, arrivals), state);
+  const sourceUpdated = arrivals.map((m) =>
+    m.id === 'old-usd' ? { ...m, categoryId: 'entretenimento' } : m,
+  );
+  assert.equal(
+    categorizedMovements(sourceUpdated, initialCategories(), state.assignments).find(
+      (m) => m.id === 'old-usd',
+    ).categoryId,
+    'casa',
+  );
+});
+
+test('F05b.3/D112: editar/pausar/reativar conserva atribuições antigas e reentrada não muda o passado', () => {
+  const base = createDemoScenario().facts.movements;
+  let state = changeRule(initialCategoryRules(base));
+  state = recordRuleArrivals(state, [...base, futureExpense('first')]);
+  state = changeRule(state, { categoryId: 'alimentacao' });
+  state = recordRuleArrivals(state, [futureExpense('second')]);
+  state = changeRule(state, { categoryId: 'alimentacao', active: false });
+  state = recordRuleArrivals(state, [futureExpense('paused')]);
+  state = changeRule(state, { categoryId: 'alimentacao', active: true });
+  state = recordRuleArrivals(state, [futureExpense('paused'), futureExpense('third')]);
+  assert.deepEqual(
+    state.assignments.map((a) => [a.movementId, a.categoryId, a.ruleRevision]),
+    [
+      ['first', 'casa', 1],
+      ['second', 'alimentacao', 2],
+      ['third', 'alimentacao', 4],
+    ],
+  );
+  state = changeRule(state, { categoryId: null });
+  state = recordRuleArrivals(state, [futureExpense('explicit-null')]);
+  assert.equal(
+    categorizedMovements(
+      [futureExpense('explicit-null')],
+      initialCategories(),
+      state.assignments,
+    )[0].categoryId,
+    null,
+  );
+});
+
+test('F05b.3: contratos fechados, revisões obsoletas, atribuições sem regra e registros inválidos são recusados', () => {
+  const state = changeRule(initialCategoryRules(createDemoScenario().facts.movements));
+  assert.throws(() => changeRule(state, { expectedRevision: null }));
+  assert.throws(() => changeRule(state, { merchantId: 'missing', expectedRevision: null }));
+  assert.throws(() => changeRule(state, { categoryId: 'missing' }));
+  for (const patch of [
+    { path: 'x' },
+    { active: 1 },
+    { expectedRevision: 0 },
+    { categoryId: '' },
+    { merchantId: null },
+  ])
+    assert.throws(() =>
+      parseSaveCategoryRule({
+        merchantId: 'uber',
+        categoryId: 'casa',
+        active: true,
+        expectedRevision: null,
+        ...patch,
+      }),
+    );
+  assert.throws(() => parseRuleCatalogue({ ...ruleCatalogue(state), version: 2 }));
+  assert.throws(() => parseCategoryRuleState({ ...state, knownMovementIds: ['x', 'x'] }));
+  assert.throws(() =>
+    parseCategoryRuleState({
+      ...state,
+      assignments: [
+        { movementId: 'unknown', merchantId: 'uber', categoryId: 'casa', ruleRevision: 1 },
+      ],
+    }),
+  );
+  assert.throws(() =>
+    parseRuleCatalogue({ ...ruleCatalogue(state), rules: [...state.rules, state.rules[0]] }),
+  );
+  assert.throws(() =>
+    parseRuleCatalogue({
+      ...ruleCatalogue(state),
+      assignments: [
+        { movementId: 'new', merchantId: 'missing', categoryId: null, ruleRevision: 1 },
+      ],
+    }),
+  );
+});
+
+test('F05b.3: lote usa categorias automáticas na busca/prévia sem confundi-las com overrides manuais', () => {
+  const facts = createDemoScenario().facts;
+  const rule = changeRule(
+    initialCategoryRules(facts.movements.filter((m) => m.id !== 'mov-uber-1')),
+  );
+  const automatic = recordRuleArrivals(rule, facts.movements).assignments;
+  const snapshot = { seedId: 'demo-financas-v1', facts };
+  const state = initialCategories();
+  const query = {
+    accountId: 'demo-a',
+    start: '2026-10-01',
+    end: '2026-10-31',
+    search: 'casa',
+    kind: null,
+    category: 'casa',
+  };
+  const preview = previewMerchantClassification(
+    snapshot,
+    state,
+    query,
+    'uber',
+    'alimentacao',
+    false,
+    automatic,
+  );
+  assert.equal(preview.length, 1);
+  assert.equal(preview[0].status, 'change');
+  assert.equal(preview[0].expected.manual, false);
+  const next = classifyMerchant(
+    snapshot,
+    state,
+    {
+      merchantId: 'uber',
+      categoryId: 'alimentacao',
+      includeManual: false,
+      query,
+      expected: preview.map((p) => p.expected),
+    },
+    automatic,
+  );
+  assert.equal(
+    categorizedMovements(facts.movements, next, automatic).find((m) => m.id === 'mov-uber-1')
+      .categoryId,
+    'alimentacao',
+  );
+});
+const {
   previewMerchantClassification,
   classifyMerchant,
   parseClassifyMerchant,

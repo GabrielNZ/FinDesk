@@ -250,6 +250,16 @@ Fontes consultadas em 28/10/2026:
 
 **D107 — acesso da reclassificação, solicitado por Gabriel em 07/11/2026:** substituir o texto clicável nos detalhes por ícone entre a seta de expansão e o + da despesa, mantendo toda a lógica e o painel existentes. Aplicar em Cards/Agrupamento e disponibilizar na área de ações da Lista; na Seleção, junto da remoção. Nome acessível e tooltip Reclassificar estabelecimento; não exigir expansão prévia.
 
+**D108 — alcance das regras futuras, confirmado por Gabriel em 07/11/2026:** a regra por identidade de estabelecimento vale para todas as contas. Substitui a recomendação inicial do Codex de limitar à conta da despesa. Não modifica D105, que continua limitando a reclassificação dos registros existentes à consulta atual.
+
+**D109 — categoria da fonte e regra do usuário, esclarecido por Gabriel em 07/11/2026:** usar a regra do estabelecimento quando já estiver estabelecida; sem essa regra ou classificação no sistema, aproveitar a categoria informada pela fonte. Aplicação: classificação individual explícita → atribuição da regra → categoria da fonte → Sem categoria. Ausência de categoria não equivale à escolha individual explícita Sem categoria, cuja prioridade manual continua preservada. Origem e categoria original não são sobrescritas.
+
+**D110 — significado de futuro, confirmado por Gabriel em 07/11/2026:** registros recebidos/cadastrados após salvar a regra são elegíveis, incluindo movimentos de data antiga que entrarem depois. Salvar uma regra não reclassifica os registros já conhecidos. Data civil da despesa não substitui a ordem de entrada no aplicativo.
+
+**D111 — organização da F05b.3, confirmada por Gabriel em 07/11/2026:** manter o ícone de etiquetas com Lançamentos atuais / Próximos lançamentos no painel. A primeira opção preserva o lote F05b.2; a segunda permite salvar regra. Categorias no Agrupamento recebe área Regras com estabelecimento → categoria, Editar e Pausar/Ativar.
+
+**D112 — edição e ativação de regras, confirmada por Gabriel em 07/11/2026:** editar, pausar ou reativar afeta somente os próximos registros recebidos, preservando categorias já aplicadas. Pausar deixa os novos registros usarem a categoria da fonte. Alterar registros anteriores continua exigindo aplicação em lote com prévia.
+
 ## Perguntas aguardando resposta e pesquisas futuras
 
 Angular/PrimeNG e barra nativa continuam confirmados em D07/D08. A limpeza de conteúdo foi acordada em D12, e a logo original foi aplicada conforme D10. Em 29/10/2026, Gabriel aprovou explicitamente o conjunto atual (casca, ajustes, F00 e reorganização) e autorizou commit e push. F01a não foi iniciada por essa tarefa de registro Git.

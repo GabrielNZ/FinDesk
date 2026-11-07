@@ -164,9 +164,10 @@ export function classifyMovement(
 export function categorizedMovements(
   movements: readonly CashMovement[],
   state: CategoryState,
+  automatic: readonly { readonly movementId: string; readonly categoryId: string | null }[] = [],
 ): readonly CashMovement[] {
   const overrides = new Map(
-    state.classifications.map((item) => [item.movementId, item.categoryId]),
+    [...automatic, ...state.classifications].map((item) => [item.movementId, item.categoryId]),
   );
   return movements.map((movement) =>
     movement.kind === 'expense' && overrides.has(movement.id)

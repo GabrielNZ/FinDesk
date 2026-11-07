@@ -1,6 +1,9 @@
 import { Injectable, computed, signal } from '@angular/core';
 import { categoryLabel } from '../../../../../application/statement';
 import { parseCategoryState } from '../../../../../application/categories';
+import { parseRuleCatalogue } from '../../../../../application/category-rules';
+import type { RuleCatalogue, SaveCategoryRule } from '../../../../../shared/category-rules';
+import { DEMO_MERCHANT_LABELS } from '../../../../../fixtures/financas/labels';
 import type {
   CategoryState,
   SaveCategory,
@@ -10,6 +13,7 @@ import type {
 @Injectable({ providedIn: 'root' })
 export class CategoryStore {
   readonly value = signal<CategoryState | null>(null);
+  readonly rules = signal<RuleCatalogue | null>(null);
   readonly busy = signal(false);
   readonly error = signal<string | null>(null);
   readonly categories = computed(() =>
@@ -25,6 +29,9 @@ export class CategoryStore {
   category(key: string | null) {
     return this.value()?.categories.find((item) => item.id === key);
   }
+  merchantLabel(id: string): string {
+    return Object.hasOwn(DEMO_MERCHANT_LABELS, id) ? DEMO_MERCHANT_LABELS[id]! : id;
+  }
 
   load(): Promise<void> {
     if (this.loading) return this.loading;
@@ -33,9 +40,12 @@ export class CategoryStore {
       try {
         const api = window.finDesk?.storage;
         if (!api?.getCategories) throw new Error();
-        const result = await api.getCategories();
-        if (!result.ok) throw new Error();
-        this.value.set(parseCategoryState(result.value));
+        const [result, rules] = await Promise.all([api.getCategories(), api.getCategoryRules()]);
+        if (!result.ok || !rules.ok) throw new Error();
+        const categories = parseCategoryState(result.value);
+        const catalogue = parseRuleCatalogue(rules.value);
+        this.value.set(categories);
+        this.rules.set(catalogue);
         this.error.set(null);
       } catch {
         this.error.set('Não foi possível carregar as categorias. Tente novamente.');
@@ -103,6 +113,27 @@ export class CategoryStore {
     } finally {
       this.busy.set(false);
       // Uma outra gravação pode ter tornado a prévia obsoleta. Atualizar sem reaplicar.
+      if (this.error()) {
+        const error = this.error();
+        await this.load();
+        this.error.set(error);
+      }
+    }
+  }
+  async saveRule(input: SaveCategoryRule): Promise<boolean> {
+    if (!this.rules() || this.busy() || this.loading) return false;
+    this.busy.set(true);
+    this.error.set(null);
+    try {
+      const result = await window.finDesk!.storage.saveCategoryRule(input);
+      if (!result.ok) throw new Error();
+      this.rules.set(parseRuleCatalogue(result.value));
+      return true;
+    } catch {
+      this.error.set('Não foi possível salvar a regra. Confira os ajustes e tente novamente.');
+      return false;
+    } finally {
+      this.busy.set(false);
       if (this.error()) {
         const error = this.error();
         await this.load();

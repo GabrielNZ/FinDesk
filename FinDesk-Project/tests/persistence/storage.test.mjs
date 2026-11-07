@@ -361,13 +361,13 @@ test('FIN-047 / C30: migração inicial e rollback de uma migração que falha p
       migrate(db, 'demo', [
         ...DEMO_MIGRATIONS,
         {
-          version: 3,
+          version: DEMO_MIGRATIONS.length + 1,
           cycleReferences: [],
           sql: 'ALTER TABLE demo_state ADD COLUMN temporary_value TEXT; DELETE FROM demo_state; INSERT INTO missing_table VALUES (1);',
         },
       ]),
     );
-    assert.equal(db.prepare('PRAGMA user_version').get().user_version, 2);
+    assert.equal(db.prepare('PRAGMA user_version').get().user_version, DEMO_MIGRATIONS.length);
     assert.equal(db.prepare('SELECT payload FROM demo_state').get().payload, '{}');
     assert.equal(
       db

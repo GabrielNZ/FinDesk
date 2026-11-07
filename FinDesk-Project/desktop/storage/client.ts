@@ -9,6 +9,7 @@ import type {
 import { failure, StorageFailure, type StorageOperation, type WorkerResponse } from './contracts';
 import type { CardLayout } from '../../shared/card-layout';
 import type { StatementLayout } from '../../shared/statement-layout';
+import type { RuleCatalogue, SaveCategoryRule } from '../../shared/category-rules';
 import type {
   CategoryState,
   SaveCategory,
@@ -95,6 +96,12 @@ export class StorageClient {
 
   getDemo(): Promise<StorageResult<DemoSnapshot>> {
     return this.request('read-demo');
+  }
+  getCategoryRules(): Promise<StorageResult<RuleCatalogue>> {
+    return this.request('read-category-rules');
+  }
+  saveCategoryRule(value: SaveCategoryRule): Promise<StorageResult<RuleCatalogue>> {
+    return this.request('save-category-rule', value);
   }
   getCategories(): Promise<StorageResult<CategoryState>> {
     return this.request('read-categories');
