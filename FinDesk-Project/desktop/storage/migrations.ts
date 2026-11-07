@@ -83,6 +83,10 @@ export const DEMO_MIGRATIONS: readonly Migration[] = [
         .run(JSON.stringify(initialMerchants(snapshot)));
     },
   },
+  {
+    version: 5,
+    sql: `CREATE TABLE expense_edits (request_id TEXT PRIMARY KEY, movement_id TEXT NOT NULL, payload TEXT NOT NULL CHECK (json_valid(payload)), revision INTEGER NOT NULL CHECK (revision > 0), UNIQUE(movement_id, revision)) STRICT;`,
+  },
 ];
 export const PREFERENCE_MIGRATIONS: readonly Migration[] = [
   {

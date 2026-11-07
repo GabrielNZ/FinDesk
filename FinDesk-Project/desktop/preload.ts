@@ -6,6 +6,8 @@ import type { StorageApi } from '../shared/storage-api';
 const api: DesktopApi = Object.freeze({
   getRuntimeInfo: (): Promise<DesktopRuntimeInfo> => ipcRenderer.invoke('findesk:runtime-info'),
   storage: Object.freeze<StorageApi>({
+    getExpenseEdit: (id) => ipcRenderer.invoke('findesk:expense-edit-read', id),
+    editExpense: (value) => ipcRenderer.invoke('findesk:expense-edit', value),
     getMerchants: () => ipcRenderer.invoke('findesk:merchants-read'),
     createExpense: (value) => ipcRenderer.invoke('findesk:expense-create', value),
     getCategoryRules: () => ipcRenderer.invoke('findesk:category-rules-read'),

@@ -25,6 +25,8 @@ import {
   parseMerchantRequest,
   parseRuleRequest,
   parseExpenseRequest,
+  parseExpenseEditRead,
+  parseExpenseEditRequest,
   StorageFailure,
 } from './storage/contracts';
 import { storageDirectory } from './storage/paths';
@@ -133,6 +135,30 @@ async function start(): Promise<void> {
       return operation() ?? failure(new StorageFailure('unavailable'));
     });
   }
+  ipcMain.handle(STORAGE_CHANNELS.readExpenseEdit, (event, ...args: unknown[]) => {
+    if (!trustedSender(event) || args.length !== 1)
+      return failure(new StorageFailure('invalid-request'));
+    try {
+      return (
+        storage?.getExpenseEdit(parseExpenseEditRead(args[0])) ??
+        failure(new StorageFailure('unavailable'))
+      );
+    } catch (error) {
+      return failure(error);
+    }
+  });
+  ipcMain.handle(STORAGE_CHANNELS.editExpense, (event, ...args: unknown[]) => {
+    if (!trustedSender(event) || args.length !== 1)
+      return failure(new StorageFailure('invalid-request'));
+    try {
+      return (
+        storage?.editExpense(parseExpenseEditRequest(args[0])) ??
+        failure(new StorageFailure('unavailable'))
+      );
+    } catch (error) {
+      return failure(error);
+    }
+  });
   ipcMain.handle(STORAGE_CHANNELS.createExpense, (event, ...args: unknown[]) => {
     if (!trustedSender(event) || args.length !== 1)
       return failure(new StorageFailure('invalid-request'));

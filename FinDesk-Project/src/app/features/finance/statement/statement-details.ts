@@ -56,7 +56,7 @@ import { formatMoney, formatCivilDate } from '../../../../../application/finance
         </div>
       }
       <div>
-        <dt>Descrição original</dt>
+        <dt>{{ item.movement.origin.kind === 'manual' ? 'Descrição' : 'Descrição original' }}</dt>
         <dd>{{ item.movement.description }}</dd>
       </div>
       <div>

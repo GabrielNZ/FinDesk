@@ -1,5 +1,7 @@
 # Arquitetura
 
+F06b/D117–D119 acrescenta `application/expense-editing.ts`, leitura específica `getExpenseEdit` e escrita `editExpense`, validadas no principal/worker. Elegibilidade exige despesa manual local e recibo de criação; a consulta devolve token do fato/override/atribuição/revisão. Edição recusa estado obsoleto e preserva recibo original, ID, origem e moeda, sem reaplicar regras. Grava fato, eventual estabelecimento, override e recibo de edição numa transação. O painel reutilizado mantém campos na falha e só recarrega dados atuais por ação explícita. Nova migração demo 5; preferências/layout permanecem separados.
+
 F06a/D113–D116: `application/expenses.ts` valida cadastro específico, centavos, conta/moeda, datas e identidade do estabelecimento. `createExpense` é a única escrita pública nova de fatos; principal/worker revalidam contrato e remetente/frame, sem expor SQL, caminhos ou substituição arbitrária do snapshot. ID/origem são produzidos no backend. Fato, novo estabelecimento preparado no formulário, override individual, atribuição da regra e recibo de solicitação são gravados juntos; repetição do mesmo pedido retorna o ID existente e payload diferente com a mesma chave é recusado. Renderer mantém consulta e atualiza snapshot/categorias/regras/nomes após sucesso; Ver lançamento muda a consulta somente por ação explícita.
 
 O FinDesk é um aplicativo desktop local com interface Angular. A casca concretiza as responsabilidades estabelecidas no mestre, sem introduzir servidor de aplicação, serviços externos ou uma arquitetura distribuída.

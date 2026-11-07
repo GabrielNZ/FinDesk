@@ -1,5 +1,7 @@
 # Verificações
 
+F06b: os mesmos arquivos de despesas em aplicação/persistência acrescentam edição com ID/origem/ordem preservados, saldos por conta/moeda, categoria mantida/manual null, categoria/regra sem retroação, estado obsoleto A→B→A, repetição de criação/edição após reabertura, rollback e migração v4→v5/worker. `tests/desktop/expenses.spec.ts -g F06b` verifica lápis em Cards/Lista/Agrupamento/Seleção, formulário preenchido, troca entre contas da mesma moeda, filtro/Seleção/saldo, falha/repetição, conflito e recarga explícita, pedido válido de outra janela IPC, reabertura/restauração e janela estreita. Somente perfis temporários; resultados efetivos no PROJECT_STATUS.
+
 F06a: `tests/application/expenses.test.mjs` cobre precisão/contrato, limites de datas/moedas, identidade e null manual; `tests/persistence/expenses.test.mjs` cobre regra, despesas iguais legítimas, recibo/repetição, rollback completo, migração/reabertura/restauração e worker. `tests/desktop/expenses.spec.ts` verifica painel, cadastro fora dos filtros/Ver lançamento, Seleção, nomes novos/regras futuras, USD/manual null, validações/cancelamento/falha/repetição, outra janela IPC e apresentação estreita. Perfis temporários exclusivos; nunca simular falhas nos bancos normais. Resultados efetivos somente em PROJECT_STATUS.
 
 Resultados efetivamente executados ficam em [PROJECT_STATUS.md](../PROJECT_STATUS.md). Os comandos abaixo são o procedimento reproduzível, não uma alegação de aprovação automática.

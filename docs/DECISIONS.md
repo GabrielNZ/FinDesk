@@ -268,6 +268,12 @@ Fontes consultadas em 28/10/2026:
 
 **D116 — datas da F06a, confirmadas por Gabriel em 07/11/2026:** manter a referência fixa da demonstração. Data inicial do cadastro e limite superior seguem snapshot.asOf (29/10/2026 na fixture atual); aceitar somente datas posteriores à abertura da conta (01/10–29/10 nas contas atuais). Informar a referência no formulário. Não avançar relógio, cobertura, ciclos ou mês inicial com a data real.
 
+**D117 — acesso à F06b, confirmado por Gabriel em 07/11/2026:** lápis no cabeçalho das despesas cadastradas manualmente no FinDesk, depois de etiquetas e antes do + de seleção. Abre painel direito “Editar despesa” com campos preenchidos, Salvar alterações/Cancelar e Seleção preservada ao fechar. Não oferecer edição de fatos de arquivo/integração nesta fatia.
+
+**D118 — troca de conta na F06b, confirmada por Gabriel em 07/11/2026:** permitir entre contas da mesma moeda, retirando o débito da origem e aplicando no destino numa única alteração do mesmo lançamento. Não reinterpretar BRL como USD nem introduzir conversão. Validar data também contra abertura da conta de destino e referência fixa D116.
+
+**D119 — categoria na edição, confirmada por Gabriel em 07/11/2026:** iniciar em Manter categoria atual, com escolha manual explícita de outra categoria ou Sem categoria. Trocar estabelecimento ou editar valor/data não reaplica regras futuras. Não acrescentar Usar regra atual nesta fatia; atribuições já aplicadas e regras dos próximos registros continuam preservadas.
+
 ## Perguntas aguardando resposta e pesquisas futuras
 
 Angular/PrimeNG e barra nativa continuam confirmados em D07/D08. A limpeza de conteúdo foi acordada em D12, e a logo original foi aplicada conforme D10. Em 29/10/2026, Gabriel aprovou explicitamente o conjunto atual (casca, ajustes, F00 e reorganização) e autorizou commit e push. F01a não foi iniciada por essa tarefa de registro Git.

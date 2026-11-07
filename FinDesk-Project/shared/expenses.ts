@@ -28,3 +28,13 @@ export interface ExpenseCreated {
   readonly rules: RuleCatalogue;
   readonly merchants: MerchantCatalogue;
 }
+export interface ExpenseEditDraft extends ExpenseCreated {
+  readonly token: string;
+  readonly effectiveCategoryId: string | null;
+}
+export interface EditExpense extends Omit<CreateExpense, 'classification'> {
+  readonly movementId: string;
+  readonly expectedToken: string;
+  readonly classification:
+    { readonly mode: 'keep' } | { readonly mode: 'manual'; readonly categoryId: string | null };
+}

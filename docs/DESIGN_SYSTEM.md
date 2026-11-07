@@ -1,5 +1,7 @@
 # Sistema visual — proposta inicial
 
+F06b/D117–D119: lápis no cabeçalho entre etiquetas e seleção, somente nas despesas manuais do FinDesk, em Cards/Lista/Agrupamento/Seleção. Painel reutiliza valor/data/conta/descrição/estabelecimento/categoria preenchidos; conta mostra destinos da mesma moeda. Manter categoria atual como padrão; seleção explícita substitui só a classificação do item. Falha preserva campos; conflito oferece Recarregar lançamento, explicando que substituirá os campos pelos dados atuais. Sucesso mantém consulta e oferece Ver lançamento, com ID/origem preservados.
+
 F06a/D113–D116: Nova despesa nos controles de Movimentações abre painel completo à direita, preservando a Seleção. Valor em destaque, data/referência, contas em botões com moeda, descrição, estabelecimento opcional com busca/criação explícita e categoria automática/individual. Novo nome é confirmado junto da despesa. Sucesso mantém consulta e oferece Ver lançamento; Cancelar/Escape não grava e volta ao acionador. Rolagem da lista de estabelecimentos/categorias é interna; painel acompanha a página sem gravar dimensão temporária.
 
 Gabriel confirmou manter a base visual da casca e enxugar o conteúdo. Tema escuro, menu, cores e espaçamento permanecem. A logo original fornecida, com moedas e seta ascendente, substitui o F.

@@ -494,6 +494,7 @@
     @if (categoryPanel()) {
       @if (expensePanel()) {
         <fd-expense-panel
+          [editingId]="editingExpenseId()"
           [outside]="expenseOutside()"
           (created)="savedExpenseId.set($event)"
           (reveal)="showExpense($event)"
@@ -790,6 +791,18 @@
       (click)="openMerchant(row)"
     >
       <i class="pi pi-tags" aria-hidden="true"></i>
+    </button>
+  }
+  @if (canEditExpense(row.movement)) {
+    <button
+      type="button"
+      class="merchant-action edit-expense"
+      aria-label="Editar despesa"
+      title="Editar despesa"
+      [disabled]="catalogue.busy()"
+      (click)="openExpenseEdit(row)"
+    >
+      <i class="pi pi-pencil" aria-hidden="true"></i>
     </button>
   }
 </ng-template>

@@ -1,5 +1,5 @@
 import { DatabaseSync } from 'node:sqlite';
-import { randomUUID } from 'node:crypto';
+import { createHash, randomUUID } from 'node:crypto';
 import {
   initialCategories,
   parseCategoryState,
@@ -28,7 +28,14 @@ import {
   parseCreateExpense,
   planExpense,
 } from '../../application/expenses';
-import type { ExpenseCreated, MerchantCatalogue } from '../../shared/expenses';
+import type { ExpenseCreated, ExpenseEditDraft, MerchantCatalogue } from '../../shared/expenses';
+import {
+  editableExpense,
+  parseExpenseEditId,
+  parseEditExpense,
+  planExpenseEdit,
+} from '../../application/expense-editing';
+import { categorizedMovements } from '../../application/categories';
 import { parseRuleRequest } from './contracts';
 import { mkdirSync } from 'node:fs';
 import { isAbsolute, join } from 'node:path';
@@ -134,7 +141,7 @@ export class DemoStore {
 
   info(): StorageInfo {
     this.requireOpen();
-    return { environment: 'demo', schemaVersion: 4 };
+    return { environment: 'demo', schemaVersion: 5 };
   }
 
   private requireOpen(): [DatabaseSync, DatabaseSync] {
@@ -181,6 +188,7 @@ export class DemoStore {
       this.writeRuleState(initialCategoryRules(fresh.facts.movements));
       this.writeMerchants(initialMerchants(fresh));
       demo.exec('DELETE FROM expense_requests');
+      demo.exec('DELETE FROM expense_edits');
     });
     return this.readDemo();
   }
@@ -282,6 +290,117 @@ export class DemoStore {
         .prepare('INSERT INTO expense_requests VALUES (?, ?, ?)')
         .run(input.requestId, payload, movementId);
       return { movementId, ...next, rules: ruleCatalogue(rules) };
+    });
+  }
+
+  private expenseEditDraft(id: string): ExpenseEditDraft {
+    const [demo] = this.requireOpen();
+    const snapshot = this.readDemo();
+    const movement = snapshot.facts.movements.find((m) => m.id === id);
+    const receipt = demo
+      .prepare('SELECT payload FROM expense_requests WHERE movement_id = ?')
+      .get(id);
+    if (!movement || !editableExpense(movement) || !receipt)
+      throw new StorageFailure('invalid-request');
+    const creation = parseCreateExpense(parseStoredJson(receipt['payload']));
+    if (movement.origin.externalId !== creation.requestId) throw new StorageFailure('corrupt');
+    const revision = this.expenseEditRevision(id);
+    const categories = this.readCategories(),
+      rules = this.getCategoryRules();
+    const token = createHash('sha256')
+      .update(
+        JSON.stringify([
+          movement,
+          categories.classifications.find((c) => c.movementId === id) ?? null,
+          rules.assignments.find((a) => a.movementId === id) ?? null,
+          revision,
+        ]),
+      )
+      .digest('hex');
+    const effective = categorizedMovements([movement], categories, rules.assignments)[0]!;
+    return {
+      movementId: id,
+      snapshot,
+      categories,
+      rules,
+      merchants: this.getMerchants(),
+      token,
+      effectiveCategoryId: effective.kind === 'expense' ? effective.categoryId : null,
+    };
+  }
+  private expenseEditRevision(id: string): number {
+    const [demo] = this.requireOpen();
+    const revision = demo
+      .prepare(
+        'SELECT coalesce(max(revision), 0) AS revision FROM expense_edits WHERE movement_id = ?',
+      )
+      .get(id)?.['revision'];
+    if (!Number.isSafeInteger(revision) || (revision as number) < 0)
+      throw new StorageFailure('corrupt');
+    return revision as number;
+  }
+  getExpenseEdit(value: unknown): ExpenseEditDraft {
+    let id;
+    try {
+      id = parseExpenseEditId(value);
+    } catch {
+      throw new StorageFailure('invalid-request');
+    }
+    return transaction(this.requireOpen()[0], () => this.expenseEditDraft(id));
+  }
+  editExpense(value: unknown): ExpenseCreated {
+    let input;
+    try {
+      input = parseEditExpense(value);
+    } catch {
+      throw new StorageFailure('invalid-request');
+    }
+    const payload = JSON.stringify(input),
+      [demo] = this.requireOpen();
+    return transaction(demo, () => {
+      const prior = demo
+        .prepare('SELECT payload, movement_id FROM expense_edits WHERE request_id = ?')
+        .get(input.requestId);
+      if (prior) {
+        if (prior['payload'] !== payload || prior['movement_id'] !== input.movementId)
+          throw new StorageFailure('invalid-request');
+        return this.expenseEditDraft(input.movementId);
+      }
+      const current = this.expenseEditDraft(input.movementId);
+      if (current.token !== input.expectedToken) throw new StorageFailure('invalid-request');
+      let next;
+      try {
+        next = planExpenseEdit(
+          current.snapshot,
+          current.categories,
+          current.merchants,
+          input,
+          randomUUID(),
+        );
+      } catch {
+        throw new StorageFailure('invalid-request');
+      }
+      validateSnapshot(next.snapshot);
+      if (
+        Number(
+          demo
+            .prepare('UPDATE demo_state SET payload = ? WHERE singleton = 1')
+            .run(JSON.stringify(next.snapshot)).changes,
+        ) !== 1 ||
+        Number(
+          demo
+            .prepare('UPDATE category_state SET payload = ? WHERE singleton = 1')
+            .run(JSON.stringify(next.categories)).changes,
+        ) !== 1
+      )
+        throw new StorageFailure('corrupt');
+      this.writeMerchants(next.merchants);
+      const revision = this.expenseEditRevision(input.movementId) + 1;
+      if (!Number.isSafeInteger(revision)) throw new StorageFailure('corrupt');
+      demo
+        .prepare('INSERT INTO expense_edits VALUES (?, ?, ?, ?)')
+        .run(input.requestId, input.movementId, payload, revision);
+      return { movementId: input.movementId, ...next, rules: current.rules };
     });
   }
 

@@ -10,7 +10,13 @@ import { failure, StorageFailure, type StorageOperation, type WorkerResponse } f
 import type { CardLayout } from '../../shared/card-layout';
 import type { StatementLayout } from '../../shared/statement-layout';
 import type { RuleCatalogue, SaveCategoryRule } from '../../shared/category-rules';
-import type { CreateExpense, ExpenseCreated, MerchantCatalogue } from '../../shared/expenses';
+import type {
+  CreateExpense,
+  EditExpense,
+  ExpenseCreated,
+  ExpenseEditDraft,
+  MerchantCatalogue,
+} from '../../shared/expenses';
 import type {
   CategoryState,
   SaveCategory,
@@ -100,6 +106,12 @@ export class StorageClient {
   }
   getMerchants(): Promise<StorageResult<MerchantCatalogue>> {
     return this.request('read-merchants');
+  }
+  getExpenseEdit(id: string): Promise<StorageResult<ExpenseEditDraft>> {
+    return this.request('read-expense-edit', id);
+  }
+  editExpense(value: EditExpense): Promise<StorageResult<ExpenseCreated>> {
+    return this.request('edit-expense', value);
   }
   createExpense(value: CreateExpense): Promise<StorageResult<ExpenseCreated>> {
     return this.request('create-expense', value);

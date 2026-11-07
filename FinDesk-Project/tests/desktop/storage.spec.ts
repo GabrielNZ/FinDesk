@@ -28,7 +28,7 @@ test('SQLite no Electron reabre preferências e restaura só a demonstração, c
     let page = await application.firstWindow();
     expect(await page.evaluate(() => window.finDesk!.storage.getStatus())).toEqual({
       ok: true,
-      value: { environment: 'demo', schemaVersion: 4 },
+      value: { environment: 'demo', schemaVersion: 5 },
     });
     const initial = await page.evaluate(() => window.finDesk!.storage.getDemo());
     expect(initial.ok).toBe(true);

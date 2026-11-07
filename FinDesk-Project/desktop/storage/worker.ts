@@ -17,6 +17,12 @@ try {
       id = request.id;
       let value: unknown;
       switch (request.operation) {
+        case 'read-expense-edit':
+          value = store.getExpenseEdit(request.payload);
+          break;
+        case 'edit-expense':
+          value = store.editExpense(request.payload);
+          break;
         case 'read-merchants':
           value = store.getMerchants();
           break;

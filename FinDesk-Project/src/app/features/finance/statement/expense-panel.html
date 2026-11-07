@@ -1,10 +1,10 @@
 <section class="category-panel" aria-labelledby="expense-title">
   <header>
-    <h2 id="expense-title">Nova despesa</h2>
+    <h2 id="expense-title">{{ editingId() ? 'Editar despesa' : 'Nova despesa' }}</h2>
     <button
       type="button"
       class="icon-button"
-      aria-label="Fechar nova despesa"
+      [attr.aria-label]="editingId() ? 'Fechar edição da despesa' : 'Fechar nova despesa'"
       [disabled]="store.busy()"
       (click)="closed.emit()"
     >
@@ -14,15 +14,26 @@
   <p>Referência da demonstração: {{ displayDate(context.snapshot()!.asOf) }}</p>
   @if (savedId(); as id) {
     <p id="expense-saved" tabindex="-1" role="status">
-      {{ outside() ? 'Despesa salva fora dos filtros atuais.' : 'Despesa salva.' }}
+      {{
+        editingId()
+          ? outside()
+            ? 'Despesa atualizada fora dos filtros atuais.'
+            : 'Despesa atualizada.'
+          : outside()
+            ? 'Despesa salva fora dos filtros atuais.'
+            : 'Despesa salva.'
+      }}
     </p>
     <div class="form-actions">
-      <button type="button" (click)="reset()">Nova despesa</button
+      <button type="button" (click)="editingId() ? loadEdit(editingId()!) : reset()">
+        {{ editingId() ? 'Editar novamente' : 'Nova despesa' }}</button
       ><button type="button" class="primary" (click)="reveal.emit(id)">Ver lançamento</button>
     </div>
+  } @else if (loading()) {
+    <p role="status">Carregando despesa…</p>
   } @else {
     <form (ngSubmit)="save()" novalidate>
-      <fieldset [disabled]="store.busy()">
+      <fieldset [disabled]="store.busy() || (editingId() && !editing())">
         <div class="expense-amount">
           <label for="expense-value"
             >Valor · {{ account()?.openingBalance?.currency ?? 'Selecione a conta' }}</label
@@ -51,7 +62,7 @@
         }
         <div class="field-label">Conta</div>
         <div class="account-choices" role="group" aria-label="Conta da despesa">
-          @for (account of context.snapshot()!.facts.accounts; track account.id) {
+          @for (account of accounts(); track account.id) {
             <button
               type="button"
               [attr.aria-pressed]="accountId() === account.id"
@@ -62,6 +73,9 @@
             </button>
           }
         </div>
+        @if (editingId()) {
+          <p>A troca de conta mantém a moeda original da despesa.</p>
+        }
         <label for="expense-description">Descrição</label
         ><input
           id="expense-description"
@@ -125,13 +139,19 @@
           }}<i class="pi pi-chevron-down" aria-hidden="true"></i>
         </button>
         @if (categoriesOpen()) {
-          <div class="expense-categories" role="group" aria-label="Categoria da nova despesa">
+          <div
+            class="expense-categories"
+            role="group"
+            [attr.aria-label]="
+              editingId() ? 'Categoria da despesa em edição' : 'Categoria da nova despesa'
+            "
+          >
             <button
               type="button"
               [attr.aria-pressed]="category() === undefined"
               (click)="choose(undefined)"
             >
-              Usar regra do estabelecimento</button
+              {{ editingId() ? 'Manter categoria atual' : 'Usar regra do estabelecimento' }}</button
             ><button type="button" [attr.aria-pressed]="category() === null" (click)="choose(null)">
               Sem categoria
             </button>
@@ -151,10 +171,22 @@
       @if (error()) {
         <p role="alert" class="error">{{ error() }}</p>
       }
+      @if (conflict() || (editingId() && !editing())) {
+        <p>Recarregar substitui os campos pelos dados atuais do lançamento.</p>
+        <button type="button" [disabled]="store.busy()" (click)="loadEdit(editingId()!)">
+          Recarregar lançamento
+        </button>
+      }
       <div class="form-actions">
         <button type="button" [disabled]="store.busy()" (click)="closed.emit()">Cancelar</button
-        ><button type="submit" class="primary" [disabled]="store.busy() || !store.merchants()">
-          {{ store.busy() ? 'Salvando…' : 'Salvar despesa' }}
+        ><button
+          type="submit"
+          class="primary"
+          [disabled]="
+            store.busy() || !store.merchants() || conflict() || (editingId() && !editing())
+          "
+        >
+          {{ store.busy() ? 'Salvando…' : editingId() ? 'Salvar alterações' : 'Salvar despesa' }}
         </button>
       </div>
     </form>

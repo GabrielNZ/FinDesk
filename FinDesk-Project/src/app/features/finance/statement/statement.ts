@@ -43,6 +43,7 @@ import { CategoryPanel } from './category-panel';
 import { MerchantCategoryPanel } from './merchant-category-panel';
 import type { MerchantQuery } from '../../../../../shared/categories';
 import { categorizedMovements } from '../../../../../application/categories';
+import { editableExpense } from '../../../../../application/expense-editing';
 
 @Component({
   selector: 'fd-statement',
@@ -67,6 +68,8 @@ export class Statement {
   readonly catalogue = inject(CategoryStore);
   readonly categoryPanel = signal(false);
   readonly expensePanel = signal(false);
+  readonly editingExpenseId = signal<string | null>(null);
+  readonly canEditExpense = editableExpense;
   readonly savedExpenseId = signal<string | null>(null);
   readonly expenseOutside = computed(
     () =>
@@ -344,6 +347,7 @@ export class Statement {
     this.editingRow.set(row);
     this.merchantRow.set(null);
     this.expensePanel.set(false);
+    this.editingExpenseId.set(null);
     this.state.focus.set(null);
     this.categoryPanel.set(true);
     this.panel.set(null);
@@ -353,6 +357,7 @@ export class Statement {
     this.editingRow.set(null);
     this.merchantRow.set(null);
     this.expensePanel.set(false);
+    this.editingExpenseId.set(null);
     afterNextRender(
       () => {
         (this.categoryReturn?.isConnected
@@ -375,6 +380,13 @@ export class Statement {
       this.expensePanel.set(true);
       this.savedExpenseId.set(null);
     }
+  }
+  openExpenseEdit(row: StatementRow): void {
+    if (this.catalogue.busy() || !editableExpense(row.movement)) return;
+    this.openCategories();
+    this.editingExpenseId.set(row.movement.id);
+    this.savedExpenseId.set(null);
+    this.expensePanel.set(true);
   }
   showExpense(id: string): void {
     const movement = this.context.snapshot()?.facts.movements.find((m) => m.id === id);
