@@ -8,6 +8,7 @@ import type { StatementLayout } from '../../shared/statement-layout';
 import { parseSaveCategory, parseClassification } from '../../application/categories';
 import { parseClassifyMerchant } from '../../application/merchant-classification';
 import { parseSaveCategoryRule } from '../../application/category-rules';
+import { parseCreateExpense } from '../../application/expenses';
 import type {
   DemoSnapshot,
   AccountCycleReference,
@@ -187,6 +188,8 @@ export function validateSnapshot(value: unknown): DemoSnapshot {
 }
 
 export type StorageOperation =
+  | 'read-merchants'
+  | 'create-expense'
   | 'read-category-rules'
   | 'save-category-rule'
   | 'read-categories'
@@ -239,6 +242,13 @@ export function parseRuleRequest(value: unknown) {
     throw new StorageFailure('invalid-request');
   }
 }
+export function parseExpenseRequest(value: unknown) {
+  try {
+    return parseCreateExpense(value);
+  } catch {
+    throw new StorageFailure('invalid-request');
+  }
+}
 export function parseStatementLayoutRequest(value: unknown): StatementLayout {
   try {
     return parseStatementLayout(value);
@@ -262,6 +272,8 @@ export function validateRequest(value: unknown): WorkerRequest {
     !Number.isSafeInteger(data['id']) ||
     (data['id'] as number) < 1 ||
     ![
+      'read-merchants',
+      'create-expense',
       'read-category-rules',
       'save-category-rule',
       'read-categories',
@@ -282,7 +294,8 @@ export function validateRequest(value: unknown): WorkerRequest {
     Object.keys(data).some((key) => !['id', 'operation', 'payload'].includes(key))
   )
     throw new StorageFailure('invalid-request');
-  if (data['operation'] === 'save-category-rule') parseRuleRequest(data['payload']);
+  if (data['operation'] === 'create-expense') parseExpenseRequest(data['payload']);
+  else if (data['operation'] === 'save-category-rule') parseRuleRequest(data['payload']);
   else if (data['operation'] === 'save-category') parseCategoryRequest(data['payload']);
   else if (data['operation'] === 'classify-movement') parseClassificationRequest(data['payload']);
   else if (data['operation'] === 'classify-merchant') parseMerchantRequest(data['payload']);

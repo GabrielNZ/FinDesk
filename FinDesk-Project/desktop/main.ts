@@ -24,6 +24,7 @@ import {
   parseClassificationRequest,
   parseMerchantRequest,
   parseRuleRequest,
+  parseExpenseRequest,
   StorageFailure,
 } from './storage/contracts';
 import { storageDirectory } from './storage/paths';
@@ -117,6 +118,7 @@ async function start(): Promise<void> {
   }
 
   const readOperations = {
+    [STORAGE_CHANNELS.readMerchants]: () => storage?.getMerchants(),
     [STORAGE_CHANNELS.readCategories]: () => storage?.getCategories(),
     [STORAGE_CHANNELS.readCardLayout]: () => storage?.getCardLayout(),
     [STORAGE_CHANNELS.readStatementLayout]: () => storage?.getStatementLayout(),
@@ -131,6 +133,18 @@ async function start(): Promise<void> {
       return operation() ?? failure(new StorageFailure('unavailable'));
     });
   }
+  ipcMain.handle(STORAGE_CHANNELS.createExpense, (event, ...args: unknown[]) => {
+    if (!trustedSender(event) || args.length !== 1)
+      return failure(new StorageFailure('invalid-request'));
+    try {
+      return (
+        storage?.createExpense(parseExpenseRequest(args[0])) ??
+        failure(new StorageFailure('unavailable'))
+      );
+    } catch (error) {
+      return failure(error);
+    }
+  });
   ipcMain.handle(STORAGE_CHANNELS.readCategoryRules, (event, ...args: unknown[]) => {
     if (!trustedSender(event) || args.length !== 0)
       return failure(new StorageFailure('invalid-request'));

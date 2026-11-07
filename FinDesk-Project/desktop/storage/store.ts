@@ -22,6 +22,13 @@ import {
   validateRuleCategories,
 } from '../../application/category-rules';
 import type { CategoryRuleState, RuleCatalogue } from '../../shared/category-rules';
+import {
+  initialMerchants,
+  parseMerchantCatalogue,
+  parseCreateExpense,
+  planExpense,
+} from '../../application/expenses';
+import type { ExpenseCreated, MerchantCatalogue } from '../../shared/expenses';
 import { parseRuleRequest } from './contracts';
 import { mkdirSync } from 'node:fs';
 import { isAbsolute, join } from 'node:path';
@@ -118,6 +125,7 @@ export class DemoStore {
       });
       this.readCategories();
       this.readRuleState();
+      this.getMerchants();
     } catch (error) {
       this.close();
       throw error;
@@ -126,7 +134,7 @@ export class DemoStore {
 
   info(): StorageInfo {
     this.requireOpen();
-    return { environment: 'demo', schemaVersion: 3 };
+    return { environment: 'demo', schemaVersion: 4 };
   }
 
   private requireOpen(): [DatabaseSync, DatabaseSync] {
@@ -171,8 +179,110 @@ export class DemoStore {
       if (Number(facts.changes) !== 1 || Number(categories.changes) !== 1)
         throw new StorageFailure('corrupt');
       this.writeRuleState(initialCategoryRules(fresh.facts.movements));
+      this.writeMerchants(initialMerchants(fresh));
+      demo.exec('DELETE FROM expense_requests');
     });
     return this.readDemo();
+  }
+
+  getMerchants(): MerchantCatalogue {
+    const [demo] = this.requireOpen();
+    const row = demo.prepare('SELECT payload FROM merchant_state WHERE singleton = 1').get();
+    if (!row) throw new StorageFailure('corrupt');
+    const raw = parseStoredJson(row['payload']);
+    if (raw && typeof raw === 'object' && 'version' in raw && raw.version !== 1)
+      throw new StorageFailure('incompatible');
+    try {
+      return parseMerchantCatalogue(raw);
+    } catch {
+      throw new StorageFailure('corrupt');
+    }
+  }
+  private writeMerchants(value: MerchantCatalogue): void {
+    const [demo] = this.requireOpen();
+    if (
+      Number(
+        demo
+          .prepare('UPDATE merchant_state SET payload = ? WHERE singleton = 1')
+          .run(JSON.stringify(value)).changes,
+      ) !== 1
+    )
+      throw new StorageFailure('corrupt');
+  }
+  createExpense(value: unknown): ExpenseCreated {
+    let input;
+    try {
+      input = parseCreateExpense(value);
+    } catch {
+      throw new StorageFailure('invalid-request');
+    }
+    const payload = JSON.stringify(input);
+    const [demo] = this.requireOpen();
+    return transaction(demo, () => {
+      const prior = demo
+        .prepare('SELECT payload, movement_id FROM expense_requests WHERE request_id = ?')
+        .get(input.requestId);
+      if (prior) {
+        if (prior['payload'] !== payload) throw new StorageFailure('invalid-request');
+        const snapshot = this.readDemo();
+        if (
+          !snapshot.facts.movements.some(
+            (m) =>
+              m.id === prior['movement_id'] &&
+              m.kind === 'expense' &&
+              m.origin.kind === 'manual' &&
+              m.origin.externalId === input.requestId,
+          )
+        )
+          throw new StorageFailure('corrupt');
+        return {
+          movementId: prior['movement_id'] as string,
+          snapshot,
+          categories: this.readCategories(),
+          rules: this.getCategoryRules(),
+          merchants: this.getMerchants(),
+        };
+      }
+      const movementId = randomUUID();
+      const oldRules = this.readRuleState();
+      let next;
+      try {
+        next = planExpense(
+          this.readDemo(),
+          this.readCategories(),
+          this.getMerchants(),
+          input,
+          movementId,
+          randomUUID(),
+        );
+      } catch {
+        throw new StorageFailure('invalid-request');
+      }
+      const rules = recordRuleArrivals(oldRules, next.snapshot.facts.movements);
+      validateSnapshot(next.snapshot);
+      if (
+        Number(
+          demo
+            .prepare('UPDATE demo_state SET payload = ? WHERE singleton = 1')
+            .run(JSON.stringify(next.snapshot)).changes,
+        ) !== 1
+      )
+        throw new StorageFailure('corrupt');
+      if (
+        Number(
+          demo
+            .prepare('UPDATE category_state SET payload = ? WHERE singleton = 1')
+            .run(JSON.stringify(next.categories)).changes,
+        ) !== 1
+      )
+        throw new StorageFailure('corrupt');
+      this.writeMerchants(next.merchants);
+      this.writeRuleState(rules);
+      demo
+        .prepare('INSERT INTO expense_requests VALUES (?, ?, ?)')
+        .run(input.requestId, payload, movementId);
+      return { movementId, ...next, rules: ruleCatalogue(rules) };
+    });
   }
 
   readCategories(): CategoryState {

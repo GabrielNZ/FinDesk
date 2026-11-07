@@ -1,5 +1,7 @@
 # Arquitetura
 
+F06a/D113–D116: `application/expenses.ts` valida cadastro específico, centavos, conta/moeda, datas e identidade do estabelecimento. `createExpense` é a única escrita pública nova de fatos; principal/worker revalidam contrato e remetente/frame, sem expor SQL, caminhos ou substituição arbitrária do snapshot. ID/origem são produzidos no backend. Fato, novo estabelecimento preparado no formulário, override individual, atribuição da regra e recibo de solicitação são gravados juntos; repetição do mesmo pedido retorna o ID existente e payload diferente com a mesma chave é recusado. Renderer mantém consulta e atualiza snapshot/categorias/regras/nomes após sucesso; Ver lançamento muda a consulta somente por ação explícita.
+
 O FinDesk é um aplicativo desktop local com interface Angular. A casca concretiza as responsabilidades estabelecidas no mestre, sem introduzir servidor de aplicação, serviços externos ou uma arquitetura distribuída.
 
 F04a/D87 acrescenta contrato fechado `StatementLayout` e geometria pura em `application/statement-layout.ts`. `StatementResize` coordena ponteiro/teclado, prévia contínua e cancelamento; `StatementLayoutState` lê e serializa gravações ao concluir ajustes. Preload oferece somente `getStatementLayout`/`saveStatementLayout`, com remetente/quantidade de argumentos e forma validados no principal e no worker. SQL permanece no store, em chave fixa de preferências, sem operação genérica de caminho/query. A organização do Geral mantém seu contrato/namespace; não há nova migração ou servidor.

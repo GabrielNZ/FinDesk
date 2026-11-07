@@ -4,6 +4,7 @@ import type { CardLayout } from './card-layout';
 import type { StatementLayout } from './statement-layout';
 import type { CategoryState, ClassifyMovement, ClassifyMerchant, SaveCategory } from './categories';
 import type { RuleCatalogue, SaveCategoryRule } from './category-rules';
+import type { CreateExpense, ExpenseCreated, MerchantCatalogue } from './expenses';
 
 export interface DemoSnapshot {
   readonly formatVersion: 1;
@@ -40,10 +41,12 @@ export type StorageResult<T> =
 
 export interface StorageInfo {
   readonly environment: 'demo';
-  readonly schemaVersion: 3;
+  readonly schemaVersion: 4;
 }
 
 export interface StorageApi {
+  getMerchants(): Promise<StorageResult<MerchantCatalogue>>;
+  createExpense(value: CreateExpense): Promise<StorageResult<ExpenseCreated>>;
   getCategoryRules(): Promise<StorageResult<RuleCatalogue>>;
   saveCategoryRule(value: SaveCategoryRule): Promise<StorageResult<RuleCatalogue>>;
   getCategories(): Promise<StorageResult<CategoryState>>;
@@ -63,6 +66,8 @@ export interface StorageApi {
 }
 
 export const STORAGE_CHANNELS = {
+  readMerchants: 'findesk:merchants-read',
+  createExpense: 'findesk:expense-create',
   readCategoryRules: 'findesk:category-rules-read',
   saveCategoryRule: 'findesk:category-rule-save',
   readCategories: 'findesk:categories-read',

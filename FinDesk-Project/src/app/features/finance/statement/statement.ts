@@ -13,6 +13,8 @@ import {
   type ElementRef,
 } from '@angular/core';
 import { NgTemplateOutlet } from '@angular/common';
+import { calendarMonth } from '../../../../../domain/civil-date';
+import { ExpensePanel } from './expense-panel';
 import {
   filterStatement,
   statementRows,
@@ -34,7 +36,6 @@ import { StatementDrag } from './statement-drag';
 import { StatementLayoutState } from './statement-layout.service';
 import { StatementResize } from './statement-resize';
 import { groupStatement } from '../../../../../application/statement-grouping';
-import { DEMO_MERCHANT_LABELS } from '../../../../../fixtures/financas/labels';
 import { StatementGroups, groupToggleId, statementGroupIcon } from './statement-groups';
 import { StatementSourceSwitch } from './statement-source-switch';
 import { CategoryStore } from './category-store.service';
@@ -51,6 +52,7 @@ import { categorizedMovements } from '../../../../../application/categories';
     StatementSourceSwitch,
     CategoryPanel,
     MerchantCategoryPanel,
+    ExpensePanel,
     NgTemplateOutlet,
   ],
   host: { '(window:resize)': 'updateFocusBounds()' },
@@ -64,6 +66,13 @@ export class Statement {
   readonly layout = inject(StatementLayoutState);
   readonly catalogue = inject(CategoryStore);
   readonly categoryPanel = signal(false);
+  readonly expensePanel = signal(false);
+  readonly savedExpenseId = signal<string | null>(null);
+  readonly expenseOutside = computed(
+    () =>
+      !!this.savedExpenseId() &&
+      !this.rows().some((row) => row.movement.id === this.savedExpenseId()),
+  );
   readonly editingRow = signal<StatementRow | null>(null);
   readonly merchantRow = signal<StatementRow | null>(null);
   readonly merchantQuery = computed<MerchantQuery | null>(() => {
@@ -210,7 +219,7 @@ export class Statement {
     groupStatement(
       this.rows(),
       this.context.currencyMode(),
-      DEMO_MERCHANT_LABELS,
+      this.catalogue.merchantLabels(),
       this.catalogue.labels(),
     ),
   );
@@ -334,6 +343,7 @@ export class Statement {
     this.categoryReturn = document.activeElement as HTMLElement | null;
     this.editingRow.set(row);
     this.merchantRow.set(null);
+    this.expensePanel.set(false);
     this.state.focus.set(null);
     this.categoryPanel.set(true);
     this.panel.set(null);
@@ -342,6 +352,7 @@ export class Statement {
     this.categoryPanel.set(false);
     this.editingRow.set(null);
     this.merchantRow.set(null);
+    this.expensePanel.set(false);
     afterNextRender(
       () => {
         (this.categoryReturn?.isConnected
@@ -357,6 +368,32 @@ export class Statement {
       return;
     this.openCategories();
     this.merchantRow.set(row);
+  }
+  openExpense(): void {
+    this.openCategories();
+    if (!this.catalogue.busy()) {
+      this.expensePanel.set(true);
+      this.savedExpenseId.set(null);
+    }
+  }
+  showExpense(id: string): void {
+    const movement = this.context.snapshot()?.facts.movements.find((m) => m.id === id);
+    if (!movement) return;
+    if (this.context.accountId() !== movement.accountId)
+      this.context.selectAccount(movement.accountId);
+    this.context.selectPeriodMode('calendar-month');
+    this.context.month.set(calendarMonth(movement.on).start);
+    this.state.clear();
+    this.state.area.set('statement');
+    this.state.expanded.set(id);
+    this.closeCategories();
+    afterNextRender(
+      () =>
+        this.grid()
+          ?.nativeElement.querySelector<HTMLElement>(`[data-movement-id="${id}"] button`)
+          ?.focus({ preventScroll: true }),
+      { injector: this.injector },
+    );
   }
   merchantApplied(count: number): void {
     this.announcement.set(

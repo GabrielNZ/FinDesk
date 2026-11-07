@@ -17,7 +17,6 @@ import {
 } from '../../../../../application/statement';
 import { previewMerchantClassification } from '../../../../../application/merchant-classification';
 import { formatCivilDate, formatMoney } from '../../../../../application/finance-context';
-import { DEMO_MERCHANT_LABELS } from '../../../../../fixtures/financas/labels';
 import { FinanceContext } from '../finance-context.service';
 import { CategoryStore } from './category-store.service';
 import { CategoryRuleEditor } from './category-rule-editor';
@@ -46,11 +45,7 @@ export class MerchantCategoryPanel {
     const movement = this.movement().movement;
     return movement.kind === 'expense' ? movement.merchantId : null;
   });
-  readonly merchantName = computed(() =>
-    Object.hasOwn(DEMO_MERCHANT_LABELS, this.merchantId() ?? '')
-      ? DEMO_MERCHANT_LABELS[this.merchantId()!]
-      : this.merchantId(),
-  );
+  readonly merchantName = computed(() => this.store.merchantLabel(this.merchantId() ?? ''));
   readonly filterDescription = computed(() => {
     const query = this.query();
     return [

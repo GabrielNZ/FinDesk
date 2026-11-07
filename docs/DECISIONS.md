@@ -260,6 +260,14 @@ Fontes consultadas em 28/10/2026:
 
 **D112 — edição e ativação de regras, confirmada por Gabriel em 07/11/2026:** editar, pausar ou reativar afeta somente os próximos registros recebidos, preservando categorias já aplicadas. Pausar deixa os novos registros usarem a categoria da fonte. Alterar registros anteriores continua exigindo aplicação em lote com prévia.
 
+**D113 — composição da F06a, confirmada por Gabriel em 07/11/2026:** botão “+ Nova despesa” nos controles de Movimentações, disponível em Extrato e Agrupamento. Painel à direita ocupa temporariamente a Seleção, com seus itens preservados ao fechar. Todos os campos no mesmo painel: valor/data destacados, conta/descrição/estabelecimento/categoria abaixo e Salvar/Cancelar ao final; sem divisão em duas etapas.
+
+**D114 — estabelecimentos no cadastro, confirmado por Gabriel em 07/11/2026:** escolher os existentes e cadastrar novos por ação explícita “Criar estabelecimento”. Campo opcional; selecionar Uber reutiliza sua identidade/regra, e escrever Uber apenas na descrição não associa automaticamente. Novos estabelecimentos precisam de identidade e nome persistidos; não inferir fusão por descrições parecidas.
+
+**D115 — cadastro fora dos filtros, confirmado por Gabriel em 07/11/2026:** salvar mantém a consulta atual. Quando o novo registro ficar fora dela, informar “Despesa salva fora dos filtros atuais” e oferecer Ver lançamento. Só essa ação ajusta a consulta para exibi-lo, com a possível poda de Seleção conforme D82, apresentada na pergunta. Não mudar filtros automaticamente a cada cadastro.
+
+**D116 — datas da F06a, confirmadas por Gabriel em 07/11/2026:** manter a referência fixa da demonstração. Data inicial do cadastro e limite superior seguem snapshot.asOf (29/10/2026 na fixture atual); aceitar somente datas posteriores à abertura da conta (01/10–29/10 nas contas atuais). Informar a referência no formulário. Não avançar relógio, cobertura, ciclos ou mês inicial com a data real.
+
 ## Perguntas aguardando resposta e pesquisas futuras
 
 Angular/PrimeNG e barra nativa continuam confirmados em D07/D08. A limpeza de conteúdo foi acordada em D12, e a logo original foi aplicada conforme D10. Em 29/10/2026, Gabriel aprovou explicitamente o conjunto atual (casca, ajustes, F00 e reorganização) e autorizou commit e push. F01a não foi iniciada por essa tarefa de registro Git.

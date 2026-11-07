@@ -2,6 +2,7 @@ import { DatabaseSync } from 'node:sqlite';
 import { initialCategories, parseCategoryState } from '../../application/categories';
 import { initialCategoryRules } from '../../application/category-rules';
 import { createDemoScenario } from '../../fixtures/financas/demo';
+import { initialMerchants } from '../../application/expenses';
 import {
   parseStoredJson,
   StorageFailure,
@@ -58,6 +59,28 @@ export const DEMO_MIGRATIONS: readonly Migration[] = [
       database
         .prepare('INSERT INTO category_rules VALUES (1, ?)')
         .run(JSON.stringify(initialCategoryRules(movements)));
+    },
+  },
+  {
+    version: 4,
+    sql: `CREATE TABLE merchant_state (singleton INTEGER PRIMARY KEY CHECK (singleton = 1), payload TEXT NOT NULL CHECK (json_valid(payload))) STRICT;
+      CREATE TABLE expense_requests (request_id TEXT PRIMARY KEY, payload TEXT NOT NULL CHECK (json_valid(payload)), movement_id TEXT NOT NULL UNIQUE) STRICT;`,
+    apply(database) {
+      const row = database.prepare('SELECT payload FROM demo_state WHERE singleton = 1').get();
+      const scenario = createDemoScenario();
+      const snapshot = row
+        ? validateSnapshot(parseStoredJson(row['payload']))
+        : {
+            formatVersion: 1 as const,
+            seedId: 'demo-financas-v1' as const,
+            seedVersion: 1 as const,
+            asOf: scenario.clock.today(),
+            timezone: scenario.timezone,
+            facts: scenario.facts,
+          };
+      database
+        .prepare('INSERT INTO merchant_state VALUES (1, ?)')
+        .run(JSON.stringify(initialMerchants(snapshot)));
     },
   },
 ];

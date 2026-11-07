@@ -7,6 +7,14 @@
   <div class="statement-toolbar">
     <div class="statement-heading">
       <fd-statement-source-switch [area]="state.area()" (areaChanged)="switchSource($event)" />
+      <button
+        type="button"
+        class="filter-toggle"
+        [disabled]="catalogue.busy() || !catalogue.merchants()"
+        (click)="openExpense()"
+      >
+        <i class="pi pi-plus" aria-hidden="true"></i> Nova despesa
+      </button>
       @if (state.area() === 'statement') {
         <div class="view-modes" role="group" aria-label="Visualização do extrato">
           <button
@@ -484,7 +492,14 @@
       }
     </div>
     @if (categoryPanel()) {
-      @if (merchantRow(); as row) {
+      @if (expensePanel()) {
+        <fd-expense-panel
+          [outside]="expenseOutside()"
+          (created)="savedExpenseId.set($event)"
+          (reveal)="showExpense($event)"
+          (closed)="closeCategories()"
+        />
+      } @else if (merchantRow(); as row) {
         @if (merchantQuery(); as query) {
           <fd-merchant-category-panel
             [movement]="row"

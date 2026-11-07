@@ -4,6 +4,8 @@ import { parseCategoryState } from '../../../../../application/categories';
 import { parseRuleCatalogue } from '../../../../../application/category-rules';
 import type { RuleCatalogue, SaveCategoryRule } from '../../../../../shared/category-rules';
 import { DEMO_MERCHANT_LABELS } from '../../../../../fixtures/financas/labels';
+import { parseMerchantCatalogue } from '../../../../../application/expenses';
+import type { MerchantCatalogue } from '../../../../../shared/expenses';
 import type {
   CategoryState,
   SaveCategory,
@@ -14,6 +16,12 @@ import type {
 export class CategoryStore {
   readonly value = signal<CategoryState | null>(null);
   readonly rules = signal<RuleCatalogue | null>(null);
+  readonly merchants = signal<MerchantCatalogue | null>(null);
+  readonly merchantLabels = computed(() =>
+    this.merchants()
+      ? Object.fromEntries(this.merchants()!.merchants.map((m) => [m.id, m.name]))
+      : DEMO_MERCHANT_LABELS,
+  );
   readonly busy = signal(false);
   readonly error = signal<string | null>(null);
   readonly categories = computed(() =>
@@ -30,7 +38,8 @@ export class CategoryStore {
     return this.value()?.categories.find((item) => item.id === key);
   }
   merchantLabel(id: string): string {
-    return Object.hasOwn(DEMO_MERCHANT_LABELS, id) ? DEMO_MERCHANT_LABELS[id]! : id;
+    const labels = this.merchantLabels();
+    return Object.hasOwn(labels, id) ? labels[id]! : id;
   }
 
   load(): Promise<void> {
@@ -40,12 +49,18 @@ export class CategoryStore {
       try {
         const api = window.finDesk?.storage;
         if (!api?.getCategories) throw new Error();
-        const [result, rules] = await Promise.all([api.getCategories(), api.getCategoryRules()]);
-        if (!result.ok || !rules.ok) throw new Error();
+        const [result, rules, merchants] = await Promise.all([
+          api.getCategories(),
+          api.getCategoryRules(),
+          api.getMerchants(),
+        ]);
+        if (!result.ok || !rules.ok || !merchants.ok) throw new Error();
         const categories = parseCategoryState(result.value);
         const catalogue = parseRuleCatalogue(rules.value);
+        const names = parseMerchantCatalogue(merchants.value);
         this.value.set(categories);
         this.rules.set(catalogue);
+        this.merchants.set(names);
         this.error.set(null);
       } catch {
         this.error.set('Não foi possível carregar as categorias. Tente novamente.');

@@ -1,0 +1,162 @@
+<section class="category-panel" aria-labelledby="expense-title">
+  <header>
+    <h2 id="expense-title">Nova despesa</h2>
+    <button
+      type="button"
+      class="icon-button"
+      aria-label="Fechar nova despesa"
+      [disabled]="store.busy()"
+      (click)="closed.emit()"
+    >
+      <i class="pi pi-times" aria-hidden="true"></i>
+    </button>
+  </header>
+  <p>Referência da demonstração: {{ displayDate(context.snapshot()!.asOf) }}</p>
+  @if (savedId(); as id) {
+    <p id="expense-saved" tabindex="-1" role="status">
+      {{ outside() ? 'Despesa salva fora dos filtros atuais.' : 'Despesa salva.' }}
+    </p>
+    <div class="form-actions">
+      <button type="button" (click)="reset()">Nova despesa</button
+      ><button type="button" class="primary" (click)="reveal.emit(id)">Ver lançamento</button>
+    </div>
+  } @else {
+    <form (ngSubmit)="save()" novalidate>
+      <fieldset [disabled]="store.busy()">
+        <div class="expense-amount">
+          <label for="expense-value"
+            >Valor · {{ account()?.openingBalance?.currency ?? 'Selecione a conta' }}</label
+          ><input
+            id="expense-value"
+            name="expense-value"
+            inputmode="decimal"
+            autocomplete="off"
+            placeholder="0,00"
+            [ngModel]="amount()"
+            (ngModelChange)="amount.set($event)"
+          />
+        </div>
+        <label for="expense-date">Data da despesa</label
+        ><input
+          id="expense-date"
+          name="expense-date"
+          type="date"
+          [min]="minDate()"
+          [max]="context.snapshot()!.asOf"
+          [ngModel]="date()"
+          (ngModelChange)="date.set($event)"
+        />
+        @if (minDate()) {
+          <p>De {{ displayDate(minDate()!) }} a {{ displayDate(context.snapshot()!.asOf) }}</p>
+        }
+        <div class="field-label">Conta</div>
+        <div class="account-choices" role="group" aria-label="Conta da despesa">
+          @for (account of context.snapshot()!.facts.accounts; track account.id) {
+            <button
+              type="button"
+              [attr.aria-pressed]="accountId() === account.id"
+              (click)="accountId.set(account.id)"
+            >
+              <span>{{ account.name }}</span
+              ><small>{{ account.openingBalance.currency }}</small>
+            </button>
+          }
+        </div>
+        <label for="expense-description">Descrição</label
+        ><input
+          id="expense-description"
+          name="expense-description"
+          maxlength="240"
+          autocomplete="off"
+          [ngModel]="description()"
+          (ngModelChange)="description.set($event)"
+        />
+        <div class="field-label">Estabelecimento <span>· opcional</span></div>
+        @if (merchantName(); as name) {
+          <div class="merchant-picked">
+            <span>{{ name }}</span
+            ><button
+              type="button"
+              aria-label="Remover estabelecimento"
+              (click)="merchant.set({ mode: 'none' })"
+            >
+              <i class="pi pi-times" aria-hidden="true"></i>
+            </button>
+          </div>
+          @if (merchant().mode === 'new') {
+            <p>Será criado ao salvar a despesa.</p>
+          }
+        } @else {
+          <input
+            aria-label="Buscar estabelecimento"
+            name="merchant-search"
+            placeholder="Buscar ou criar"
+            maxlength="160"
+            autocomplete="off"
+            [ngModel]="merchantSearch()"
+            (ngModelChange)="merchantSearch.set($event)"
+          />
+          <div class="merchant-options" role="group" aria-label="Estabelecimentos">
+            @for (item of matches(); track item.id) {
+              <button type="button" (click)="merchant.set({ mode: 'existing', id: item.id })">
+                {{ item.name }}
+              </button>
+            }
+          </div>
+          @if (merchantSearch().trim()) {
+            <button type="button" class="create-merchant" (click)="prepareMerchant()">
+              <i class="pi pi-plus" aria-hidden="true"></i> Criar estabelecimento
+            </button>
+          }
+        }
+        <div class="field-label">Categoria</div>
+        <button
+          type="button"
+          class="category-current"
+          [attr.aria-expanded]="categoriesOpen()"
+          (click)="categoriesOpen.set(!categoriesOpen())"
+        >
+          {{
+            category() === undefined
+              ? automaticLabel()
+              : category() === null
+                ? 'Sem categoria · escolha individual'
+                : store.label(category()!) + ' · escolha individual'
+          }}<i class="pi pi-chevron-down" aria-hidden="true"></i>
+        </button>
+        @if (categoriesOpen()) {
+          <div class="expense-categories" role="group" aria-label="Categoria da nova despesa">
+            <button
+              type="button"
+              [attr.aria-pressed]="category() === undefined"
+              (click)="choose(undefined)"
+            >
+              Usar regra do estabelecimento</button
+            ><button type="button" [attr.aria-pressed]="category() === null" (click)="choose(null)">
+              Sem categoria
+            </button>
+            @for (item of store.categories(); track item.id) {
+              <button
+                type="button"
+                [attr.aria-pressed]="category() === item.id"
+                (click)="choose(item.id)"
+              >
+                <i [class]="'pi ' + item.icon" [style.color]="item.color" aria-hidden="true"></i>
+                {{ item.name }}
+              </button>
+            }
+          </div>
+        }
+      </fieldset>
+      @if (error()) {
+        <p role="alert" class="error">{{ error() }}</p>
+      }
+      <div class="form-actions">
+        <button type="button" [disabled]="store.busy()" (click)="closed.emit()">Cancelar</button
+        ><button type="submit" class="primary" [disabled]="store.busy() || !store.merchants()">
+          {{ store.busy() ? 'Salvando…' : 'Salvar despesa' }}
+        </button>
+      </div>
+    </form>
+  }
+</section>

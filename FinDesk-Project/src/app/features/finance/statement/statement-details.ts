@@ -49,6 +49,12 @@ import { formatMoney, formatCivilDate } from '../../../../../application/finance
         <dt>Origem</dt>
         <dd>{{ sources[item.movement.origin.kind] }}</dd>
       </div>
+      @if (item.movement.kind === 'expense' && item.movement.merchantId) {
+        <div>
+          <dt>Estabelecimento</dt>
+          <dd>{{ catalogue.merchantLabel(item.movement.merchantId) }}</dd>
+        </div>
+      }
       <div>
         <dt>Descrição original</dt>
         <dd>{{ item.movement.description }}</dd>

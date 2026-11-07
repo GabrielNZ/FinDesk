@@ -1,5 +1,7 @@
 # Sistema visual — proposta inicial
 
+F06a/D113–D116: Nova despesa nos controles de Movimentações abre painel completo à direita, preservando a Seleção. Valor em destaque, data/referência, contas em botões com moeda, descrição, estabelecimento opcional com busca/criação explícita e categoria automática/individual. Novo nome é confirmado junto da despesa. Sucesso mantém consulta e oferece Ver lançamento; Cancelar/Escape não grava e volta ao acionador. Rolagem da lista de estabelecimentos/categorias é interna; painel acompanha a página sem gravar dimensão temporária.
+
 Gabriel confirmou manter a base visual da casca e enxugar o conteúdo. Tema escuro, menu, cores e espaçamento permanecem. A logo original fornecida, com moedas e seta ascendente, substitui o F.
 
 ## Base visual
