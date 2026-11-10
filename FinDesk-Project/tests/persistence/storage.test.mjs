@@ -21,6 +21,205 @@ const {
 } = require('../../out/desktop/storage/contracts.js');
 const { storageDirectory } = require('../../out/desktop/storage/paths.js');
 const { defaultStatementLayout } = require('../../out/application/statement-layout.js');
+const { randomUUID } = await import('node:crypto');
+const { createDemoScenario } = require('../../out/fixtures/financas/demo.js');
+const isSeptember = (id) => id.startsWith('demo-september-2026-');
+
+test('F07a/D136: atualização v1→v2 preserva manuais, recibos, excluídas, categorias, saldos e preferências', async (t) => {
+  const root = await temporary(t);
+  let store = new DemoStore(root);
+  const manual = store.createExpense({
+    requestId: randomUUID(),
+    accountId: 'demo-a',
+    on: '2026-10-20',
+    amountMinor: 2000,
+    description: 'Manual preservada',
+    merchant: { mode: 'none' },
+    classification: { mode: 'manual', categoryId: null },
+  }).movementId;
+  const removed = store.createExpense({
+    requestId: randomUUID(),
+    accountId: 'demo-a',
+    on: '2026-10-21',
+    amountMinor: 1000,
+    description: 'Excluída preservada',
+    merchant: { mode: 'none' },
+    classification: { mode: 'manual', categoryId: 'casa' },
+  }).movementId;
+  store.deleteExpense({
+    requestId: randomUUID(),
+    movementId: removed,
+    expectedToken: store.getExpenseEdit(removed).token,
+  });
+  store.saveCategoryRule({
+    merchantId: 'uber',
+    categoryId: 'casa',
+    active: true,
+    expectedRevision: null,
+  });
+  store.classifyMovement({ movementId: 'mov-merc', categoryId: 'casa' });
+  const current = store.readDemo(),
+    base = createDemoScenario().facts;
+  const legacy = {
+    ...current,
+    seedVersion: 1,
+    facts: {
+      ...current.facts,
+      accounts: base.accounts,
+      movements: current.facts.movements.filter((m) => !isSeptember(m.id)),
+      coverage: base.coverage,
+    },
+  };
+  const prefs = store.readPreferences(),
+    categories = store.readCategories(),
+    token = store.getExpenseEdit(manual).token;
+  store.close();
+  const db = new DatabaseSync(join(root, 'demo.sqlite'));
+  const preserved = () =>
+    JSON.stringify(
+      [
+        'expense_requests',
+        'expense_edits',
+        'expense_trash',
+        'expense_lifecycle_requests',
+        'category_state',
+        'merchant_state',
+      ].map((table) => db.prepare(`SELECT * FROM ${table}`).all()),
+    );
+  try {
+    db.prepare('UPDATE demo_state SET payload=?').run(JSON.stringify(legacy));
+    const rules = JSON.parse(db.prepare('SELECT payload FROM category_rules').get().payload);
+    rules.knownMovementIds = rules.knownMovementIds.filter((id) => !isSeptember(id));
+    rules.assignments = rules.assignments.filter((a) => !isSeptember(a.movementId));
+    db.prepare('UPDATE category_rules SET payload=?').run(JSON.stringify(rules));
+    const before = preserved();
+    store = new DemoStore(root);
+    const after = store.readDemo();
+    assert.equal(after.seedVersion, 2);
+    assert.deepEqual(
+      after.facts.movements.filter((m) => !isSeptember(m.id)),
+      legacy.facts.movements,
+    );
+    assert.equal(preserved(), before);
+    assert.deepEqual(store.readCategories(), categories);
+    assert.deepEqual(store.readPreferences(), prefs);
+    assert.equal(store.getExpenseEdit(manual).token, token);
+    assert.equal(store.getExpenseTrash().trash[0].movement.id, removed);
+    assert.equal(
+      store
+        .getCategoryRules()
+        .assignments.filter((a) => isSeptember(a.movementId) && a.merchantId === 'uber').length,
+      2,
+    );
+    store.close();
+    store = new DemoStore(root);
+    assert.deepEqual(store.readDemo(), after);
+    store.close();
+  } finally {
+    db.close();
+    store.close();
+  }
+});
+test('F07a/D136: falha ao atualizar recibo de chegadas reverte fatos e versão da seed', async (t) => {
+  const root = await temporary(t),
+    first = new DemoStore(root),
+    scenario = createDemoScenario();
+  const legacy = { ...first.readDemo(), seedVersion: 1, facts: scenario.facts };
+  first.close();
+  const db = new DatabaseSync(join(root, 'demo.sqlite'));
+  try {
+    const bytes = JSON.stringify(legacy);
+    db.prepare('UPDATE demo_state SET payload=?').run(bytes);
+    const rules = JSON.parse(db.prepare('SELECT payload FROM category_rules').get().payload);
+    rules.knownMovementIds = rules.knownMovementIds.filter((id) => !isSeptember(id));
+    db.prepare('UPDATE category_rules SET payload=?').run(JSON.stringify(rules));
+    db.exec(
+      "CREATE TRIGGER fail_seed_update AFTER UPDATE ON category_rules BEGIN SELECT RAISE(ABORT,'falha simulada'); END",
+    );
+    assert.throws(() => new DemoStore(root));
+    assert.equal(db.prepare('SELECT payload FROM demo_state').get().payload, bytes);
+    db.exec('DROP TRIGGER fail_seed_update');
+    const next = new DemoStore(root);
+    assert.equal(next.readDemo().seedVersion, 2);
+    next.close();
+  } finally {
+    db.close();
+  }
+});
+const { defaultCardLayout: analysisLayout } = require('../../out/application/card-layout.js');
+
+test('F07a: layout de análises persiste isolado e restauração demo o preserva, sem aceitar área do Geral', async (t) => {
+  const root = await temporary(t);
+  let store = new DemoStore(root);
+  try {
+    const facts = store.readDemo(),
+      prefs = store.readPreferences();
+    assert.equal(store.readExpenseAnalysisLayout(), null);
+    assert.equal(store.readCardLayout(), null);
+    const layout = analysisLayout('finance-analysis');
+    store.saveExpenseAnalysisLayout(layout);
+    assert.throws(() => store.saveCardLayout(layout));
+    assert.throws(() => store.saveExpenseAnalysisLayout(analysisLayout()));
+    assert.deepEqual(store.readDemo(), facts);
+    assert.deepEqual(store.readPreferences(), prefs);
+    assert.equal(store.readStatementLayout(), null);
+    assert.equal(store.readCardLayout(), null);
+    store.close();
+    store = new DemoStore(root);
+    assert.deepEqual(store.readExpenseAnalysisLayout(), layout);
+    store.restoreDemo();
+    assert.deepEqual(store.readExpenseAnalysisLayout(), layout);
+  } finally {
+    store.close();
+  }
+});
+test('F07a: contrato/worker recusam campos/área extras; conteúdo futuro ou inválido é preservado', async (t) => {
+  const root = await temporary(t),
+    client = new StorageClient(root);
+  try {
+    const layout = analysisLayout('finance-analysis');
+    assert.equal((await client.getExpenseAnalysisLayout()).value, null);
+    assert.equal((await client.saveExpenseAnalysisLayout(layout)).ok, true);
+    assert.equal((await client.saveExpenseAnalysisLayout({ ...layout, sql: 'x' })).ok, false);
+    assert.equal((await client.saveExpenseAnalysisLayout(analysisLayout())).ok, false);
+    assert.throws(() =>
+      validateRequest({ id: 1, operation: 'read-expense-analysis-layout', payload: {} }),
+    );
+  } finally {
+    await client.close();
+  }
+  const db = new DatabaseSync(join(root, 'preferences.sqlite'));
+  try {
+    const payload = JSON.stringify({ ...analysisLayout('finance-analysis'), version: 99 });
+    db.prepare("UPDATE preferences SET payload = ? WHERE key = 'layout.finance-analysis.v1'").run(
+      payload,
+    );
+    const store = new DemoStore(root);
+    try {
+      assert.throws(
+        () => store.readExpenseAnalysisLayout(),
+        (error) => error.code === 'incompatible',
+      );
+      assert.throws(() => store.saveExpenseAnalysisLayout(analysisLayout('finance-analysis')));
+      assert.equal(
+        db.prepare("SELECT payload FROM preferences WHERE key = 'layout.finance-analysis.v1'").get()
+          .payload,
+        payload,
+      );
+      db.prepare(
+        "UPDATE preferences SET payload = '{}' WHERE key = 'layout.finance-analysis.v1'",
+      ).run();
+      assert.throws(
+        () => store.readExpenseAnalysisLayout(),
+        (error) => error.code === 'corrupt',
+      );
+    } finally {
+      store.close();
+    }
+  } finally {
+    db.close();
+  }
+});
 
 test('F04a/D87: tamanho da lista persiste isolado, leitura não grava e restauração demo o preserva', async (t) => {
   const root = await temporary(t);

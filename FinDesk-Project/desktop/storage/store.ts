@@ -53,6 +53,7 @@ import { parseRuleRequest } from './contracts';
 import { mkdirSync } from 'node:fs';
 import { isAbsolute, join } from 'node:path';
 import { createDemoScenario } from '../../fixtures/financas/demo';
+import { withSeptemberHistory } from '../../fixtures/financas/comparison-history';
 import type { DemoSnapshot, FinancePreferences, StorageInfo } from '../../shared/storage-api';
 import { parsePreferences, parseStoredJson, StorageFailure, validateSnapshot } from './contracts';
 import { DEMO_MIGRATIONS, migrate, PREFERENCE_MIGRATIONS } from './migrations';
@@ -126,6 +127,20 @@ export class DemoStore {
           this.demo!.exec('UPDATE storage_identity SET initialized = 1');
         } else if (initialized === 1 && row) validateSnapshot(parseStoredJson(row['payload']));
         else throw new StorageFailure('corrupt');
+        const previous = this.readDemo();
+        if (previous.seedVersion === 1) {
+          let next;
+          try {
+            next = validateSnapshot(withSeptemberHistory(previous));
+          } catch {
+            throw new StorageFailure('corrupt');
+          }
+          const rules = recordRuleArrivals(this.readRuleState(), next.facts.movements);
+          this.demo!.prepare('UPDATE demo_state SET payload = ? WHERE singleton = 1').run(
+            JSON.stringify(next),
+          );
+          this.writeRuleState(rules);
+        }
       });
       transaction(this.preferences, () => {
         const row = this.preferences!.prepare(
@@ -193,7 +208,7 @@ export class DemoStore {
   restoreDemo(): DemoSnapshot {
     const [demo] = this.requireOpen();
     transaction(demo, () => {
-      const fresh = freshDemo();
+      const fresh = withSeptemberHistory(freshDemo());
       const facts = demo
         .prepare('UPDATE demo_state SET payload = ? WHERE singleton = 1')
         .run(JSON.stringify(fresh));
@@ -770,7 +785,7 @@ export class DemoStore {
     )
       throw new StorageFailure('incompatible');
     try {
-      return parseCardLayout(raw);
+      return parseCardLayout(raw, 'finance-general');
     } catch {
       throw new StorageFailure('corrupt');
     }
@@ -807,7 +822,7 @@ export class DemoStore {
   }
 
   saveCardLayout(value: unknown): CardLayout {
-    const checked = parseCardLayout(value);
+    const checked = parseCardLayout(value, 'finance-general');
     this.readCardLayout();
     return this.writeCardLayout(checked);
   }
@@ -826,5 +841,32 @@ export class DemoStore {
 
   restoreCardLayout(): CardLayout {
     return this.writeCardLayout(defaultCardLayout());
+  }
+  readExpenseAnalysisLayout(): CardLayout | null {
+    const row = this.requireOpen()[1]
+      .prepare("SELECT payload FROM preferences WHERE key = 'layout.finance-analysis.v1'")
+      .get();
+    if (!row) return null;
+    const raw = parseStoredJson(row['payload']);
+    if (raw && typeof raw === 'object' && 'version' in raw && raw.version !== 3)
+      throw new StorageFailure('incompatible');
+    try {
+      return parseCardLayout(raw, 'finance-analysis');
+    } catch {
+      throw new StorageFailure('corrupt');
+    }
+  }
+  saveExpenseAnalysisLayout(value: unknown): CardLayout {
+    const checked = parseCardLayout(value, 'finance-analysis');
+    this.readExpenseAnalysisLayout();
+    const db = this.requireOpen()[1];
+    transaction(db, () =>
+      db
+        .prepare(
+          "INSERT INTO preferences (key, payload) VALUES ('layout.finance-analysis.v1', ?) ON CONFLICT(key) DO UPDATE SET payload = excluded.payload",
+        )
+        .run(JSON.stringify(checked)),
+    );
+    return this.readExpenseAnalysisLayout()!;
   }
 }

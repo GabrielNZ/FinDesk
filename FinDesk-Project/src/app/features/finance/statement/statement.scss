@@ -24,7 +24,6 @@
   container-type: inline-size;
 }
 .statement-heading,
-.expense-actions,
 .view-modes {
   display: flex;
   align-items: center;
@@ -34,7 +33,6 @@
   gap: 16px;
 }
 .view-modes button,
-.expense-actions button,
 .panel-focus {
   display: grid;
   place-items: center;
@@ -44,7 +42,6 @@
   border-radius: 8px;
 }
 .view-modes button,
-.expense-actions button,
 .statement-heading .panel-focus {
   width: 34px;
   height: 34px;
@@ -56,28 +53,8 @@
   background: #90bfa90b;
 }
 .view-modes .pi,
-.expense-actions .pi,
 .statement-heading .panel-focus .pi {
   font-size: 14px;
-}
-.expense-actions button {
-  position: relative;
-  flex-shrink: 0;
-}
-.expense-actions button:focus-visible::after {
-  content: attr(aria-label);
-  position: absolute;
-  top: calc(100% + 8px);
-  left: 50%;
-  transform: translateX(-50%);
-  z-index: 2;
-  white-space: nowrap;
-  padding: 6px 8px;
-  border: 1px solid var(--fd-border);
-  border-radius: 6px;
-  background: var(--fd-surface);
-  color: var(--fd-text);
-  font-size: 12px;
 }
 .selection-area {
   position: sticky;

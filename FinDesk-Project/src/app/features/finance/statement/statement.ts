@@ -45,6 +45,16 @@ import type { MerchantQuery } from '../../../../../shared/categories';
 import { categorizedMovements } from '../../../../../application/categories';
 import { editableExpense } from '../../../../../application/expense-editing';
 import { ExpenseTrashPanel } from './expense-trash-panel';
+import { ExpenseAnalyses } from './expense-analyses';
+import { ExpenseStatementModal } from './expense-statement-modal';
+import {
+  analyzeExpenses,
+  expenseStatementPreview,
+  type ExpenseStatementRequest,
+  type ExpenseStatementPreview,
+  type ExpenseAnalysisQuery,
+} from '../../../../../application/expense-analysis';
+import { previousExpenseMonths } from '../../../../../application/expense-analysis-periods';
 
 @Component({
   selector: 'fd-statement',
@@ -56,11 +66,13 @@ import { ExpenseTrashPanel } from './expense-trash-panel';
     MerchantCategoryPanel,
     ExpensePanel,
     ExpenseTrashPanel,
+    ExpenseAnalyses,
+    ExpenseStatementModal,
     NgTemplateOutlet,
   ],
   host: { '(window:resize)': 'updateFocusBounds()' },
   templateUrl: './statement.html',
-  styleUrl: './statement.scss',
+  styleUrls: ['./statement.scss', './statement-actions.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class Statement {
@@ -68,6 +80,64 @@ export class Statement {
   readonly state = inject(StatementState);
   readonly layout = inject(StatementLayoutState);
   readonly catalogue = inject(CategoryStore);
+  readonly analysisStatement = signal<ExpenseStatementPreview | null>(null);
+  readonly classifiedSnapshot = computed(() => {
+    const snapshot = this.context.snapshot(),
+      catalogue = this.catalogue.value();
+    return snapshot && catalogue
+      ? {
+          ...snapshot,
+          facts: {
+            ...snapshot.facts,
+            movements: categorizedMovements(
+              snapshot.facts.movements,
+              catalogue,
+              this.catalogue.rules()?.assignments,
+            ),
+          },
+        }
+      : null;
+  });
+  readonly analysisQuery = computed<ExpenseAnalysisQuery | null>(() => {
+    const snapshot = this.classifiedSnapshot(),
+      range = this.context.range();
+    if (!snapshot || !range) return null;
+    const catalogue =
+      this.context.periodMode() === 'salary-cycle'
+        ? this.context.salaryPeriods()
+        : this.context.cardPeriods();
+    const previous =
+      this.context.periodMode() === 'calendar-month'
+        ? previousExpenseMonths(range)
+        : (catalogue?.periods
+            .filter((p) => p.range.end < range.start)
+            .map((p) => p.range)
+            .reverse() ?? []);
+    return {
+      accountId: this.context.accountId(),
+      range,
+      previous,
+      filters: {
+        search: this.state.search(),
+        kind: this.state.kind(),
+        category: this.state.category(),
+      },
+      currencyMode: this.context.currencyMode(),
+      rate: DEMO_EXCHANGE_RATE,
+      labels: this.catalogue.labels(),
+    };
+  });
+  readonly insights = computed(() => {
+    const snapshot = this.classifiedSnapshot(),
+      query = this.analysisQuery();
+    return snapshot && query ? analyzeExpenses(snapshot, query) : [];
+  });
+  openAnalysisStatement(request: ExpenseStatementRequest): void {
+    const snapshot = this.classifiedSnapshot(),
+      query = this.analysisQuery();
+    if (snapshot && query)
+      this.analysisStatement.set(expenseStatementPreview(snapshot, query, request));
+  }
   readonly categoryPanel = signal(false);
   readonly expensePanel = signal(false);
   readonly editingExpenseId = signal<string | null>(null);

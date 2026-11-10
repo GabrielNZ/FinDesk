@@ -4,6 +4,15 @@
   tabindex="-1"
   (keydown.escape)="escape($event)"
 >
+  <fd-expense-analyses
+    [insights]="insights()"
+    [labels]="catalogue.labels()"
+    [categories]="catalogue.categories()"
+    (statementRequested)="openAnalysisStatement($event)"
+  />
+  @if (analysisStatement(); as preview) {
+    <fd-expense-statement-modal [preview]="preview" (closed)="analysisStatement.set(null)" />
+  }
   <div class="statement-toolbar">
     <div class="statement-heading">
       <fd-statement-source-switch [area]="state.area()" (areaChanged)="switchSource($event)" />

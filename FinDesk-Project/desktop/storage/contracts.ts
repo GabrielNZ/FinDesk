@@ -159,7 +159,7 @@ export function validateSnapshot(value: unknown): DemoSnapshot {
     if (
       data['formatVersion'] !== 1 ||
       data['seedId'] !== 'demo-financas-v1' ||
-      data['seedVersion'] !== 1 ||
+      (data['seedVersion'] !== 1 && data['seedVersion'] !== 2) ||
       data['timezone'] !== 'America/Sao_Paulo'
     )
       throw new StorageFailure('incompatible');
@@ -190,6 +190,8 @@ export function validateSnapshot(value: unknown): DemoSnapshot {
 }
 
 export type StorageOperation =
+  | 'read-expense-analysis-layout'
+  | 'save-expense-analysis-layout'
   | 'read-expense-trash'
   | 'delete-expense'
   | 'recover-expense'
@@ -216,7 +218,14 @@ export type StorageOperation =
 
 export function parseLayoutRequest(value: unknown): CardLayout {
   try {
-    return parseCardLayout(value);
+    return parseCardLayout(value, 'finance-general');
+  } catch {
+    throw new StorageFailure('invalid-request');
+  }
+}
+export function parseExpenseAnalysisLayoutRequest(value: unknown): CardLayout {
+  try {
+    return parseCardLayout(value, 'finance-analysis');
   } catch {
     throw new StorageFailure('invalid-request');
   }
@@ -300,6 +309,8 @@ export function validateRequest(value: unknown): WorkerRequest {
     !Number.isSafeInteger(data['id']) ||
     (data['id'] as number) < 1 ||
     ![
+      'read-expense-analysis-layout',
+      'save-expense-analysis-layout',
       'read-expense-trash',
       'delete-expense',
       'recover-expense',
@@ -338,6 +349,8 @@ export function validateRequest(value: unknown): WorkerRequest {
   else if (data['operation'] === 'classify-merchant') parseMerchantRequest(data['payload']);
   else if (data['operation'] === 'save-preferences') parsePreferences(data['payload']);
   else if (data['operation'] === 'save-card-layout') parseLayoutRequest(data['payload']);
+  else if (data['operation'] === 'save-expense-analysis-layout')
+    parseExpenseAnalysisLayoutRequest(data['payload']);
   else if (data['operation'] === 'save-statement-layout')
     parseStatementLayoutRequest(data['payload']);
   else if (data['operation'] === 'restore-card-layout') {

@@ -17,6 +17,12 @@ try {
       id = request.id;
       let value: unknown;
       switch (request.operation) {
+        case 'read-expense-analysis-layout':
+          value = store.readExpenseAnalysisLayout();
+          break;
+        case 'save-expense-analysis-layout':
+          value = store.saveExpenseAnalysisLayout(request.payload);
+          break;
         case 'read-expense-trash':
           value = store.getExpenseTrash();
           break;

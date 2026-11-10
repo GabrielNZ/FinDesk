@@ -31,6 +31,12 @@ import type {
 
 /** Canal interno para um único worker; sem SQL, eval ou caminho em mensagens. */
 export class StorageClient {
+  getExpenseAnalysisLayout(): Promise<StorageResult<CardLayout | null>> {
+    return this.request('read-expense-analysis-layout');
+  }
+  saveExpenseAnalysisLayout(value: CardLayout): Promise<StorageResult<CardLayout>> {
+    return this.request('save-expense-analysis-layout', value);
+  }
   readonly ready: Promise<StorageResult<StorageInfo>>;
   private worker: Worker;
   private resolveReady!: (value: StorageResult<StorageInfo>) => void;

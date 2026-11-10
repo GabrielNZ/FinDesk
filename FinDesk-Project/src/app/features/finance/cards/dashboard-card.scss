@@ -3,6 +3,20 @@
   min-width: 0;
   height: 100%;
 }
+:host(.analysis-card) header {
+  min-height: 32px;
+  padding: 8px 14px 4px;
+}
+:host(.analysis-card) h3 {
+  padding-right: 34px;
+  font-size: 12px;
+}
+:host(.analysis-card) .card-content {
+  container-type: size;
+  display: flex;
+  flex-direction: column;
+  padding: 0 14px 16px;
+}
 .card-shell {
   position: relative;
   height: 100%;

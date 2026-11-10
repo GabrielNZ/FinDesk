@@ -10,10 +10,14 @@ import {
   inject,
   Injector,
   signal,
+  input,
+  type TemplateRef,
   viewChild,
 } from '@angular/core';
+import { NgTemplateOutlet } from '@angular/common';
 import {
   CARD_GRID,
+  cardMinimums,
   assistedCardHeight,
   previewCardDrop,
   type CardBox,
@@ -55,7 +59,7 @@ interface Point {
 
 @Component({
   selector: 'fd-card-board',
-  imports: [DashboardCard],
+  imports: [DashboardCard, NgTemplateOutlet],
   templateUrl: './card-board.html',
   styleUrl: './card-board.scss',
   host: {
@@ -69,6 +73,7 @@ interface Point {
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class CardBoard {
+  readonly content = input<TemplateRef<{ $implicit: FinanceCardId }> | null>(null);
   readonly state = inject(CardLayoutState);
   readonly focused = this.state.focused;
   readonly focusHeight = signal(360);
@@ -101,16 +106,20 @@ export class CardBoard {
     this.resolved().cards.find((box) => box.id === this.drag()?.id),
   );
   readonly headings: Record<FinanceCardId, string> = {
+    largest: 'Maior gasto',
+    increase: 'Maior aumento',
+    decrease: 'Maior redução',
+    usual: 'Desvio do habitual',
     categories: 'Categorias',
     evolution: 'Evolução',
     upcoming: 'Próximos compromissos',
   };
-  readonly icons: Record<FinanceCardId, string> = {
+  readonly icons: Partial<Record<FinanceCardId, string>> = {
     categories: 'pi-chart-bar',
     evolution: 'pi-chart-line',
     upcoming: 'pi-calendar',
   };
-  readonly pending: Record<FinanceCardId, string> = {
+  readonly pending: Partial<Record<FinanceCardId, string>> = {
     categories: 'Gráfico por categoria ainda não implementado.',
     evolution: 'Evolução dos gastos ainda não implementada.',
     upcoming: 'Lista de compromissos ainda não implementada.',
@@ -277,7 +286,7 @@ export class CardBoard {
     if (gesture.kind === 'resize') {
       const width = this.boardWidth();
       const original = gesture.initial.cards.find((card) => card.id === gesture.id)!;
-      const minWidth = Math.min(CARD_GRID.minWidth, width);
+      const minWidth = Math.min(cardMinimums(this.state.area).minWidth, width);
       const columns =
         Math.abs(dx) < 0.5 || width < 2 * minWidth + CARD_GRID.gap
           ? original.columns
@@ -285,13 +294,14 @@ export class CardBoard {
               this.clamp(
                 ((gesture.rect.width + dx + CARD_GRID.gap) * CARD_GRID.columns) /
                   (width + CARD_GRID.gap),
-                CARD_GRID.minColumns,
+                cardMinimums(this.state.area).minColumns,
                 CARD_GRID.columns,
               ),
             );
       const desiredHeight = this.clamp(
         gesture.rect.height + dy,
-        CARD_GRID.minRows * (CARD_GRID.rowHeight + CARD_GRID.gap) - CARD_GRID.gap,
+        cardMinimums(this.state.area).minRows * (CARD_GRID.rowHeight + CARD_GRID.gap) -
+          CARD_GRID.gap,
         CARD_GRID.maxRows * (CARD_GRID.rowHeight + CARD_GRID.gap) - CARD_GRID.gap,
       );
       gesture.snapHeight =
@@ -305,7 +315,7 @@ export class CardBoard {
         this.clamp(
           ((gesture.snapHeight ?? desiredHeight) + CARD_GRID.gap) /
             (CARD_GRID.rowHeight + CARD_GRID.gap),
-          CARD_GRID.minRows,
+          cardMinimums(this.state.area).minRows,
           CARD_GRID.maxRows,
         ),
       );
@@ -467,14 +477,14 @@ export class CardBoard {
     const columns = this.round(
       this.clamp(
         card.columns + (event.key === 'ArrowLeft' ? -0.25 : event.key === 'ArrowRight' ? 0.25 : 0),
-        4,
+        cardMinimums(this.state.area).minColumns,
         12,
       ),
     );
     const rows = this.round(
       this.clamp(
         card.rows + (event.key === 'ArrowUp' ? -0.25 : event.key === 'ArrowDown' ? 0.25 : 0),
-        3,
+        cardMinimums(this.state.area).minRows,
         12,
       ),
     );

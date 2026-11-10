@@ -1,4 +1,4 @@
-import type { CardLayout, FinanceCardId } from '../shared/card-layout';
+import type { CardArea, CardLayout, FinanceCardId } from '../shared/card-layout';
 
 export const CARD_GRID = Object.freeze({
   columns: 12,
@@ -10,8 +10,20 @@ export const CARD_GRID = Object.freeze({
   minWidth: 280,
 });
 const IDS: readonly FinanceCardId[] = ['categories', 'evolution', 'upcoming'];
+const ANALYSIS_IDS: readonly FinanceCardId[] = ['largest', 'increase', 'decrease', 'usual'];
+export const cardMinimums = (area: CardArea) =>
+  area === 'finance-analysis'
+    ? { ...CARD_GRID, minColumns: 3, minRows: 2.5, minWidth: 220 }
+    : CARD_GRID;
 
-export function defaultCardLayout(): CardLayout {
+export function defaultCardLayout(area: CardArea = 'finance-general'): CardLayout {
+  if (area === 'finance-analysis')
+    return {
+      version: 3,
+      area,
+      priority: null,
+      cards: ANALYSIS_IDS.map((id) => ({ id, columns: 3, rows: 3.75 })),
+    };
   return {
     version: 3,
     area: 'finance-general',
@@ -29,10 +41,22 @@ function object(value: unknown): Record<string, unknown> {
     throw new RangeError('Layout inválido.');
   return value as Record<string, unknown>;
 }
+export function normalizeAnalysisLayout(layout: CardLayout): CardLayout {
+  if (layout.area !== 'finance-analysis') return layout;
+  return {
+    ...layout,
+    cards: layout.cards.map((card) =>
+      [2.75, 3, 3.25, 4].includes(card.rows) ? { ...card, rows: 3.75 } : card,
+    ),
+  };
+}
 
 /** Contrato fechado, reutilizado na aplicação e nas fronteiras privilegiadas. */
-export function parseCardLayout(value: unknown): CardLayout {
+export function parseCardLayout(value: unknown, expectedArea?: CardArea): CardLayout {
   const data = object(value);
+  const area = data['area'];
+  const ids = area === 'finance-analysis' ? ANALYSIS_IDS : IDS;
+  const minimums = cardMinimums(area as CardArea);
   const legacy = data['version'] === 1;
   const current = data['version'] === 3;
   const hasRows = current && 'rowStarts' in data;
@@ -44,9 +68,11 @@ export function parseCardLayout(value: unknown): CardLayout {
           ? 'area,cards,priority,rowStarts,version'
           : 'area,cards,priority,version') ||
     (!legacy && !current && data['version'] !== 2) ||
-    data['area'] !== 'finance-general' ||
+    (area !== 'finance-general' && area !== 'finance-analysis') ||
+    (expectedArea !== undefined && area !== expectedArea) ||
+    (area === 'finance-analysis' && !current) ||
     !Array.isArray(data['cards']) ||
-    data['cards'].length !== IDS.length
+    data['cards'].length !== ids.length
   )
     throw new RangeError('Layout incompatível.');
   const seen = new Set<string>();
@@ -63,15 +89,15 @@ export function parseCardLayout(value: unknown): CardLayout {
         (!Number.isFinite(item['align']) ||
           (item['align'] as number) < 0 ||
           (item['align'] as number) > 1)) ||
-      !IDS.includes(id) ||
+      !ids.includes(id) ||
       seen.has(id) ||
       !Number.isFinite(columns) ||
       (legacy && !Number.isInteger(columns)) ||
-      columns < CARD_GRID.minColumns ||
+      columns < minimums.minColumns ||
       columns > CARD_GRID.columns ||
       !Number.isFinite(rows) ||
       (legacy && !Number.isInteger(rows)) ||
-      rows < CARD_GRID.minRows ||
+      rows < minimums.minRows ||
       rows > CARD_GRID.maxRows
     )
       throw new RangeError('Dimensões ou cards inválidos.');
@@ -79,7 +105,7 @@ export function parseCardLayout(value: unknown): CardLayout {
     return { id, columns, rows, ...('align' in item ? { align: item['align'] as number } : {}) };
   });
   const priority = legacy ? null : data['priority'];
-  if (!(priority === null || IDS.includes(priority as FinanceCardId)))
+  if (!(priority === null || ids.includes(priority as FinanceCardId)))
     throw new RangeError('Prioridade inválida.');
   const rowStarts = data['rowStarts'];
   if (
@@ -90,7 +116,7 @@ export function parseCardLayout(value: unknown): CardLayout {
       rowStarts[0] !== cards[0]!.id ||
       rowStarts.some(
         (id, index) =>
-          !IDS.includes(id) ||
+          !ids.includes(id) ||
           (index > 0 &&
             cards.findIndex((card) => card.id === id) <=
               cards.findIndex((card) => card.id === rowStarts[index - 1])),
@@ -99,7 +125,7 @@ export function parseCardLayout(value: unknown): CardLayout {
     throw new RangeError('Linhas inválidas.');
   return {
     version: 3,
-    area: 'finance-general',
+    area: area as CardArea,
     priority: priority as FinanceCardId | null,
     cards,
     ...(hasRows ? { rowStarts: [...(rowStarts as FinanceCardId[])] } : {}),
@@ -136,13 +162,13 @@ export function resizeCard(
   // Uma edição na apresentação estreita não transforma suas quebras responsivas em preferência.
   const before = resolveCardLayout(
     layout,
-    width < 2 * CARD_GRID.minWidth + CARD_GRID.gap ? 1200 : width,
+    width < 2 * cardMinimums(layout.area).minWidth + CARD_GRID.gap ? 1200 : width,
   ).cards;
   const origin = before.find((card) => card.id === id)!;
   const requestedWidth = Math.min(
     width,
     Math.max(
-      Math.min(CARD_GRID.minWidth, width),
+      Math.min(cardMinimums(layout.area).minWidth, width),
       ((width + CARD_GRID.gap) * columns) / CARD_GRID.columns - CARD_GRID.gap,
     ),
   );
@@ -343,7 +369,7 @@ export function previewCardDrop(
 export function resolveCardLayout(layout: CardLayout, width: number): ResolvedCardLayout {
   if (!Number.isFinite(width) || width <= 0) return { cards: [], height: 0 };
   const gap = CARD_GRID.gap;
-  const min = Math.min(CARD_GRID.minWidth, width);
+  const min = Math.min(cardMinimums(layout.area).minWidth, width);
   const vertical = width < 2 * min + gap;
   const preferred = (card: CardLayout['cards'][number]) =>
     vertical

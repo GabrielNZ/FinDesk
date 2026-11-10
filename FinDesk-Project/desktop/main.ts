@@ -28,6 +28,7 @@ import {
   parseExpenseEditRead,
   parseExpenseEditRequest,
   parseExpenseLifecycleRequest,
+  parseExpenseAnalysisLayoutRequest,
   StorageFailure,
 } from './storage/contracts';
 import { storageDirectory } from './storage/paths';
@@ -121,6 +122,7 @@ async function start(): Promise<void> {
   }
 
   const readOperations = {
+    [STORAGE_CHANNELS.readExpenseAnalysisLayout]: () => storage?.getExpenseAnalysisLayout(),
     [STORAGE_CHANNELS.readExpenseTrash]: () => storage?.getExpenseTrash(),
     [STORAGE_CHANNELS.readMerchants]: () => storage?.getMerchants(),
     [STORAGE_CHANNELS.readCategories]: () => storage?.getCategories(),
@@ -137,6 +139,18 @@ async function start(): Promise<void> {
       return operation() ?? failure(new StorageFailure('unavailable'));
     });
   }
+  ipcMain.handle(STORAGE_CHANNELS.saveExpenseAnalysisLayout, (event, ...args: unknown[]) => {
+    if (!trustedSender(event) || args.length !== 1)
+      return failure(new StorageFailure('invalid-request'));
+    try {
+      return (
+        storage?.saveExpenseAnalysisLayout(parseExpenseAnalysisLayoutRequest(args[0])) ??
+        failure(new StorageFailure('unavailable'))
+      );
+    } catch (error) {
+      return failure(error);
+    }
+  });
   for (const [channel, operation] of [
     [
       STORAGE_CHANNELS.deleteExpense,

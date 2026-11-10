@@ -4,6 +4,8 @@
 
 ## Convenções e conjunto base
 
+**Extensão F07a/D136:** `comparison-history.ts` aplica à base abaixo a seed v2 usada no aplicativo: 13 despesas fictícias em setembro/2026, abertura em 31/08 e cobertura desde 01/09. Compensação do saldo inicial mantém os saldos desde 30/09. A base de domínio v1 continua reproduzível para testes; registros anteriores não são reescritos. Na Nubank, setembro soma R$ 320 em Entretenimento, R$ 90 em Transporte, R$ 130 em Alimentação e R$ 90 em Casa; a auxiliar soma R$ 20 em Casa e a Nomad USD 14 em Alimentação. Cruzamentos com outubro decorrem das datas/valores, não de ajuste do desenho. Regras de chegada existentes podem mudar a categoria efetiva dos novos registros. Referência fixa e três anteriores exigidos para habitual permanecem.
+
 Identificador proposto: `demo-financas-v1`. Relógio congelado em `2026-10-29`, fuso de apresentação America/Sao_Paulo. Período inicial `2026-10-01` a `2026-10-31`; passado e futuro são explícitos. Testes com outra data usam uma variante, sem depender do relógio do computador. O modo demonstração deverá ser identificado na interface; representação proposta em [DATA_MODEL.md](../DATA_MODEL.md).
 
 Cada variante parte da base, declara suas diferenças e não se mistura automaticamente às outras. Cobertura tem início/fim, conta, fonte e momento de observação; previsão futura nunca prova cobertura futura. Para o diário base, cobertura fictícia completa de 01/10 até 29/10. A falta deliberada de cobertura só existe nos cenários que a declaram.

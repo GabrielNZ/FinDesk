@@ -4,6 +4,8 @@ Requisitos FIN-003/010/047 e cenário C30 em [REQUISITOS.md](REQUISITOS.md) e [C
 
 ## Decisões confirmadas na F01c
 
+**Atualização F07a/D136:** seed fictícia v1→v2 independente dos esquemas SQLite demo 6/preferências 3. A inicialização acrescenta setembro e compensa a abertura numa transação, preservando saldos atuais, fatos anteriores, categorias/regras, recibos e Excluídas. Somente IDs novos passam por D110. Falha reverte payload e atribuições; conteúdo conflitante é recusado sem sobrescrever. Nova instalação e restauração explícita usam a seed ampliada; não há restauração automática ou limpeza dos cadastros existentes. Testes/falhas somente em perfis temporários antes da atualização autorizada no normal. Detalhes em [COMPARACAO_GASTOS.md](COMPARACAO_GASTOS.md).
+
 - **D23:** SQLite local, confirmado na F01a.
 - **D25:** usar `node:sqlite`, incluído no Electron, com acesso em worker Node dedicado no lado privilegiado. A API é release candidate; revalidar a compatibilidade nas atualizações do runtime. Não alterar sandbox ou habilitar Node no renderer.
 - **D26:** dados em `%LOCALAPPDATA%\FinDesk\data`, fora do repositório. A pasta de dados será criada somente pela implementação autorizada; esta avaliação não a criou nem a modificou. Os caches/perfil Chromium não foram realocados nesta rodada.

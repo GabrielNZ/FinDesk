@@ -1,0 +1,40 @@
+.expense-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.expense-actions button {
+  display: grid;
+  place-items: center;
+  position: relative;
+  flex-shrink: 0;
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  background: transparent;
+  border: 1px solid var(--fd-border);
+  border-radius: 8px;
+  color: var(--fd-muted);
+}
+.expense-actions .pi {
+  font-size: 14px;
+}
+.expense-actions button:hover {
+  color: var(--fd-text);
+  background: #ffffff06;
+}
+.expense-actions button:focus-visible::after {
+  content: attr(aria-label);
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 2;
+  white-space: nowrap;
+  padding: 6px 8px;
+  border: 1px solid var(--fd-border);
+  border-radius: 6px;
+  background: var(--fd-surface);
+  color: var(--fd-text);
+  font-size: 12px;
+}

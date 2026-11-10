@@ -71,7 +71,7 @@ const movement: Rule = (value) => {
 export const snapshotShape: Rule = shape({
   formatVersion: oneOf(1),
   seedId: oneOf('demo-financas-v1'),
-  seedVersion: oneOf(1),
+  seedVersion: oneOf(1, 2),
   asOf: text,
   timezone: oneOf('America/Sao_Paulo'),
   facts: shape({

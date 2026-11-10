@@ -1,4 +1,9 @@
-<section aria-label="Cards do Geral" [attr.aria-busy]="state.saving() || state.restoring()">
+<section
+  [attr.aria-label]="
+    state.area === 'finance-analysis' ? 'Análises de despesas da conta' : 'Cards do Geral'
+  "
+  [attr.aria-busy]="state.saving() || state.restoring()"
+>
   @if (state.state() === 'loading') {
     <p class="layout-status" role="status">Carregando layout…</p>
   } @else if (state.state() === 'failed') {
@@ -59,6 +64,7 @@
           @let box = boxFor(savedCard.id);
           <fd-dashboard-card
             class="card-item"
+            [class.analysis-card]="state.area === 'finance-analysis'"
             [attr.data-card-id]="card.id"
             [attr.data-columns]="card.columns"
             [attr.data-rows]="card.rows"
@@ -97,10 +103,17 @@
             (resizeKey)="resizeKey($event, card)"
             (focusRequested)="toggleFocus(card.id)"
           >
-            <div class="prototype-content">
-              <i [class]="'pi ' + icons[card.id]" aria-hidden="true"></i>
-              <p>{{ pending[card.id] }}</p>
-            </div>
+            @if (content(); as template) {
+              <ng-container
+                [ngTemplateOutlet]="template"
+                [ngTemplateOutletContext]="{ $implicit: card.id }"
+              />
+            } @else {
+              <div class="prototype-content">
+                <i [class]="'pi ' + icons[card.id]" aria-hidden="true"></i>
+                <p>{{ pending[card.id] }}</p>
+              </div>
+            }
           </fd-dashboard-card>
         }
       </div>

@@ -1,11 +1,20 @@
-import { Injectable, signal } from '@angular/core';
-import { defaultCardLayout, parseCardLayout } from '../../../../../application/card-layout';
-import type { CardLayout, FinanceCardId } from '../../../../../shared/card-layout';
+import { Injectable, InjectionToken, inject, signal } from '@angular/core';
+import {
+  defaultCardLayout,
+  parseCardLayout,
+  normalizeAnalysisLayout,
+} from '../../../../../application/card-layout';
+import type { CardArea, CardLayout, FinanceCardId } from '../../../../../shared/card-layout';
+export const CARD_LAYOUT_AREA = new InjectionToken<CardArea>('card-layout-area', {
+  providedIn: 'root',
+  factory: () => 'finance-general',
+});
 
 @Injectable({ providedIn: 'root' })
 export class CardLayoutState {
+  readonly area = inject(CARD_LAYOUT_AREA);
   readonly state = signal<'loading' | 'ready' | 'failed' | 'browser'>('loading');
-  readonly layout = signal<CardLayout>(defaultCardLayout());
+  readonly layout = signal<CardLayout>(defaultCardLayout(this.area));
   readonly saving = signal(false);
   readonly restoring = signal(false);
   readonly error = signal<string | null>(null);
@@ -30,14 +39,18 @@ export class CardLayoutState {
     this.error.set(null);
     this.loading = (async () => {
       try {
-        const result = await api.getCardLayout();
+        const result = await (this.area === 'finance-analysis'
+          ? api.getExpenseAnalysisLayout()
+          : api.getCardLayout());
         if (!result.ok) {
           this.error.set(result.error.message);
           this.state.set('failed');
           return;
         }
         this.layout.set(
-          result.value === null ? defaultCardLayout() : parseCardLayout(result.value),
+          result.value === null
+            ? defaultCardLayout(this.area)
+            : normalizeAnalysisLayout(parseCardLayout(result.value, this.area)),
         );
         this.initialized = true;
         this.state.set('ready');
@@ -53,7 +66,7 @@ export class CardLayoutState {
 
   commit(value: CardLayout): void {
     if (this.state() !== 'ready' || this.restoring()) return;
-    const layout = parseCardLayout(value);
+    const layout = parseCardLayout(value, this.area);
     if (JSON.stringify(layout) === JSON.stringify(this.layout()) && !this.saveError()) return;
     this.layout.set(layout);
     const revision = ++this.revision;
@@ -61,7 +74,10 @@ export class CardLayoutState {
     this.saveError.set(null);
     this.queue = this.queue.then(async () => {
       try {
-        const result = await window.finDesk!.storage.saveCardLayout(layout);
+        const api = window.finDesk!.storage;
+        const result = await (this.area === 'finance-analysis'
+          ? api.saveExpenseAnalysisLayout(layout)
+          : api.saveCardLayout(layout));
         if (revision === this.revision && !result.ok) this.failedSave();
       } catch {
         if (revision === this.revision) this.failedSave();
@@ -82,12 +98,15 @@ export class CardLayoutState {
     await this.queue;
     this.saveError.set(null);
     try {
-      const result = await window.finDesk!.storage.restoreCardLayout('restore-card-layout');
+      const api = window.finDesk!.storage;
+      const result = await (this.area === 'finance-analysis'
+        ? api.saveExpenseAnalysisLayout(defaultCardLayout(this.area))
+        : api.restoreCardLayout('restore-card-layout'));
       if (!result.ok) {
         this.saveError.set('Não foi possível restaurar o layout. Seus ajustes foram mantidos.');
         return false;
       }
-      this.layout.set(parseCardLayout(result.value));
+      this.layout.set(parseCardLayout(result.value, this.area));
       this.error.set(null);
       this.initialized = true;
       this.state.set('ready');

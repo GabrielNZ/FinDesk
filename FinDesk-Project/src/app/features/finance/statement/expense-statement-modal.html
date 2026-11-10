@@ -1,0 +1,76 @@
+<dialog
+  #dialog
+  aria-labelledby="expense-statement-title"
+  aria-describedby="expense-statement-context"
+  (close)="closed.emit()"
+>
+  @let value = preview();
+  <header>
+    <div>
+      <span class="eyebrow">{{ value.request.label }}</span>
+      <h2 id="expense-statement-title">Extrato · {{ value.categoryLabel }}</h2>
+      <p id="expense-statement-context">
+        {{ date(value.request.range.start) }} — {{ date(value.request.range.end) }} ·
+        {{ value.request.currency }}
+      </p>
+    </div>
+    <button data-close type="button" class="close" aria-label="Fechar extrato" (click)="close()">
+      <i class="pi pi-times" aria-hidden="true"></i>
+    </button>
+  </header>
+  <div class="modal-scroll" tabindex="0" aria-label="Lançamentos da categoria">
+    @for (row of value.rows; track row.movement.id) {
+      <details class="preview-movement" [attr.data-preview-id]="row.movement.id">
+        <summary>
+          <span class="movement-date">{{ date(row.movement.on) }}</span>
+          <span class="movement-description"
+            >{{ row.description }}<small>{{ row.accountName }}</small></span
+          >
+          <span class="movement-amount">{{ row.amount ? money(row.amount) : 'Indisponível' }}</span>
+          <i class="pi pi-chevron-down" aria-hidden="true"></i>
+        </summary>
+        <dl>
+          <div>
+            <dt>Valor original</dt>
+            <dd>{{ money(row.movement.delta) }}</dd>
+          </div>
+          <div>
+            <dt>Origem</dt>
+            <dd>{{ sources[row.movement.origin.kind] }}</dd>
+          </div>
+          @if (row.movement.kind === 'expense' && row.movement.merchantId) {
+            <div>
+              <dt>Estabelecimento</dt>
+              <dd>{{ catalogue.merchantLabel(row.movement.merchantId) }}</dd>
+            </div>
+          }
+          <div>
+            <dt>Descrição</dt>
+            <dd>{{ row.movement.description }}</dd>
+          </div>
+          <div>
+            <dt>Fonte</dt>
+            <dd>{{ row.movement.origin.sourceId }}</dd>
+          </div>
+        </dl>
+      </details>
+    } @empty {
+      <p class="empty">Nenhuma despesa dessa categoria no intervalo da análise.</p>
+    }
+    @if (value.converted) {
+      <p class="conversion">
+        Cotação fictícia de apresentação · 1 USD = 5 BRL · 29/10/2026. Valores originais nos
+        detalhes.
+      </p>
+    }
+  </div>
+  <footer>
+    <span
+      >{{ value.rows.length }} {{ value.rows.length === 1 ? 'lançamento' : 'lançamentos' }}</span
+    >
+    <span class="total"
+      >Total de despesas
+      <strong>{{ value.total ? money(value.total) : 'Indisponível' }}</strong></span
+    >
+  </footer>
+</dialog>

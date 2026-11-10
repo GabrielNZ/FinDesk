@@ -1,0 +1,241 @@
+:host {
+  display: block;
+  min-width: 0;
+  margin-bottom: 24px;
+  overflow-wrap: anywhere;
+}
+.analysis-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 12px;
+  color: var(--fd-text);
+  font-size: 13px;
+}
+.analysis-scope {
+  color: var(--fd-muted);
+  font-size: 12px;
+}
+.insight-value {
+  --analysis-gap: clamp(20px, 8cqh, 56px);
+  display: flex;
+  flex-direction: column;
+  flex: 1 0 auto;
+}
+.insight-value + .insight-value {
+  margin-top: var(--analysis-gap);
+  padding-top: var(--analysis-gap);
+  border-top: 1px solid var(--fd-border);
+}
+.insight-summary {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: clamp(8px, 2.5cqh, 20px);
+  width: 100%;
+  background: transparent;
+  border: 0;
+  padding: 0;
+  color: var(--fd-muted);
+  font: inherit;
+  font-size: 12px;
+  line-height: 1.2;
+  text-align: left;
+}
+.insight-category {
+  color: var(--fd-text);
+  font-size: 17px;
+  font-weight: 500;
+}
+.insight-title-row {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  flex-wrap: wrap;
+  width: 100%;
+}
+.insight-category-icon {
+  margin-left: auto;
+  color: var(--fd-accent);
+  font-size: 22px;
+}
+.corner-icon {
+  position: absolute;
+  top: 12px;
+  right: 14px;
+  pointer-events: none;
+}
+.insight-amount-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+}
+.insight-difference {
+  min-width: 0;
+  font-size: 11px;
+}
+.method-tag {
+  font-size: 9px;
+  color: var(--fd-muted);
+}
+strong {
+  flex-shrink: 0;
+  color: var(--fd-text);
+  font-size: 22px;
+  line-height: 1.15;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+}
+p {
+  margin: 8px 0 0;
+  color: var(--fd-muted);
+  font-size: 12px;
+  line-height: 1.5;
+}
+.insight-unavailable {
+  margin: 0;
+}
+small {
+  font-size: 10px;
+  margin-left: 4px;
+}
+button:focus-visible,
+.insight-chart:focus-visible {
+  outline: 2px solid var(--fd-accent);
+  outline-offset: 4px;
+  border-radius: 3px;
+}
+.insight-chart {
+  display: flex;
+  flex-direction: column;
+  flex: 1 0 auto;
+  min-height: 112px;
+  margin: var(--analysis-gap) 0;
+}
+.chart-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 3px 5px;
+  align-items: center;
+  font-size: 9px;
+  line-height: 1.2;
+  color: var(--fd-muted);
+}
+.chart-amount {
+  font-variant-numeric: tabular-nums;
+}
+figcaption {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: 8px;
+}
+.equivalent-note {
+  color: var(--fd-muted);
+  font-size: 10px;
+}
+.line-chart {
+  display: block;
+  width: 100%;
+  height: 100%;
+  min-height: 76px;
+  overflow: visible;
+}
+.trend-grid {
+  stroke: var(--fd-border);
+  stroke-width: 0.5;
+  stroke-dasharray: 2 4;
+  fill: none;
+}
+.trend-area {
+  fill: var(--fd-accent);
+  opacity: 0.08;
+}
+.previous-trend,
+.current-trend {
+  fill: none;
+  stroke-width: 1.6;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+.previous-trend {
+  stroke: #dc8984;
+  opacity: 0.9;
+}
+.current-trend {
+  stroke: var(--fd-accent);
+}
+.trend-arrow {
+  fill: var(--fd-accent);
+}
+.previous-arrow {
+  fill: #dc8984;
+}
+.previous .period-label {
+  color: #dc8984;
+}
+.plot-grid {
+  flex: 1;
+  display: grid;
+  grid-template-columns: 52px minmax(0, 1fr);
+  grid-template-rows: minmax(76px, 1fr) 14px;
+  gap: 6px 3px;
+}
+.y-axis {
+  position: relative;
+  height: 100%;
+  color: var(--fd-muted);
+  font-size: 9px;
+}
+.y-tick {
+  position: absolute;
+  right: 2px;
+  transform: translateY(-50%);
+  white-space: nowrap;
+}
+.x-axis {
+  height: 11px;
+  position: relative;
+  color: var(--fd-muted);
+  font-size: 8px;
+}
+.x-axis > span {
+  position: absolute;
+  transform: translateX(-50%);
+  white-space: nowrap;
+}
+.axis-label {
+  color: var(--fd-muted);
+  font-size: 8px;
+  text-align: right;
+  padding-right: 6px;
+}
+.current .period-label {
+  color: var(--fd-accent);
+}
+.chart-row.unknown {
+  opacity: 0.8;
+}
+.view-statement {
+  flex-shrink: 0;
+  align-self: flex-start;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--fd-accent);
+  font: inherit;
+  font-size: 12px;
+  cursor: pointer;
+}
+.view-statement:hover {
+  color: var(--fd-text);
+}
+.view-statement .pi {
+  font-size: 10px;
+}

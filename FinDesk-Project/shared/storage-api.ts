@@ -20,7 +20,7 @@ import type {
 export interface DemoSnapshot {
   readonly formatVersion: 1;
   readonly seedId: 'demo-financas-v1';
-  readonly seedVersion: 1;
+  readonly seedVersion: 1 | 2;
   readonly asOf: CivilDate;
   readonly timezone: 'America/Sao_Paulo';
   readonly facts: FinanceFacts;
@@ -56,6 +56,8 @@ export interface StorageInfo {
 }
 
 export interface StorageApi {
+  getExpenseAnalysisLayout(): Promise<StorageResult<CardLayout | null>>;
+  saveExpenseAnalysisLayout(value: CardLayout): Promise<StorageResult<CardLayout>>;
   getExpenseTrash(): Promise<StorageResult<ExpenseTrashState>>;
   deleteExpense(value: ExpenseLifecycleRequest): Promise<StorageResult<ExpenseLifecycleResult>>;
   recoverExpense(value: ExpenseLifecycleRequest): Promise<StorageResult<ExpenseLifecycleResult>>;
@@ -82,6 +84,8 @@ export interface StorageApi {
 }
 
 export const STORAGE_CHANNELS = {
+  readExpenseAnalysisLayout: 'findesk:expense-analysis-layout-read',
+  saveExpenseAnalysisLayout: 'findesk:expense-analysis-layout-save',
   readExpenseTrash: 'findesk:expense-trash-read',
   deleteExpense: 'findesk:expense-delete',
   recoverExpense: 'findesk:expense-recover',

@@ -1,0 +1,169 @@
+<div class="analysis-heading">
+  <span>Despesas da conta</span>
+  <span class="analysis-scope">Consulta atual · Comparação por categoria</span>
+</div>
+<fd-card-board [content]="content" />
+<ng-template #content let-id>
+  @if (insight(id); as item) {
+    @for (value of item.values; track value.currency) {
+      <div class="insight-value" [attr.data-currency]="value.currency">
+        @if (value.status === 'known') {
+          <div class="insight-summary" [attr.title]="description(item, value)">
+            <span class="insight-title-row"
+              ><span class="insight-category">{{ category(value.category!) }}</span>
+              @if (item.id === 'usual') {
+                <span class="method-tag">vs média de 3</span>
+              }
+              <i
+                [class]="
+                  'pi insight-category-icon ' + (categoryStyle(value.category!)?.icon ?? 'pi-tag')
+                "
+                [class.corner-icon]="item.values.length === 1"
+                [style.color]="categoryStyle(value.category!)?.color"
+                aria-hidden="true"
+              ></i>
+            </span>
+            <span class="insight-amount-row">
+              <strong>{{ money(value.current!) }}</strong>
+              @if (value.difference; as difference) {
+                <span class="insight-difference"
+                  >{{ difference.minorUnits > 0 ? '+' : '' }}{{ money(difference) }}
+                  @if (value.percent) {
+                    ({{ value.percent }})
+                  } @else {
+                    · Referência zero
+                  }
+                </span>
+              }
+            </span>
+          </div>
+          @if (value.ties > 1) {
+            <p>Empate entre {{ value.ties }} categorias</p>
+          }
+          @if (value.chart; as chart) {
+            @let plot = geometry(chart);
+            <figure
+              class="insight-chart"
+              role="img"
+              tabindex="0"
+              data-card-interactive
+              [attr.aria-label]="
+                'Comparação de ' + category(value.category!) + '. ' + description(item, value)
+              "
+              [attr.title]="description(item, value)"
+            >
+              <div class="plot-grid">
+                <div class="y-axis" aria-hidden="true">
+                  @for (tick of plot.yTicks; track tick.value.minorUnits) {
+                    <span class="y-tick" [style.top.%]="tick.position">{{
+                      money(tick.value)
+                    }}</span>
+                  }
+                </div>
+                <svg
+                  class="line-chart"
+                  viewBox="0 0 240 64"
+                  preserveAspectRatio="none"
+                  aria-hidden="true"
+                >
+                  <defs>
+                    <marker
+                      [attr.id]="arrowId(item, value)"
+                      viewBox="0 0 7 7"
+                      refX="5"
+                      refY="3.5"
+                      markerWidth="7"
+                      markerHeight="7"
+                      markerUnits="userSpaceOnUse"
+                      orient="auto"
+                    >
+                      <path class="trend-arrow" d="M0 0L7 3.5L0 7L2 3.5Z" />
+                    </marker>
+                    <marker
+                      [attr.id]="arrowId(item, value, true)"
+                      viewBox="0 0 7 7"
+                      refX="5"
+                      refY="3.5"
+                      markerWidth="7"
+                      markerHeight="7"
+                      markerUnits="userSpaceOnUse"
+                      orient="auto"
+                    >
+                      <path class="previous-arrow" d="M0 0L7 3.5L0 7L2 3.5Z" />
+                    </marker>
+                  </defs>
+                  <path class="trend-grid" d="M4 6H232M4 31H232M4 56H232" />
+                  @if (chart.current.series) {
+                    <path class="trend-area" [attr.d]="plot.area" />
+                  }
+                  @if (chart.previous.series) {
+                    <path
+                      class="previous-trend"
+                      [attr.d]="plot.previous"
+                      [attr.marker-end]="'url(#' + arrowId(item, value, true) + ')'"
+                      vector-effect="non-scaling-stroke"
+                    />
+                  }
+                  @if (chart.current.series) {
+                    <path
+                      class="current-trend"
+                      [attr.d]="plot.current"
+                      [attr.marker-end]="'url(#' + arrowId(item, value) + ')'"
+                      vector-effect="non-scaling-stroke"
+                    />
+                  }
+                </svg>
+                <span class="axis-label" aria-hidden="true">Dia</span>
+                <div class="x-axis" aria-hidden="true">
+                  @for (tick of plot.xTicks; track tick.day) {
+                    <span [style.left.%]="tick.position">{{ tick.day }}</span>
+                  }
+                </div>
+              </div>
+              <figcaption>
+                <span
+                  class="chart-row previous"
+                  [class.unknown]="!chart.previous.value"
+                  aria-hidden="true"
+                >
+                  <span class="period-label">{{ period(chart.previous, 'Anterior') }}</span>
+                  <span class="chart-amount">{{ pointValue(chart.previous) }}</span>
+                </span>
+                <span class="chart-row current" aria-hidden="true">
+                  <span class="period-label">{{ period(chart.current, 'Atual') }}</span>
+                  <span class="chart-amount">{{ pointValue(chart.current) }}</span>
+                </span>
+              </figcaption>
+              @if (chart.shortened) {
+                <span class="equivalent-note">Dias equivalentes</span>
+              }
+            </figure>
+          }
+          <button
+            type="button"
+            class="view-statement"
+            [attr.aria-label]="
+              'Ver extrato de ' +
+              category(value.category!) +
+              ' · ' +
+              item.label +
+              ' · ' +
+              value.currency
+            "
+            (click)="select(item, value)"
+          >
+            Ver extrato <i class="pi pi-arrow-down-right" aria-hidden="true"></i>
+          </button>
+        } @else {
+          <p class="insight-unavailable" [attr.title]="description(item, value)">
+            {{ status(item, value) }} <small>{{ value.currency }}</small>
+          </p>
+        }
+      </div>
+    } @empty {
+      <p>Carregando análise…</p>
+    }
+  } @else {
+    <p>Carregando análise…</p>
+  }
+</ng-template>
