@@ -1,5 +1,11 @@
 # F07a — Comparação de gastos entre períodos
 
+**Revisão D141 (10/11/2026):** os valores e datas antes fixos abaixo dos minigráficos passam a aparecer em uma dica no próprio traçado. A posição horizontal seleciona o dia equivalente; a dica identifica separadamente a data civil e o acumulado do período atual e do anterior. Guia vertical e marcadores acompanham o ponteiro; na seta final, mostram a data do último dia observado. Setas Home/End e laterais permitem consultar por teclado; Escape recolhe a dica. Dados indisponíveis permanecem identificados, sem valores inventados. O gráfico, as métricas e o layout salvo não mudam.
+
+**Refinamento D142:** retirar as datas ao lado de Atual/Anterior dentro da dica. A data única no topo acompanha a linha apontada; as linhas abaixo mostram apenas rótulo e valor. Setas para cima/baixo alternam a linha por teclado quando ambas têm dados; a data exata da seta final de cada série continua disponível.
+
+**Refinamento D143:** Gabriel preferiu voltar a “Dia N” no topo da dica. As linhas Atual/Anterior continuam apenas com rótulo e valor; a mesma posição horizontal compara dias equivalentes. A data civil completa e a alternância vertical de linha descritas na D142 deixam de aparecer na interface.
+
 ## Objetivo e autorização
 
 Gabriel aprovou a F06c com D123 em 07/11/2026 e autorizou a próxima pequena entrega proposta, F07a. A autorização permite o levantamento; escolhas relevantes ainda abertas devem ser respondidas e registradas antes da implementação dependente. Estado, aprovação e verificações efetivas ficam exclusivamente em PROJECT_STATUS.

@@ -1,6 +1,30 @@
 import { expensePeriodDays } from './expense-analysis-periods';
 import type { ExpenseChartPoint, ExpenseInsightChart } from './expense-analysis';
 import { money, type Money } from '../domain/money';
+import { adjacentCivilDate } from '../domain/civil-date';
+
+/** O cursor usa dias equivalentes, mas cada linha conserva a sua data civil. */
+export function expenseChartAtDay(chart: ExpenseInsightChart, day: number) {
+  const count = Math.max(
+    ...[chart.current, chart.previous].map((point) =>
+      point.range ? expensePeriodDays(point.range) : 0,
+    ),
+    1,
+  );
+  const selected = Math.max(1, Math.min(count, Math.round(day)));
+  const at = (point: ExpenseChartPoint) => {
+    if (!point.range || selected > expensePeriodDays(point.range)) return null;
+    let on = point.range.start;
+    for (let index = 1; index < selected; index++) {
+      const next = adjacentCivilDate(on, 1);
+      if (!next) return null;
+      on = next;
+    }
+    const value = point.series?.filter((entry) => entry.on <= on).at(-1)?.value ?? null;
+    return { on, value, unavailable: point.unavailable };
+  };
+  return { day: selected, days: count, current: at(chart.current), previous: at(chart.previous) };
+}
 
 /** Somente geometria de apresentação; valores e cruzamentos continuam derivados dos fatos. */
 export function expenseChartGeometry(chart: ExpenseInsightChart) {
@@ -49,5 +73,7 @@ export function expenseChartGeometry(chart: ExpenseInsightChart) {
       day,
       position: (x(day) / 240) * 100,
     })),
+    dayPosition: (day: number) => (x(day) / 240) * 100,
+    valuePosition: (value: Money) => (y(value) / 64) * 100,
   };
 }

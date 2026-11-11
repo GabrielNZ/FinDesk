@@ -1,8 +1,13 @@
 # Estado do FinDesk
 
-Atualizado em **10/11/2026** (America/Sao_Paulo).
+Atualizado em **11/11/2026** (America/Sao_Paulo).
 
 ## Situação atual
+
+- **Aprovação e continuidade em 11/11/2026:** “Vamos para o proximo” aprova os ajustes apresentados D140–D143 e autoriza seu commit/push, seguido do levantamento da **F07b — Gráficos por categoria e evolução dos gastos**. Política vigente: push após cada entrega aprovada, para origin/master em https://github.com/GabrielNZ/FinDesk.git. Escolhas de composição e interação da F07b continuam dependendo das respostas de Gabriel; a autorização não confirma as propostas.
+- **F07a — Comparação de gastos entre períodos, ajustes D141–D143 aprovados:** faixa fixa de datas/valores e marcas inferiores removidas dos minigráficos. A dica interna mostra “Dia N” no topo; abaixo, Atual/Anterior exibem só os valores. Ponteiro e teclado mantêm guia, marcadores e acumulados para dias equivalentes. D143 substitui a data civil completa/alternância vertical da D142, a pedido de Gabriel. Sem mudança no cálculo, fatos, layout salvo ou navegação. Build web, tipos dos testes, lint e formatação passaram na D143; 14 testes Node pertinentes e os dois fluxos Electron da F07a passaram na D141, com o fluxo afetado repetido na D142. As suítes não foram repetidas após a troca pontual do rótulo. Tipos/templates e build web passaram novamente na revisão conjunta de 11/11/2026 com D140.
+- **F05b.1 — Categorias e classificação individual, ajuste D140 aprovado:** botão Categorias alterna o painel, indica estado aberto e devolve a Seleção ao fechar. Ir para Extrato fecha o painel sem roubar o foco; voltar ao Agrupamento não o reabre. Seleção e catálogo preservados. Passaram tipos/templates, build web e o fluxo Electron específico em perfil temporário (clique/Enter, retorno ao Extrato, itens/total preservados e catálogo inalterado). Evidências anteriores da F07a reutilizadas; nenhum teste no perfil normal.
+- **Sincronização em 10/11/2026:** atualização de origin/master até `007b2ab` (F07a) incorporada. Ajuste local da F05b.1 no painel Categorias preservado e renumerado para D140, sem aprovação/commit/push. O erro de leitura de layout após a sincronização vinha do Electron compilado antes da F07a; build desktop e reinício resolveram. `preferences.sqlite` normal foi consultado somente em leitura, sem layout de análise salvo. Fluxo Electron da F07a passou em perfil temporário.
 
 ### Última entrega aprovada — F07a: comparação de gastos entre períodos
 

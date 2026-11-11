@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, input, output } from '@angular/core';
+import { ChangeDetectionStrategy, Component, input, output, signal } from '@angular/core';
 import type { FinanceCardId } from '../../../../../shared/card-layout';
 import type { DateRange } from '../../../../../domain/civil-date';
 import type {
@@ -10,7 +10,7 @@ import type {
 import { formatCivilDate, formatMoney } from '../../../../../application/finance-context';
 import { expensePeriodDays } from '../../../../../application/expense-analysis-periods';
 import { categoryLabel } from '../../../../../application/statement';
-import { expenseChartGeometry } from '../../../../../application/expense-chart';
+import { expenseChartAtDay, expenseChartGeometry } from '../../../../../application/expense-chart';
 import type { Category } from '../../../../../shared/categories';
 import { CardBoard } from '../cards/card-board';
 import { CARD_LAYOUT_AREA, CardLayoutState } from '../cards/card-layout.service';
@@ -31,6 +31,56 @@ export class ExpenseAnalyses {
   readonly money = formatMoney;
   readonly days = expensePeriodDays;
   readonly geometry = expenseChartGeometry;
+  readonly hover = signal<{ key: string; day: number } | null>(null);
+  private chartKey(insight: ExpenseInsight, value: ExpenseInsightValue): string {
+    return `${insight.id}:${value.currency}`;
+  }
+  hoverDay(insight: ExpenseInsight, value: ExpenseInsightValue): number | null {
+    const active = this.hover();
+    return active?.key === this.chartKey(insight, value) ? active.day : null;
+  }
+  chartAtDay = expenseChartAtDay;
+  moveChart(event: PointerEvent, insight: ExpenseInsight, value: ExpenseInsightValue): void {
+    if (!value.chart) return;
+    const rect = (event.currentTarget as SVGSVGElement).getBoundingClientRect();
+    if (!rect.width) return;
+    const days = expenseChartAtDay(value.chart, 1).days;
+    const x = ((event.clientX - rect.left) / rect.width) * 240;
+    const day = 1 + ((Math.max(4, Math.min(232, x)) - 4) / 228) * (days - 1);
+    this.hover.set({ key: this.chartKey(insight, value), day: Math.round(day) });
+  }
+  chartKeydown(event: KeyboardEvent, insight: ExpenseInsight, value: ExpenseInsightValue): void {
+    if (!value.chart) return;
+    const days = expenseChartAtDay(value.chart, 1).days;
+    const current = this.hoverDay(insight, value);
+    let day: number;
+    switch (event.key) {
+      case 'ArrowLeft':
+        day = Math.max(1, (current ?? days) - 1);
+        break;
+      case 'ArrowRight':
+        day = Math.min(days, (current ?? 0) + 1);
+        break;
+      case 'Home':
+        day = 1;
+        break;
+      case 'End':
+        day = days;
+        break;
+      case 'Escape':
+        this.hover.set(null);
+        event.stopPropagation();
+        return;
+      default:
+        return;
+    }
+    event.preventDefault();
+    event.stopPropagation();
+    this.hover.set({ key: this.chartKey(insight, value), day });
+  }
+  clearChart(): void {
+    this.hover.set(null);
+  }
   insight(id: FinanceCardId) {
     return this.insights().find((i) => i.id === id);
   }
@@ -42,18 +92,6 @@ export class ExpenseAnalyses {
   }
   range(value: DateRange): string {
     return `${formatCivilDate(value.start)} — ${formatCivilDate(value.end)}`;
-  }
-  period(point: ExpenseChartPoint, fallback: string): string {
-    const range = point.range;
-    if (!range || !range.start.endsWith('-01') || range.start.slice(0, 7) !== range.end.slice(0, 7))
-      return fallback;
-    return (
-      new Intl.DateTimeFormat('pt-BR', { month: 'short', timeZone: 'UTC' })
-        .format(new Date(`${range.start}T00:00:00Z`))
-        .replace('.', '') +
-      '/' +
-      range.start.slice(2, 4)
-    );
   }
   pointValue(point: ExpenseChartPoint): string {
     return point.value

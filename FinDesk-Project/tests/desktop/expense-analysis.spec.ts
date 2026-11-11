@@ -89,9 +89,26 @@ test('F07a: demo, investigação/filtros/Seleção, organização/foco/reabertur
     await page.mouse.up();
     expect((await card('largest').boundingBox())!.height).toBeCloseTo(284, 1);
     await expect(card('largest').locator('.y-tick')).toHaveCount(3);
-    await expect(card('largest').locator('.x-axis')).toContainText('29');
+    await expect(card('largest').locator('.x-axis, figcaption')).toHaveCount(0);
     await expect(board().getByText('Ver cálculo', { exact: true })).toHaveCount(0);
-    await expect(card('largest').locator('.previous .chart-amount')).toHaveText('R$ 320,00');
+    const chart = card('largest').locator('.insight-chart');
+    const svg = chart.locator('svg');
+    const svgBox = await svg.boundingBox();
+    await page.mouse.move(svgBox!.x + svgBox!.width * (232 / 240), svgBox!.y + svgBox!.height / 2);
+    await expect(chart.locator('.hover-day')).toHaveText('Dia 29');
+    await expect(chart.locator('.current-period')).toContainText('Atual');
+    await expect(chart.locator('.previous-period')).toContainText('Anterior');
+    expect(
+      (await chart.locator('.hover-period').allTextContents()).every((row) => !row.includes('/')),
+    ).toBe(true);
+    await expect(chart.locator('.hover-tooltip')).toContainText('R$ 320,00');
+    await expect(chart.locator('.hover-marker')).toHaveCount(2);
+    await chart.screenshot({ path: 'test-results/expense-analysis-hover.png' });
+    await page.mouse.move(
+      svgBox!.x + svgBox!.width * (232 / 240),
+      svgBox!.y + svgBox!.height * (6 / 64),
+    );
+    await expect(chart.locator('.hover-day')).toHaveText('Dia 29');
     await expect(card('largest').locator('.bar-track')).toHaveCount(0);
     await expect(card('largest').locator('.previous-trend')).toHaveAttribute(
       'marker-end',
@@ -107,7 +124,16 @@ test('F07a: demo, investigação/filtros/Seleção, organização/foco/reabertur
     );
     await expect(card('largest').locator('.current-trend')).toHaveAttribute('d', /^M.* L/);
     expect(await card('largest').locator('.current-trend').getAttribute('d')).not.toMatch(/[HV]/);
-    await expect(card('largest').locator('.current .chart-amount')).toHaveText('R$ 279,80');
+    await expect(chart.locator('.hover-tooltip')).toContainText('R$ 279,80');
+    await chart.focus();
+    await page.keyboard.press('Home');
+    await expect(chart.locator('.hover-day')).toHaveText('Dia 1');
+    await page.keyboard.press('ArrowRight');
+    await expect(chart.locator('.hover-day')).toHaveText('Dia 2');
+    await page.keyboard.press('End');
+    await expect(chart.locator('.hover-day')).toHaveText('Dia 29');
+    await page.keyboard.press('Escape');
+    await expect(chart.locator('.hover-tooltip')).toHaveCount(0);
     await page.locator('[data-movement-id="mov-uber-1"] .select-movement').click();
     await page.getByRole('tab', { name: 'Agrupamento', exact: true }).click();
     const trigger = card('largest').getByRole('button', { name: /Ver extrato de Entretenimento/ });
@@ -308,10 +334,12 @@ test('F07a: referências numéricas temporárias, clique preserva destaques e fa
     await expect(card('decrease')).toContainText('Entretenimento');
     await expect(card('decrease')).toContainText('-R$ 220,20');
     await expect(card('usual')).toContainText('vs média de 3');
-    await expect(card('usual').locator('.previous .chart-amount')).toHaveText('R$ 500,00');
+    await card('usual').locator('.insight-chart').focus();
+    await page.keyboard.press('End');
+    await expect(card('usual').locator('.hover-tooltip')).toContainText('R$ 500,00');
     await expect(card('usual').locator('.previous-trend')).toHaveCount(1);
     await expect(card('usual').locator('.current-trend')).toHaveCount(1);
-    await expect(card('usual').locator('.current .chart-amount')).toHaveText('R$ 279,80');
+    await expect(card('usual').locator('.hover-tooltip')).toContainText('R$ 279,80');
     await card('usual').locator('.insight-chart').focus();
     await expect(card('usual').locator('.insight-chart')).toHaveAttribute(
       'aria-label',

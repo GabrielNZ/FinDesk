@@ -3,7 +3,10 @@ import { test } from 'node:test';
 import { createRequire } from 'node:module';
 const require = createRequire(import.meta.url);
 const { withSeptemberHistory } = require('../../out/fixtures/financas/comparison-history.js');
-const { expenseChartGeometry } = require('../../out/application/expense-chart.js');
+const {
+  expenseChartAtDay,
+  expenseChartGeometry,
+} = require('../../out/application/expense-chart.js');
 const { accountBalanceAt } = require('../../out/domain/finance.js');
 const { normalizeAnalysisLayout } = require('../../out/application/card-layout.js');
 const {
@@ -122,6 +125,33 @@ test('F07a/D135: escala numérica, segmentos diagonais e cruzamentos vêm dos da
   assert.ok(amount(chart.current, 5) < amount(chart.previous, 5));
   assert.ok(amount(chart.current, 21) > amount(chart.previous, 21));
   assert.ok(amount(chart.current, 29) < amount(chart.previous, 29));
+});
+
+test('F07a/D141: cursor usa a data civil de cada linha e o acumulado real de cada dia', () => {
+  const chart = value(analyze(withSeptemberHistory(data())), 'largest').chart;
+  const start = expenseChartAtDay(chart, 1);
+  assert.equal(start.days, 29);
+  assert.deepEqual(
+    [
+      start.current.on,
+      start.current.value.minorUnits,
+      start.previous.on,
+      start.previous.value.minorUnits,
+    ],
+    ['2026-10-01', 0, '2026-09-01', 0],
+  );
+  const end = expenseChartAtDay(chart, 29);
+  assert.deepEqual(
+    [end.current.on, end.current.value.minorUnits, end.previous.on, end.previous.value.minorUnits],
+    ['2026-10-29', 27980, '2026-09-29', 32000],
+  );
+  assert.deepEqual(expenseChartAtDay(chart, 999), end);
+  const absent = expenseChartAtDay(
+    { ...chart, previous: { ...chart.previous, series: null, unavailable: 'history' } },
+    29,
+  );
+  assert.equal(absent.previous.on, '2026-09-29');
+  assert.equal(absent.previous.value, null);
 });
 test('F07a/D135: compactação preserva ordem/largura/alinhamento e alturas personalizadas', () => {
   const old = {

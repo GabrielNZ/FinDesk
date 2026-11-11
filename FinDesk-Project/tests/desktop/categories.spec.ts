@@ -681,3 +681,49 @@ test('F05b.1: falha de escrita preserva estado e formulário; novo IPC rejeita o
     await clean(profile);
   }
 });
+
+test('F05b.1/D140: Categorias alterna o painel e voltar ao Extrato restaura a Seleção', async () => {
+  test.setTimeout(60_000);
+  const profile = await mkdtemp(join(tmpdir(), 'findesk-categories-'));
+  let app: ElectronApplication | undefined;
+  try {
+    const session = await launch(profile);
+    app = session.app;
+    const page = session.page;
+    const before = await page.evaluate(() => window.finDesk!.storage.getCategories());
+    await page.getByRole('tab', { name: 'Agrupamento', exact: true }).click();
+    await page.getByRole('button', { name: 'Adicionar Transporte à seleção', exact: true }).click();
+    const toggle = page.locator('button[aria-controls="statement-category-panel"]');
+    const panel = page.locator('fd-category-panel');
+    await expect(toggle).toHaveAttribute('aria-pressed', 'false');
+    await toggle.click();
+    await expect(toggle).toHaveAttribute('aria-pressed', 'true');
+    await expect(toggle).toHaveClass(/active/);
+    await expect(panel).toBeVisible();
+    await expect(page.locator('.selection-area')).toHaveCount(0);
+    await toggle.click();
+    await expect(toggle).toHaveAttribute('aria-expanded', 'false');
+    await expect(toggle).not.toHaveClass(/active/);
+    await expect(panel).toHaveCount(0);
+    await expect(page.locator('.selected-movement')).toHaveCount(2);
+    await toggle.click();
+    await page.getByRole('tab', { name: 'Extrato', exact: true }).click();
+    await expect(panel).toHaveCount(0);
+    await expect(page.locator('.selection-area')).toBeVisible();
+    await expect(page.locator('.selected-movement')).toHaveCount(2);
+    await expect(page.locator('[data-grand-currency="BRL"]')).toHaveText('-R$ 60,00');
+    await page.getByRole('tab', { name: 'Agrupamento', exact: true }).click();
+    await expect(toggle).toHaveAttribute('aria-pressed', 'false');
+    await toggle.focus();
+    await page.keyboard.press('Enter');
+    await expect(panel).toBeVisible();
+    await toggle.focus();
+    await page.keyboard.press('Enter');
+    await expect(panel).toHaveCount(0);
+    await expect(toggle).toBeFocused();
+    expect(await page.evaluate(() => window.finDesk!.storage.getCategories())).toEqual(before);
+  } finally {
+    await app?.close();
+    await clean(profile);
+  }
+});

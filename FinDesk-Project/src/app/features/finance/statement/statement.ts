@@ -411,9 +411,20 @@ export class Statement {
   }
 
   switchSource(area: 'statement' | 'grouping'): void {
+    if (area === 'statement' && this.categoriesVisible()) this.closeCategories(false);
     if (this.state.focus() === 'selection') this.state.focus.set(null);
     this.state.area.set(area);
     this.panel.set(null);
+  }
+  categoriesVisible(): boolean {
+    return (
+      this.categoryPanel() && !this.merchantRow() && !this.expensePanel() && !this.trashPanel()
+    );
+  }
+  toggleCategories(): void {
+    if (this.catalogue.busy()) return;
+    if (this.categoriesVisible()) this.closeCategories();
+    else this.openCategories();
   }
   openCategories(row: StatementRow | null = null): void {
     if (this.catalogue.busy()) return;
@@ -428,7 +439,7 @@ export class Statement {
     this.categoryPanel.set(true);
     this.panel.set(null);
   }
-  closeCategories(): void {
+  closeCategories(restoreFocus = true): void {
     this.categoryPanel.set(false);
     this.editingRow.set(null);
     this.merchantRow.set(null);
@@ -436,6 +447,7 @@ export class Statement {
     this.editingExpenseId.set(null);
     this.trashPanel.set(false);
     this.deletingExpenseId.set(null);
+    if (!restoreFocus) return;
     afterNextRender(
       () => {
         (this.categoryReturn?.isConnected

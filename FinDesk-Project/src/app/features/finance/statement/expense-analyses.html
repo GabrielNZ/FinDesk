@@ -42,15 +42,19 @@
           }
           @if (value.chart; as chart) {
             @let plot = geometry(chart);
+            @let activeDay = hoverDay(item, value);
+            @let active = activeDay === null ? null : chartAtDay(chart, activeDay);
             <figure
               class="insight-chart"
-              role="img"
+              role="group"
               tabindex="0"
               data-card-interactive
               [attr.aria-label]="
                 'Comparação de ' + category(value.category!) + '. ' + description(item, value)
               "
-              [attr.title]="description(item, value)"
+              (keydown)="chartKeydown($event, item, value)"
+              (focusout)="clearChart()"
+              (pointerleave)="clearChart()"
             >
               <div class="plot-grid">
                 <div class="y-axis" aria-hidden="true">
@@ -60,80 +64,116 @@
                     }}</span>
                   }
                 </div>
-                <svg
-                  class="line-chart"
-                  viewBox="0 0 240 64"
-                  preserveAspectRatio="none"
-                  aria-hidden="true"
-                >
-                  <defs>
-                    <marker
-                      [attr.id]="arrowId(item, value)"
-                      viewBox="0 0 7 7"
-                      refX="5"
-                      refY="3.5"
-                      markerWidth="7"
-                      markerHeight="7"
-                      markerUnits="userSpaceOnUse"
-                      orient="auto"
+                <div class="chart-surface">
+                  <svg
+                    class="line-chart"
+                    viewBox="0 0 240 64"
+                    preserveAspectRatio="none"
+                    aria-hidden="true"
+                    (pointermove)="moveChart($event, item, value)"
+                  >
+                    <defs>
+                      <marker
+                        [attr.id]="arrowId(item, value)"
+                        viewBox="0 0 7 7"
+                        refX="5"
+                        refY="3.5"
+                        markerWidth="7"
+                        markerHeight="7"
+                        markerUnits="userSpaceOnUse"
+                        orient="auto"
+                      >
+                        <path class="trend-arrow" d="M0 0L7 3.5L0 7L2 3.5Z" />
+                      </marker>
+                      <marker
+                        [attr.id]="arrowId(item, value, true)"
+                        viewBox="0 0 7 7"
+                        refX="5"
+                        refY="3.5"
+                        markerWidth="7"
+                        markerHeight="7"
+                        markerUnits="userSpaceOnUse"
+                        orient="auto"
+                      >
+                        <path class="previous-arrow" d="M0 0L7 3.5L0 7L2 3.5Z" />
+                      </marker>
+                    </defs>
+                    <path class="trend-grid" d="M4 6H232M4 31H232M4 56H232" />
+                    @if (chart.current.series) {
+                      <path class="trend-area" [attr.d]="plot.area" />
+                    }
+                    @if (chart.previous.series) {
+                      <path
+                        class="previous-trend"
+                        [attr.d]="plot.previous"
+                        [attr.marker-end]="'url(#' + arrowId(item, value, true) + ')'"
+                        vector-effect="non-scaling-stroke"
+                      />
+                    }
+                    @if (chart.current.series) {
+                      <path
+                        class="current-trend"
+                        [attr.d]="plot.current"
+                        [attr.marker-end]="'url(#' + arrowId(item, value) + ')'"
+                        vector-effect="non-scaling-stroke"
+                      />
+                    }
+                  </svg>
+                  @if (active; as sample) {
+                    <div class="chart-interaction" aria-hidden="true">
+                      <span
+                        class="hover-guide"
+                        [style.left.%]="plot.dayPosition(sample.day)"
+                      ></span>
+                      @if (sample.current?.value; as currentValue) {
+                        <span
+                          class="hover-marker current-marker"
+                          [style.left.%]="plot.dayPosition(sample.day)"
+                          [style.top.%]="plot.valuePosition(currentValue)"
+                        ></span>
+                      }
+                      @if (sample.previous?.value; as previousValue) {
+                        <span
+                          class="hover-marker previous-marker"
+                          [style.left.%]="plot.dayPosition(sample.day)"
+                          [style.top.%]="plot.valuePosition(previousValue)"
+                        ></span>
+                      }
+                    </div>
+                    <div
+                      class="hover-tooltip"
+                      [class.hover-left]="sample.day > sample.days / 2"
+                      role="status"
+                      aria-live="polite"
+                      [style.--hover-position]="plot.dayPosition(sample.day) + '%'"
                     >
-                      <path class="trend-arrow" d="M0 0L7 3.5L0 7L2 3.5Z" />
-                    </marker>
-                    <marker
-                      [attr.id]="arrowId(item, value, true)"
-                      viewBox="0 0 7 7"
-                      refX="5"
-                      refY="3.5"
-                      markerWidth="7"
-                      markerHeight="7"
-                      markerUnits="userSpaceOnUse"
-                      orient="auto"
-                    >
-                      <path class="previous-arrow" d="M0 0L7 3.5L0 7L2 3.5Z" />
-                    </marker>
-                  </defs>
-                  <path class="trend-grid" d="M4 6H232M4 31H232M4 56H232" />
-                  @if (chart.current.series) {
-                    <path class="trend-area" [attr.d]="plot.area" />
-                  }
-                  @if (chart.previous.series) {
-                    <path
-                      class="previous-trend"
-                      [attr.d]="plot.previous"
-                      [attr.marker-end]="'url(#' + arrowId(item, value, true) + ')'"
-                      vector-effect="non-scaling-stroke"
-                    />
-                  }
-                  @if (chart.current.series) {
-                    <path
-                      class="current-trend"
-                      [attr.d]="plot.current"
-                      [attr.marker-end]="'url(#' + arrowId(item, value) + ')'"
-                      vector-effect="non-scaling-stroke"
-                    />
-                  }
-                </svg>
-                <span class="axis-label" aria-hidden="true">Dia</span>
-                <div class="x-axis" aria-hidden="true">
-                  @for (tick of plot.xTicks; track tick.day) {
-                    <span [style.left.%]="tick.position">{{ tick.day }}</span>
+                      <span class="hover-day">Dia {{ sample.day }}</span>
+                      @if (sample.current; as current) {
+                        <span class="hover-period current-period">
+                          <span>Atual</span>
+                          <strong>{{
+                            current.value ? money(current.value) : 'Indisponível'
+                          }}</strong>
+                        </span>
+                      }
+                      @if (sample.previous; as previous) {
+                        <span class="hover-period previous-period">
+                          <span>Anterior</span>
+                          <strong>{{
+                            previous.value
+                              ? money(previous.value)
+                              : previous.unavailable === 'precision'
+                                ? 'Indisponível'
+                                : 'Sem histórico'
+                          }}</strong>
+                        </span>
+                      } @else {
+                        <span class="hover-period previous-period">Anterior · Sem histórico</span>
+                      }
+                    </div>
                   }
                 </div>
               </div>
-              <figcaption>
-                <span
-                  class="chart-row previous"
-                  [class.unknown]="!chart.previous.value"
-                  aria-hidden="true"
-                >
-                  <span class="period-label">{{ period(chart.previous, 'Anterior') }}</span>
-                  <span class="chart-amount">{{ pointValue(chart.previous) }}</span>
-                </span>
-                <span class="chart-row current" aria-hidden="true">
-                  <span class="period-label">{{ period(chart.current, 'Atual') }}</span>
-                  <span class="chart-amount">{{ pointValue(chart.current) }}</span>
-                </span>
-              </figcaption>
               @if (chart.shortened) {
                 <span class="equivalent-note">Dias equivalentes</span>
               }

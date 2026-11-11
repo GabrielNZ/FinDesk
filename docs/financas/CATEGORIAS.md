@@ -8,6 +8,8 @@ Base: FIN-045 e especificação §14.3. Sem categoria é fallback neutro, perman
 
 ## Critérios de aceitação
 
+**D140 — continuidade de 06/11/2026:** botão Categorias fica marcado com o painel aberto, alterna abrir/fechar por clique/teclado e devolve a Seleção ao fechar. Trocar para Extrato fecha o painel, preserva o foco da troca e restaura os itens/totais selecionados. Voltar ao Agrupamento mantém Categorias desmarcado; classificação pelos detalhes continua disponível.
+
 1. Catálogo inicial compatível com os quatro IDs já presentes na demonstração; categorias criadas recebem ID estável. Nome obrigatório e sem duplicidade normalizada; ícone e cor escolhidos localmente, sem downloads. Sem categoria não é categoria editável.
 2. Criação/edição com confirmação de Salvar; cancelar/fechar não grava. Opções de ícones e cores em grade. Seleção individual grava apenas a classificação daquele ID; opção Sem categoria. Sem mudança silenciosa de outros lançamentos do estabelecimento.
 3. Reabrir preserva catálogo/classificações. Fatos originais ficam separados das personalizações. Atualizar catálogo/atribuição somente após confirmação de sucesso; falha preserva consulta e permite repetir.

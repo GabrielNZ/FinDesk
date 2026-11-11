@@ -57,7 +57,16 @@
         </div>
       }
       @if (state.area() === 'grouping') {
-        <button type="button" class="filter-toggle" (click)="openCategories()">
+        <button
+          type="button"
+          class="filter-toggle"
+          [class.active]="categoriesVisible()"
+          [attr.aria-pressed]="categoriesVisible()"
+          [attr.aria-expanded]="categoriesVisible()"
+          aria-controls="statement-category-panel"
+          [disabled]="catalogue.busy()"
+          (click)="toggleCategories()"
+        >
           <i class="pi pi-tags" aria-hidden="true"></i> Categorias
         </button>
       }
@@ -539,7 +548,11 @@
           />
         }
       } @else {
-        <fd-category-panel [movement]="editingRow()" (closed)="closeCategories()" />
+        <fd-category-panel
+          id="statement-category-panel"
+          [movement]="editingRow()"
+          (closed)="closeCategories()"
+        />
       }
     } @else {
       <section

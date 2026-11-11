@@ -312,6 +312,14 @@ Fontes consultadas em 28/10/2026:
 
 **D139 — redução moderada da F07a, solicitada por Gabriel em 08/11/2026:** diminuir um pouco a altura dos cards compensando na distância vertical entre os valores do gráfico. Padrão passa de 304 para 284 px (3,75 unidades), com gráfico mínimo de 76 px; as mesmas marcas monetárias ficam mais próximas pela redução da área de plotagem, sem alterar valores/escala financeira. Manter espaços externos ao gráfico e crescimento de gráfico/espaçamentos pelo redimensionador. Antigos padrões 2,75/3/3,25/4 apresentados em 3,75; outras dimensões preservadas, sem gravar ao ler.
 
+**D140 — alternância do painel Categorias, solicitada por Gabriel em 06/11/2026:** botão marcado enquanto o painel da direita estiver aberto; clicar novamente fecha e devolve a Seleção. Voltar para Extrato fecha o painel e restaura a Seleção automaticamente, sem mudar seus itens nem o total. Retornar ao Agrupamento não reabre o painel sozinho. Detalhes de despesas continuam permitindo a classificação contextual.
+
+**D141 — leitura interativa do gráfico da F07a, solicitada por Gabriel em 10/11/2026:** retirar a faixa fixa de datas/valores sob o gráfico. Ao passar o ponteiro pelo traçado, mostrar guia e valores acumulados das linhas para o dia apontado, com a data civil correspondente de cada período; a seta final deve informar a data exata de seu ponto. Disponibilizar a mesma consulta por teclado, sem alterar os cálculos, os filtros ou o layout salvo.
+
+**D142 — data separada dos rótulos do gráfico, solicitada por Gabriel em 10/11/2026:** as linhas da dica mostram apenas Atual/Anterior e seus valores. A data exata fica no cabeçalho da dica e corresponde à linha mais próxima do ponteiro; nas setas finais, verde identifica a data atual e vermelha a anterior. O teclado permite alternar a linha da data sem alterar os acumulados.
+
+**D143 — dia no topo da dica, solicitado por Gabriel em 10/11/2026:** substituir a data completa do cabeçalho por “Dia N”, como na primeira versão da dica. Atual/Anterior continuam sem datas ao lado; a posição horizontal indica o dia equivalente e os valores permanecem separados por período. Substitui a apresentação da data completa e a alternância de linha da D142.
+
 ## Perguntas aguardando resposta e pesquisas futuras
 
 **D134 — minigráfico acumulado da F07a, confirmado por Gabriel em 07/11/2026:** linha de gastos acumulados ao longo dos dias, atual e anterior quando houver cobertura, com seta na ponta da linha atual. Despesas somam no dia; sem nova despesa o acumulado permanece horizontal. Não preencher histórico ausente com zeros; manter intervalos equivalentes, moedas, filtros e base fictícia atuais. Substitui barras/colunas da revisão anterior.
