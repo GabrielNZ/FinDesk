@@ -856,6 +856,33 @@ export class DemoStore {
       throw new StorageFailure('corrupt');
     }
   }
+  readExpenseChartsLayout(): CardLayout | null {
+    const row = this.requireOpen()[1]
+      .prepare("SELECT payload FROM preferences WHERE key = 'layout.finance-charts.v1'")
+      .get();
+    if (!row) return null;
+    const raw = parseStoredJson(row['payload']);
+    if (raw && typeof raw === 'object' && 'version' in raw && raw.version !== 3)
+      throw new StorageFailure('incompatible');
+    try {
+      return parseCardLayout(raw, 'finance-charts');
+    } catch {
+      throw new StorageFailure('corrupt');
+    }
+  }
+  saveExpenseChartsLayout(value: unknown): CardLayout {
+    const checked = parseCardLayout(value, 'finance-charts');
+    this.readExpenseChartsLayout();
+    const db = this.requireOpen()[1];
+    transaction(db, () =>
+      db
+        .prepare(
+          "INSERT INTO preferences (key, payload) VALUES ('layout.finance-charts.v1', ?) ON CONFLICT(key) DO UPDATE SET payload = excluded.payload",
+        )
+        .run(JSON.stringify(checked)),
+    );
+    return this.readExpenseChartsLayout()!;
+  }
   saveExpenseAnalysisLayout(value: unknown): CardLayout {
     const checked = parseCardLayout(value, 'finance-analysis');
     this.readExpenseAnalysisLayout();

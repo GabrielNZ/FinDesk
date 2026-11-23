@@ -46,6 +46,8 @@ import { categorizedMovements } from '../../../../../application/categories';
 import { editableExpense } from '../../../../../application/expense-editing';
 import { ExpenseTrashPanel } from './expense-trash-panel';
 import { ExpenseAnalyses } from './expense-analyses';
+import { ExpenseCharts } from './expense-charts';
+import { reportExpenses } from '../../../../../application/expense-reports';
 import { ExpenseStatementModal } from './expense-statement-modal';
 import {
   analyzeExpenses,
@@ -67,6 +69,7 @@ import { previousExpenseMonths } from '../../../../../application/expense-analys
     ExpensePanel,
     ExpenseTrashPanel,
     ExpenseAnalyses,
+    ExpenseCharts,
     ExpenseStatementModal,
     NgTemplateOutlet,
   ],
@@ -81,6 +84,7 @@ export class Statement {
   readonly layout = inject(StatementLayoutState);
   readonly catalogue = inject(CategoryStore);
   readonly analysisStatement = signal<ExpenseStatementPreview | null>(null);
+  readonly chartsFocused = signal(false);
   readonly classifiedSnapshot = computed(() => {
     const snapshot = this.context.snapshot(),
       catalogue = this.catalogue.value();
@@ -131,6 +135,11 @@ export class Statement {
     const snapshot = this.classifiedSnapshot(),
       query = this.analysisQuery();
     return snapshot && query ? analyzeExpenses(snapshot, query) : [];
+  });
+  readonly reports = computed(() => {
+    const snapshot = this.classifiedSnapshot(),
+      query = this.analysisQuery();
+    return snapshot && query ? reportExpenses(snapshot, query) : null;
   });
   openAnalysisStatement(request: ExpenseStatementRequest): void {
     const snapshot = this.classifiedSnapshot(),
@@ -542,6 +551,7 @@ export class Statement {
     );
   }
   escape(event: Event): void {
+    if (this.chartsFocused()) return;
     if (this.categoryPanel()) {
       event.preventDefault();
       event.stopPropagation();

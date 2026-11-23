@@ -17,6 +17,14 @@
   flex-direction: column;
   padding: 0 14px 16px;
 }
+:host(.charts-card) .card-content {
+  container-type: size;
+  padding: 0 16px 14px;
+}
+:host(.charts-card) header {
+  min-height: 42px;
+  padding: 10px 16px 6px;
+}
 .card-shell {
   position: relative;
   height: 100%;

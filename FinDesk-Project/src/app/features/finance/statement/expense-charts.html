@@ -1,0 +1,224 @@
+<div class="reports-heading">
+  <span>Gráficos de despesas da conta</span><span>Consulta atual</span>
+</div>
+<fd-card-board [content]="content" (focusChanged)="focusChanged.emit($event !== null)" />
+<ng-template #content let-id>
+  @if (id === 'evolution') {
+    <div class="mode-switch" role="group" aria-label="Leitura da evolução" data-card-interactive>
+      <button
+        type="button"
+        [class.active]="mode() === 'daily'"
+        [attr.aria-pressed]="mode() === 'daily'"
+        (click)="mode.set('daily')"
+      >
+        Por dia
+      </button>
+      <button
+        type="button"
+        [class.active]="mode() === 'accumulated'"
+        [attr.aria-pressed]="mode() === 'accumulated'"
+        (click)="mode.set('accumulated')"
+      >
+        Acumulado
+      </button>
+    </div>
+  }
+  @for (lane of reports().lanes; track lane.currency) {
+    <div class="report-lane" [attr.data-currency]="lane.currency">
+      @if (id === 'categories') {
+        <div class="report-summary">
+          <strong>{{
+            lane.observed.total ? money(lane.observed.total!) : unavailable(lane.observed)
+          }}</strong
+          ><span>{{ lane.currency }}</span>
+        </div>
+        <p class="report-range">{{ range(lane.observed) }}</p>
+        @if (lane.observed.total) {
+          <div class="category-bars">
+            @for (bar of lane.categories; track bar.category) {
+              <button
+                type="button"
+                class="category-bar"
+                [attr.data-category]="bar.category"
+                [attr.aria-label]="
+                  'Ver extrato de ' + category(bar.category) + ', ' + money(bar.value)
+                "
+                (click)="inspectCategory(lane, bar.category)"
+              >
+                <span class="category-line"
+                  ><span class="category-name"
+                    ><i
+                      [class]="'pi ' + (categoryStyle(bar.category)?.icon ?? 'pi-tag')"
+                      [style.color]="categoryStyle(bar.category)?.color"
+                      aria-hidden="true"
+                    ></i
+                    >{{ category(bar.category) }}</span
+                  ><strong>{{ money(bar.value) }}</strong></span
+                >
+                <span class="category-track" aria-hidden="true"
+                  ><span
+                    [style.width.%]="bar.width"
+                    [style.background]="categoryStyle(bar.category)?.color"
+                  ></span
+                ></span>
+                <span class="category-share">{{ bar.share ?? 'Participação indisponível' }}</span>
+              </button>
+            } @empty {
+              <p class="empty">Nenhuma despesa na consulta.</p>
+            }
+          </div>
+        } @else {
+          <p class="empty">
+            {{ unavailable(lane.observed) }} · Nenhum total parcial é apresentado.
+          </p>
+        }
+      } @else {
+        @let graph = plot(lane);
+        <div class="series-labels">
+          <span class="current-label"
+            >Atual ·
+            {{ lane.current.total ? money(lane.current.total!) : unavailable(lane.current) }}</span
+          ><span class="previous-label"
+            >Anterior ·
+            {{
+              lane.previous.total ? money(lane.previous.total!) : unavailable(lane.previous)
+            }}</span
+          >
+        </div>
+        @if (lane.current.total || lane.previous.total) {
+          <figure
+            class="evolution-chart"
+            tabindex="0"
+            role="group"
+            data-card-interactive
+            [attr.aria-label]="
+              'Evolução de despesas em ' +
+              lane.currency +
+              '. ' +
+              (mode() === 'daily' ? 'Gasto por dia.' : 'Gasto acumulado.') +
+              ' Setas consultam dias; Home e End vão às extremidades. Enter abre o dia atual; Shift Enter abre o anterior.'
+            "
+            (keydown)="key($event, lane)"
+          >
+            <div class="plot-grid">
+              <div class="y-axis" aria-hidden="true">
+                @for (tick of graph.yTicks; track tick.value.minorUnits) {
+                  <span [style.top.%]="tick.position">{{ money(tick.value) }}</span>
+                }
+              </div>
+              <div class="chart-surface">
+                <svg
+                  viewBox="0 0 240 64"
+                  preserveAspectRatio="none"
+                  aria-hidden="true"
+                  (pointermove)="pointer($event, lane)"
+                  (click)="clickPlot($event, lane)"
+                >
+                  <path class="grid" d="M4 6H232M4 31H232M4 56H232" />
+                  @if (mode() === 'daily') {
+                    @for (bar of graph.previousBars; track bar.on) {
+                      <rect
+                        class="day-bar previous"
+                        [attr.x]="bar.x + 0.3"
+                        [attr.y]="bar.y"
+                        [attr.width]="graph.width"
+                        [attr.height]="bar.height"
+                        (click)="inspect(lane, true, bar.day, $event)"
+                      />
+                    }
+                    @for (bar of graph.currentBars; track bar.on) {
+                      <rect
+                        class="day-bar current"
+                        [attr.x]="bar.x - graph.width - 0.3"
+                        [attr.y]="bar.y"
+                        [attr.width]="graph.width"
+                        [attr.height]="bar.height"
+                        (click)="inspect(lane, false, bar.day, $event)"
+                      />
+                    }
+                  } @else {
+                    @if (lane.previous.total) {
+                      <path
+                        class="series-line previous"
+                        [attr.d]="graph.previous"
+                        vector-effect="non-scaling-stroke"
+                      />
+                    }
+                    @if (lane.current.total) {
+                      <path
+                        class="series-line current"
+                        [attr.d]="graph.current"
+                        vector-effect="non-scaling-stroke"
+                      />
+                    }
+                  }
+                </svg>
+                <span
+                  class="day-guide"
+                  [style.left.%]="graph.dayPosition(day(lane))"
+                  aria-hidden="true"
+                ></span>
+              </div>
+              <span class="axis-label" aria-hidden="true">Dia</span>
+              <div class="x-axis" aria-hidden="true">
+                @for (tick of graph.xTicks; track tick.day) {
+                  <span
+                    [style.left.%]="tick.position"
+                    [class.expense-day]="tick.hasExpense"
+                    [class.lower-row]="tick.day % 2 === 0"
+                    [class.third-row-1]="tick.day % 3 === 1"
+                    [class.third-row-2]="tick.day % 3 === 2"
+                    >{{ tick.day }}</span
+                  >
+                }
+              </div>
+            </div>
+            <figcaption class="day-details" aria-live="polite">
+              <span class="day-number"
+                >Dia {{ day(lane)
+                }}{{ mode() === 'accumulated' ? ' · Acumulado' : ' · Gasto do dia' }}</span
+              >
+              @if (point(lane, false); as current) {
+                <button
+                  type="button"
+                  class="current-label day-action"
+                  [attr.aria-label]="'Ver despesas de ' + date(current.on) + ' no período atual'"
+                  (keydown)="$event.stopPropagation()"
+                  (click)="inspect(lane, false, day(lane))"
+                >
+                  <span>Atual</span
+                  ><strong>{{
+                    money(mode() === 'accumulated' ? current.accumulated : current.value)
+                  }}</strong
+                  ><small>Ver despesas do dia</small>
+                </button>
+              }
+              @if (point(lane, true); as previous) {
+                <button
+                  type="button"
+                  class="previous-label day-action"
+                  [attr.aria-label]="
+                    'Ver despesas de ' + date(previous.on) + ' no período anterior'
+                  "
+                  (keydown)="$event.stopPropagation()"
+                  (click)="inspect(lane, true, day(lane))"
+                >
+                  <span>Anterior</span
+                  ><strong>{{
+                    money(mode() === 'accumulated' ? previous.accumulated : previous.value)
+                  }}</strong
+                  ><small>Ver despesas do dia</small>
+                </button>
+              }
+            </figcaption>
+          </figure>
+        } @else {
+          <p class="empty">{{ unavailable(lane.current) }}</p>
+        }
+        @if (reports().shortened) {
+          <p class="report-note">Comparação limitada a dias equivalentes.</p>
+        }
+      }
+    </div>
+  }
+</ng-template>

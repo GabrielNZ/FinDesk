@@ -1,6 +1,6 @@
 export type FinanceCardId =
   'categories' | 'evolution' | 'upcoming' | 'largest' | 'increase' | 'decrease' | 'usual';
-export type CardArea = 'finance-general' | 'finance-analysis';
+export type CardArea = 'finance-general' | 'finance-analysis' | 'finance-charts';
 
 export interface CardPlacement {
   readonly id: FinanceCardId;

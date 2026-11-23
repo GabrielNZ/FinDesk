@@ -18,7 +18,7 @@
       <i class="pi pi-times" aria-hidden="true"></i>
     </button>
   </header>
-  <div class="modal-scroll" tabindex="0" aria-label="Lançamentos da categoria">
+  <div class="modal-scroll" tabindex="0" aria-label="Lançamentos da consulta">
     @for (row of value.rows; track row.movement.id) {
       <details class="preview-movement" [attr.data-preview-id]="row.movement.id">
         <summary>
@@ -55,7 +55,13 @@
         </dl>
       </details>
     } @empty {
-      <p class="empty">Nenhuma despesa dessa categoria no intervalo da análise.</p>
+      <p class="empty">
+        {{
+          value.request.category === null
+            ? 'Nenhuma despesa nesse dia.'
+            : 'Nenhuma despesa dessa categoria no intervalo da análise.'
+        }}
+      </p>
     }
     @if (value.converted) {
       <p class="conversion">

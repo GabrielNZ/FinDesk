@@ -11,6 +11,7 @@ import {
   Injector,
   signal,
   input,
+  output,
   type TemplateRef,
   viewChild,
 } from '@angular/core';
@@ -73,6 +74,7 @@ interface Point {
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class CardBoard {
+  readonly focusChanged = output<FinanceCardId | null>();
   readonly content = input<TemplateRef<{ $implicit: FinanceCardId }> | null>(null);
   readonly state = inject(CardLayoutState);
   readonly focused = this.state.focused;
@@ -508,6 +510,7 @@ export class CardBoard {
       if (this.workspace()) this.workspace()!.scrollTop = 0;
     }
     this.focused.set(leaving ? null : id);
+    this.focusChanged.emit(leaving ? null : id);
     this.focusAfter('[data-focus-id="' + id + '"]');
     afterNextRender(
       () => {

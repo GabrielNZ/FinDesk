@@ -322,6 +322,16 @@ Fontes consultadas em 28/10/2026:
 
 ## Perguntas aguardando resposta e pesquisas futuras
 
+**D144 — composição da F07b, confirmada por Gabriel em 11/11/2026:** Categorias e Evolução abaixo da consulta/Seleção, lado a lado com mais largura para Evolução; em janela estreita, disposição vertical. Preservar arraste, redimensionamento, foco temporário e layout salvo próprio.
+
+**D145 — leitura da Evolução na F07b, confirmada por Gabriel em 11/11/2026:** gasto por dia ao abrir, com alternância para acumulado e referência anterior respeitando dias equivalentes/cobertura da F07a. A troca de leitura não altera os fatos nem os filtros. Modo inicia em diário a cada abertura; tamanho/ordem dos cards continuam persistidos.
+
+**D146 — investigação da F07b, confirmada por Gabriel em 11/11/2026:** clicar na categoria ou data abre extrato flutuante dos respectivos lançamentos; fechar preserva consulta, Seleção, layout e rolagem do fundo. Para datas comparadas, usar a data civil da série atual/anterior acionada, não a data equivalente do outro período.
+
+**D147 — eixo e datas da Evolução, solicitado por Gabriel em 22/11/2026:** a escala horizontal marca todos os dias com despesas na série atual ou anterior, além das referências de início/meio/fim. Os intervalos das duas séries aparecem uma única vez, abaixo do seletor Por dia/Acumulado; as ações Atual/Anterior do dia consultado mostram valores sem repetir datas visíveis. A data civil exata permanece no extrato aberto e no nome acessível da ação.
+
+**D148 — apresentação enxuta da Evolução, solicitada por Gabriel em 22/11/2026:** remover também a linha de intervalos Atual/Anterior abaixo do seletor. Todos os números dos dias no eixo horizontal usam o mesmo cinza, inclusive os dias com despesas. A data exata continua disponível no extrato do dia e nos nomes acessíveis das ações. Substitui apenas a apresentação de datas de D147; a marcação de dias com despesas permanece.
+
 **D134 — minigráfico acumulado da F07a, confirmado por Gabriel em 07/11/2026:** linha de gastos acumulados ao longo dos dias, atual e anterior quando houver cobertura, com seta na ponta da linha atual. Despesas somam no dia; sem nova despesa o acumulado permanece horizontal. Não preencher histórico ausente com zeros; manter intervalos equivalentes, moedas, filtros e base fictícia atuais. Substitui barras/colunas da revisão anterior.
 
 Angular/PrimeNG e barra nativa continuam confirmados em D07/D08. A limpeza de conteúdo foi acordada em D12, e a logo original foi aplicada conforme D10. Em 29/10/2026, Gabriel aprovou explicitamente o conjunto atual (casca, ajustes, F00 e reorganização) e autorizou commit e push. F01a não foi iniciada por essa tarefa de registro Git.

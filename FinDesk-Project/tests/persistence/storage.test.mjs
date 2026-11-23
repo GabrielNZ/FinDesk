@@ -148,6 +148,91 @@ test('F07a/D136: falha ao atualizar recibo de chegadas reverte fatos e versão d
 });
 const { defaultCardLayout: analysisLayout } = require('../../out/application/card-layout.js');
 
+test('F07b: layout dos gráficos isolado, reabertura, restauração demo e fronteiras do worker', async (t) => {
+  const root = await temporary(t);
+  const client = new StorageClient(root);
+  const layout = analysisLayout('finance-charts');
+  try {
+    assert.equal((await client.getExpenseChartsLayout()).value, null);
+    assert.deepEqual((await client.saveExpenseChartsLayout(layout)).value, layout);
+    for (const invalid of [
+      analysisLayout(),
+      analysisLayout('finance-analysis'),
+      { ...layout, sql: 'x' },
+      { ...layout, cards: layout.cards.slice(1) },
+      { ...layout, version: 2 },
+    ]) {
+      assert.equal((await client.saveExpenseChartsLayout(invalid)).ok, false);
+    }
+    assert.throws(() =>
+      validateRequest({ id: 1, operation: 'read-expense-charts-layout', payload: {} }),
+    );
+    assert.throws(() =>
+      validateRequest({
+        id: 1,
+        operation: 'save-expense-charts-layout',
+        payload: analysisLayout(),
+      }),
+    );
+    assert.equal((await client.getCardLayout()).value, null);
+    assert.equal((await client.getExpenseAnalysisLayout()).value, null);
+  } finally {
+    await client.close();
+  }
+  const store = new DemoStore(root);
+  try {
+    const facts = store.readDemo(),
+      prefs = store.readPreferences();
+    assert.deepEqual(store.readExpenseChartsLayout(), layout);
+    assert.deepEqual(store.readDemo(), facts);
+    store.restoreDemo();
+    assert.deepEqual(store.readExpenseChartsLayout(), layout);
+    assert.deepEqual(store.readPreferences(), prefs);
+    assert.throws(() => store.saveCardLayout(layout));
+    assert.throws(() => store.saveExpenseAnalysisLayout(layout));
+  } finally {
+    store.close();
+  }
+});
+test('F07b: falha de escrita e conteúdo incompatível/corrupto preservam bytes do novo layout', async (t) => {
+  const root = await temporary(t),
+    store = new DemoStore(root),
+    db = new DatabaseSync(join(root, 'preferences.sqlite'));
+  try {
+    const layout = analysisLayout('finance-charts');
+    store.saveExpenseChartsLayout(layout);
+    const bytes = () =>
+      db.prepare("SELECT payload FROM preferences WHERE key = 'layout.finance-charts.v1'").get()
+        .payload;
+    const before = bytes();
+    db.exec(
+      "CREATE TRIGGER fail_chart BEFORE UPDATE ON preferences WHEN NEW.key = 'layout.finance-charts.v1' BEGIN SELECT RAISE(ABORT, 'teste'); END",
+    );
+    assert.throws(() =>
+      store.saveExpenseChartsLayout({ ...layout, cards: [...layout.cards].reverse() }),
+    );
+    assert.equal(bytes(), before);
+    db.exec('DROP TRIGGER fail_chart');
+    for (const [payload, code] of [
+      [JSON.stringify({ ...layout, version: 99 }), 'incompatible'],
+      ['{}', 'corrupt'],
+    ]) {
+      db.prepare("UPDATE preferences SET payload = ? WHERE key = 'layout.finance-charts.v1'").run(
+        payload,
+      );
+      assert.throws(
+        () => store.readExpenseChartsLayout(),
+        (error) => error.code === code,
+      );
+      assert.throws(() => store.saveExpenseChartsLayout(layout));
+      assert.equal(bytes(), payload);
+    }
+  } finally {
+    db.close();
+    store.close();
+  }
+});
+
 test('F07a: layout de análises persiste isolado e restauração demo o preserva, sem aceitar área do Geral', async (t) => {
   const root = await temporary(t);
   let store = new DemoStore(root);

@@ -1,5 +1,6 @@
 <section
   class="statement"
+  [class.charts-focused]="chartsFocused()"
   aria-label="Extrato de movimentações"
   tabindex="-1"
   (keydown.escape)="escape($event)"
@@ -716,6 +717,15 @@
       </section>
     }
   </div>
+  @if (reports(); as charts) {
+    <fd-expense-charts
+      [reports]="charts"
+      [categories]="catalogue.categories()"
+      [labels]="catalogue.labels()"
+      (investigate)="openAnalysisStatement($event)"
+      (focusChanged)="chartsFocused.set($event)"
+    />
+  }
   @if (converted()) {
     <p class="exchange-note">
       Cotação fictícia de apresentação: 1 USD = 5 BRL · 29/10/2026. Não é cotação histórica dos

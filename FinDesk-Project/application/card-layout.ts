@@ -11,12 +11,25 @@ export const CARD_GRID = Object.freeze({
 });
 const IDS: readonly FinanceCardId[] = ['categories', 'evolution', 'upcoming'];
 const ANALYSIS_IDS: readonly FinanceCardId[] = ['largest', 'increase', 'decrease', 'usual'];
+const CHART_IDS: readonly FinanceCardId[] = ['categories', 'evolution'];
 export const cardMinimums = (area: CardArea) =>
   area === 'finance-analysis'
     ? { ...CARD_GRID, minColumns: 3, minRows: 2.5, minWidth: 220 }
-    : CARD_GRID;
+    : area === 'finance-charts'
+      ? { ...CARD_GRID, minWidth: 360 }
+      : CARD_GRID;
 
 export function defaultCardLayout(area: CardArea = 'finance-general'): CardLayout {
+  if (area === 'finance-charts')
+    return {
+      version: 3,
+      area,
+      priority: null,
+      cards: [
+        { id: 'categories', columns: 5, rows: 5 },
+        { id: 'evolution', columns: 7, rows: 5 },
+      ],
+    };
   if (area === 'finance-analysis')
     return {
       version: 3,
@@ -55,7 +68,8 @@ export function normalizeAnalysisLayout(layout: CardLayout): CardLayout {
 export function parseCardLayout(value: unknown, expectedArea?: CardArea): CardLayout {
   const data = object(value);
   const area = data['area'];
-  const ids = area === 'finance-analysis' ? ANALYSIS_IDS : IDS;
+  const ids =
+    area === 'finance-analysis' ? ANALYSIS_IDS : area === 'finance-charts' ? CHART_IDS : IDS;
   const minimums = cardMinimums(area as CardArea);
   const legacy = data['version'] === 1;
   const current = data['version'] === 3;
@@ -68,9 +82,9 @@ export function parseCardLayout(value: unknown, expectedArea?: CardArea): CardLa
           ? 'area,cards,priority,rowStarts,version'
           : 'area,cards,priority,version') ||
     (!legacy && !current && data['version'] !== 2) ||
-    (area !== 'finance-general' && area !== 'finance-analysis') ||
+    (area !== 'finance-general' && area !== 'finance-analysis' && area !== 'finance-charts') ||
     (expectedArea !== undefined && area !== expectedArea) ||
-    (area === 'finance-analysis' && !current) ||
+    (area !== 'finance-general' && !current) ||
     !Array.isArray(data['cards']) ||
     data['cards'].length !== ids.length
   )

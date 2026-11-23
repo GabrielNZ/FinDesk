@@ -190,6 +190,8 @@ export function validateSnapshot(value: unknown): DemoSnapshot {
 }
 
 export type StorageOperation =
+  | 'read-expense-charts-layout'
+  | 'save-expense-charts-layout'
   | 'read-expense-analysis-layout'
   | 'save-expense-analysis-layout'
   | 'read-expense-trash'
@@ -226,6 +228,13 @@ export function parseLayoutRequest(value: unknown): CardLayout {
 export function parseExpenseAnalysisLayoutRequest(value: unknown): CardLayout {
   try {
     return parseCardLayout(value, 'finance-analysis');
+  } catch {
+    throw new StorageFailure('invalid-request');
+  }
+}
+export function parseExpenseChartsLayoutRequest(value: unknown): CardLayout {
+  try {
+    return parseCardLayout(value, 'finance-charts');
   } catch {
     throw new StorageFailure('invalid-request');
   }
@@ -309,6 +318,8 @@ export function validateRequest(value: unknown): WorkerRequest {
     !Number.isSafeInteger(data['id']) ||
     (data['id'] as number) < 1 ||
     ![
+      'read-expense-charts-layout',
+      'save-expense-charts-layout',
       'read-expense-analysis-layout',
       'save-expense-analysis-layout',
       'read-expense-trash',
@@ -349,6 +360,8 @@ export function validateRequest(value: unknown): WorkerRequest {
   else if (data['operation'] === 'classify-merchant') parseMerchantRequest(data['payload']);
   else if (data['operation'] === 'save-preferences') parsePreferences(data['payload']);
   else if (data['operation'] === 'save-card-layout') parseLayoutRequest(data['payload']);
+  else if (data['operation'] === 'save-expense-charts-layout')
+    parseExpenseChartsLayoutRequest(data['payload']);
   else if (data['operation'] === 'save-expense-analysis-layout')
     parseExpenseAnalysisLayoutRequest(data['payload']);
   else if (data['operation'] === 'save-statement-layout')

@@ -1,0 +1,284 @@
+:host {
+  display: block;
+  margin-top: 24px;
+}
+.reports-heading {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  color: var(--fd-muted);
+  font-size: 11px;
+  margin: 0 0 12px;
+}
+.report-lane {
+  min-width: 0;
+}
+.report-lane + .report-lane {
+  border-top: 1px solid var(--fd-border);
+  padding-top: 16px;
+  margin-top: 16px;
+}
+.report-summary {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+}
+.report-summary strong {
+  font-size: 22px;
+  font-weight: 500;
+}
+.report-summary > span,
+.report-range,
+.report-note,
+.category-share {
+  color: var(--fd-muted);
+  font-size: 10px;
+}
+.report-range {
+  margin: 5px 0 16px;
+}
+.category-bars {
+  display: grid;
+  gap: 13px;
+}
+.category-bar {
+  display: grid;
+  gap: 5px;
+  width: 100%;
+  padding: 2px;
+  background: transparent;
+  border: 0;
+  color: var(--fd-text);
+  text-align: left;
+  border-radius: 4px;
+  cursor: pointer;
+  font: inherit;
+}
+.category-bar:hover {
+  background: var(--fd-surface);
+}
+.category-line {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  font-size: 12px;
+}
+.category-name {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.category-line strong {
+  flex-shrink: 0;
+  font-size: 12px;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+}
+.category-track {
+  display: block;
+  height: 7px;
+  background: var(--fd-border);
+  border-radius: 3px;
+  overflow: hidden;
+}
+.category-track > span {
+  display: block;
+  height: 100%;
+  background: var(--fd-muted);
+  border-radius: inherit;
+}
+.category-share {
+  text-align: right;
+}
+.mode-switch {
+  display: flex;
+  width: fit-content;
+  padding: 3px;
+  gap: 3px;
+  border: 1px solid var(--fd-border);
+  border-radius: 8px;
+  margin-bottom: 13px;
+}
+.mode-switch button {
+  padding: 5px 10px;
+  background: transparent;
+  border: 0;
+  border-radius: 5px;
+  color: var(--fd-muted);
+  cursor: pointer;
+  font: inherit;
+  font-size: 11px;
+}
+.mode-switch .active {
+  background: var(--fd-accent);
+  color: #111416;
+}
+.series-labels {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 6px 14px;
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+}
+.current-label {
+  color: var(--fd-accent);
+}
+.previous-label {
+  color: #dc8984;
+}
+.evolution-chart {
+  display: block;
+  margin: 12px 0 0;
+}
+.plot-grid {
+  display: grid;
+  grid-template-columns: 65px minmax(0, 1fr);
+  grid-template-rows: minmax(124px, 1fr) 14px;
+  gap: 8px 4px;
+}
+.chart-surface {
+  position: relative;
+  min-width: 0;
+  height: clamp(124px, calc(100cqh - 205px), 640px);
+}
+.chart-surface svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+  overflow: visible;
+  cursor: crosshair;
+}
+.grid {
+  stroke: var(--fd-border);
+  stroke-width: 0.35;
+  fill: none;
+}
+.day-bar.current {
+  fill: var(--fd-accent);
+}
+.day-bar.previous {
+  fill: #dc8984;
+  opacity: 0.85;
+}
+.day-bar:hover {
+  opacity: 0.65;
+}
+.series-line {
+  fill: none;
+  stroke-width: 2;
+}
+.series-line.current {
+  stroke: var(--fd-accent);
+}
+.series-line.previous {
+  stroke: #dc8984;
+}
+.day-guide {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  border-left: 1px dashed var(--fd-muted);
+  opacity: 0.6;
+  pointer-events: none;
+}
+.y-axis {
+  position: relative;
+  color: var(--fd-muted);
+  font-size: 9px;
+}
+.y-axis span {
+  position: absolute;
+  right: 0;
+  white-space: nowrap;
+  transform: translateY(-50%);
+}
+.x-axis {
+  position: relative;
+  color: var(--fd-muted);
+  font-size: 9px;
+}
+.x-axis span {
+  position: absolute;
+  transform: translateX(-50%);
+  white-space: nowrap;
+}
+@container (max-width: 480px) {
+  .plot-grid {
+    grid-template-rows: minmax(124px, 1fr) 26px;
+  }
+  .chart-surface {
+    height: clamp(124px, calc(100cqh - 217px), 640px);
+  }
+  .x-axis .lower-row {
+    top: 12px;
+  }
+}
+@container (max-width: 300px) {
+  .plot-grid {
+    grid-template-rows: minmax(124px, 1fr) 36px;
+  }
+  .chart-surface {
+    height: clamp(124px, calc(100cqh - 227px), 640px);
+  }
+  .x-axis .lower-row {
+    top: 0;
+  }
+  .x-axis .third-row-1 {
+    top: 11px;
+  }
+  .x-axis .third-row-2 {
+    top: 22px;
+  }
+}
+.axis-label {
+  text-align: right;
+  color: var(--fd-muted);
+  font-size: 9px;
+}
+.day-details {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: 6px;
+}
+.day-number {
+  flex-basis: 100%;
+  color: var(--fd-muted);
+  font-size: 10px;
+}
+.day-action {
+  display: grid;
+  gap: 3px;
+  padding: 3px 0;
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+  text-align: left;
+  font: inherit;
+  font-size: 10px;
+}
+.day-action strong {
+  font-size: 13px;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+}
+.day-action small {
+  color: var(--fd-muted);
+  font-size: 9px;
+}
+.empty {
+  color: var(--fd-muted);
+  font-size: 12px;
+  line-height: 1.5;
+}
+button:focus-visible,
+figure:focus-visible {
+  outline: 2px solid var(--fd-accent);
+  outline-offset: 3px;
+}

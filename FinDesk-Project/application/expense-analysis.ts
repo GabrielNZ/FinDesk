@@ -63,7 +63,7 @@ export interface ExpenseAnalysisQuery {
   readonly labels: Readonly<Record<string, string>>;
 }
 export interface ExpenseStatementRequest {
-  readonly category: string;
+  readonly category: string | null;
   readonly currency: Currency;
   readonly range: DateRange;
   readonly label: string;
@@ -90,7 +90,7 @@ export function expenseStatementPreview(
     .filter((row) => {
       if (
         row.movement.kind !== 'expense' ||
-        row.category !== request.category ||
+        (request.category !== null && row.category !== request.category) ||
         seen.has(row.movement.id) ||
         (query.currencyMode === 'original' && row.movement.delta.currency !== request.currency)
       )
@@ -121,7 +121,8 @@ export function expenseStatementPreview(
   }
   return {
     request,
-    categoryLabel: categoryLabel(request.category, query.labels),
+    categoryLabel:
+      request.category === null ? 'Despesas do dia' : categoryLabel(request.category, query.labels),
     rows,
     total,
     converted: rows.some(

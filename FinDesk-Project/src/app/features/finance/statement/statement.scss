@@ -5,6 +5,12 @@
 .statement {
   min-width: 0;
 }
+.charts-focused > :not(fd-expense-charts):not(fd-expense-statement-modal) {
+  display: none;
+}
+.charts-focused > fd-expense-charts {
+  margin-top: 0;
+}
 .statement-layout,
 .movement-list,
 .selection-area,

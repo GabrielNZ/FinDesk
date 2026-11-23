@@ -6,6 +6,9 @@ import type { StorageApi } from '../shared/storage-api';
 const api: DesktopApi = Object.freeze({
   getRuntimeInfo: (): Promise<DesktopRuntimeInfo> => ipcRenderer.invoke('findesk:runtime-info'),
   storage: Object.freeze<StorageApi>({
+    getExpenseChartsLayout: () => ipcRenderer.invoke('findesk:expense-charts-layout-read'),
+    saveExpenseChartsLayout: (value) =>
+      ipcRenderer.invoke('findesk:expense-charts-layout-save', value),
     getExpenseAnalysisLayout: () => ipcRenderer.invoke('findesk:expense-analysis-layout-read'),
     saveExpenseAnalysisLayout: (value) =>
       ipcRenderer.invoke('findesk:expense-analysis-layout-save', value),
