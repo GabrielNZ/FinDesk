@@ -1,0 +1,84 @@
+<section class="invoice-categories" aria-label="Categorias da fatura">
+  <div class="category-heading">
+    <h3>Categorias da fatura</h3>
+    <span>Itens conhecidos</span>
+  </div>
+  @if (!catalogue.value()) {
+    @if (catalogue.error()) {
+      <p class="category-state" role="alert">{{ catalogue.error() }}</p>
+      <button type="button" class="retry" (click)="catalogue.load()">Tentar novamente</button>
+    } @else {
+      <p class="category-state" role="status">Carregando categorias…</p>
+    }
+  } @else if (unavailable()) {
+    <p class="category-state">Valores indisponíveis para a composição.</p>
+  } @else if (reading().categories.length) {
+    <div
+      class="category-track"
+      role="group"
+      aria-label="Composição dos itens da fatura"
+      [style.--category-x]="anchor() + '%'"
+      (pointerenter)="point($event, true)"
+      (pointermove)="point($event)"
+      (pointerleave)="leave()"
+      (keydown)="key($event)"
+    >
+      @for (part of reading().categories; track part.categoryId; let index = $index) {
+        @let meta = category(part.categoryId);
+        <button
+          type="button"
+          class="category-segment"
+          [class.active]="activeIndex() === index"
+          [style.width.%]="part.width"
+          [style.--category-color]="meta.color"
+          [attr.data-category]="part.categoryId ?? 'uncategorized'"
+          [attr.aria-label]="meta.name + ': ' + money(part.amount) + ', ' + part.share"
+          [attr.aria-describedby]="activeIndex() === index ? 'invoice-category-detail' : null"
+          (focus)="focusPart($event, index)"
+          (blur)="focus.set(null)"
+        >
+          <span class="segment-fill" aria-hidden="true"></span>
+        </button>
+      }
+      @if (active(); as part) {
+        @let meta = category(part.categoryId);
+        <span
+          class="category-dot"
+          [style.left.%]="anchor()"
+          [style.background]="meta.color"
+          aria-hidden="true"
+        ></span>
+        <span class="category-tooltip" id="invoice-category-detail" role="tooltip">
+          <span class="tooltip-category"
+            ><i [class]="'pi ' + meta.icon" [style.color]="meta.color" aria-hidden="true"></i
+            ><span>{{ meta.name }}</span></span
+          >
+          <span class="tooltip-values"
+            ><strong>{{ money(part.amount) }}</strong
+            ><span>{{ part.share }}</span></span
+          >
+          @if (converted()) {
+            <small>Original: {{ originalMoney(part.amount) }}</small>
+          }
+        </span>
+      }
+    </div>
+    @if (differentTotal()) {
+      <p class="category-state">
+        Base conhecida: {{ money(reading().knownSubtotal) }}. Os itens conhecidos não correspondem
+        ao total confirmado.
+      </p>
+    }
+    @if (converted()) {
+      <p class="category-state">Participações calculadas na moeda original.</p>
+    }
+  } @else {
+    <p class="category-state">
+      {{
+        reading().itemCount
+          ? 'Nenhum valor a distribuir entre categorias.'
+          : 'Nenhum item conhecido nesta fatura.'
+      }}
+    </p>
+  }
+</section>

@@ -320,7 +320,7 @@ Fontes consultadas em 28/10/2026:
 
 **D143 — dia no topo da dica, solicitado por Gabriel em 10/11/2026:** substituir a data completa do cabeçalho por “Dia N”, como na primeira versão da dica. Atual/Anterior continuam sem datas ao lado; a posição horizontal indica o dia equivalente e os valores permanecem separados por período. Substitui a apresentação da data completa e a alternância de linha da D142.
 
-## Perguntas aguardando resposta e pesquisas futuras
+## Decisões posteriores da área financeira
 
 **D144 — composição da F07b, confirmada por Gabriel em 11/11/2026:** Categorias e Evolução abaixo da consulta/Seleção, lado a lado com mais largura para Evolução; em janela estreita, disposição vertical. Preservar arraste, redimensionamento, foco temporário e layout salvo próprio.
 
@@ -331,6 +331,26 @@ Fontes consultadas em 28/10/2026:
 **D147 — eixo e datas da Evolução, solicitado por Gabriel em 22/11/2026:** a escala horizontal marca todos os dias com despesas na série atual ou anterior, além das referências de início/meio/fim. Os intervalos das duas séries aparecem uma única vez, abaixo do seletor Por dia/Acumulado; as ações Atual/Anterior do dia consultado mostram valores sem repetir datas visíveis. A data civil exata permanece no extrato aberto e no nome acessível da ação.
 
 **D148 — apresentação enxuta da Evolução, solicitada por Gabriel em 22/11/2026:** remover também a linha de intervalos Atual/Anterior abaixo do seletor. Todos os números dos dias no eixo horizontal usam o mesmo cinza, inclusive os dias com despesas. A data exata continua disponível no extrato do dia e nos nomes acessíveis das ações. Substitui apenas a apresentação de datas de D147; a marcação de dias com despesas permanece.
+
+**D149 — navegação das faturas na F08a, confirmada por Gabriel em 23/11/2026:** carteira à esquerda e fatura à direita, com mês/setas e faixa dos meses próximos. Consultar outra fatura/cartão preserva contexto global e referência de Configurações. Critérios em CARTAO.md.
+
+**D150 — segundo cartão da demonstração na F08a, confirmado por Gabriel em 23/11/2026:** acrescentar segundo cartão inteiramente fictício à mesma conta Nubank, com identificação/faturas próprias, por atualização versionada que preserve os dados atuais. Sem movimentar dinheiro ou conectar instituição.
+
+**D151 — valor conhecido na F08a, confirmado por Gabriel em 23/11/2026:** destacar o subtotal de R$ 283,24 da fatura de novembro com Valor conhecido e Em formação; não tratar como cobrança final. Fechamento/vencimento e limites de fonte própria permanecem identificados.
+
+**D152 — leitura dos limites na F08a, solicitada por Gabriel em 23/11/2026:** total na ponta direita da barra. Utilizado aparece ao passar o ponteiro na parte preenchida; disponível, na parte restante. Retirar a grade fixa com os três valores. Mesma consulta por foco/teclado, Escape para ocultar a dica e valores/fontes/conversão preservados.
+
+**D153 — cartão não selecionado na F08a, solicitado por Gabriel em 23/11/2026:** deixar o cartão de trás um pouco mais escondido e fazê-lo subir ao passar o mouse. Foco de teclado oferece o mesmo destaque temporário, sem selecionar por hover; preservar clique/arrasto/teclado e movimento reduzido.
+
+**D154 — consulta contínua da barra de limite, solicitada por Gabriel em 23/11/2026:** a dica acompanha horizontalmente o ponteiro pela barra, trocando entre Utilizado e Disponível ao cruzar a divisão nos dois sentidos. Manter um único mostrador, sem salto entre âncoras fixas de cada trecho; conter a dica nas bordas. Teclado, Escape, valores e conversão preservados.
+
+**D155 — marcador circular da barra de limite, solicitado por Gabriel em 23/11/2026:** substituir a pequena linha por uma bolinha que acompanha o ponto consultado. Usar a mesma cor do trecho: verde no preenchido e escura no restante. Preservar a consulta contínua, dica e teclado da D154.
+
+**D156 — hierarquia da fatura, solicitada por Gabriel em 23/11/2026:** retirar a faixa de meses próximos abaixo do mês com setas, pois repete a navegação. Manter o mês/setas da fatura; subir e ampliar seu valor. Inserir composição por categoria entre o valor e os limites; detalhes da expansão discutidos em rodada própria antes da parte dependente. Não vincular a navegação da fatura ao período global.
+
+**D157 — composição por categoria da fatura, confirmada por Gabriel em 23/11/2026:** barra única, do maior gasto para o menor, com cores do catálogo. Cada segmento mantém a largura proporcional e cresce apenas em altura no hover/foco, com dica acompanhando o mouse e mostrando ícone/nome/valor/participação. Expansão temporária, sem salvar tamanho ou alterar a fatura. Somente itens conhecidos da fatura selecionada, seguindo D24; não somar compras contratadas/pagamentos como novos gastos. Antecipação limitada desta análise, sem autorizar o restante da F09.
+
+## Perguntas aguardando resposta e pesquisas futuras
 
 **D134 — minigráfico acumulado da F07a, confirmado por Gabriel em 07/11/2026:** linha de gastos acumulados ao longo dos dias, atual e anterior quando houver cobertura, com seta na ponta da linha atual. Despesas somam no dia; sem nova despesa o acumulado permanece horizontal. Não preencher histórico ausente com zeros; manter intervalos equivalentes, moedas, filtros e base fictícia atuais. Substitui barras/colunas da revisão anterior.
 

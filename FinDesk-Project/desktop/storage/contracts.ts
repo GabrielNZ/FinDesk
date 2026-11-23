@@ -159,7 +159,7 @@ export function validateSnapshot(value: unknown): DemoSnapshot {
     if (
       data['formatVersion'] !== 1 ||
       data['seedId'] !== 'demo-financas-v1' ||
-      (data['seedVersion'] !== 1 && data['seedVersion'] !== 2) ||
+      (data['seedVersion'] !== 1 && data['seedVersion'] !== 2 && data['seedVersion'] !== 3) ||
       data['timezone'] !== 'America/Sao_Paulo'
     )
       throw new StorageFailure('incompatible');

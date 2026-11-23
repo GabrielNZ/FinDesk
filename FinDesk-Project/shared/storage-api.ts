@@ -20,7 +20,7 @@ import type {
 export interface DemoSnapshot {
   readonly formatVersion: 1;
   readonly seedId: 'demo-financas-v1';
-  readonly seedVersion: 1 | 2;
+  readonly seedVersion: 1 | 2 | 3;
   readonly asOf: CivilDate;
   readonly timezone: 'America/Sao_Paulo';
   readonly facts: FinanceFacts;

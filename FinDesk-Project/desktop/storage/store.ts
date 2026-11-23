@@ -54,6 +54,7 @@ import { mkdirSync } from 'node:fs';
 import { isAbsolute, join } from 'node:path';
 import { createDemoScenario } from '../../fixtures/financas/demo';
 import { withSeptemberHistory } from '../../fixtures/financas/comparison-history';
+import { withSecondCard } from '../../fixtures/financas/card-wallet';
 import type { DemoSnapshot, FinancePreferences, StorageInfo } from '../../shared/storage-api';
 import { parsePreferences, parseStoredJson, StorageFailure, validateSnapshot } from './contracts';
 import { DEMO_MIGRATIONS, migrate, PREFERENCE_MIGRATIONS } from './migrations';
@@ -127,7 +128,7 @@ export class DemoStore {
           this.demo!.exec('UPDATE storage_identity SET initialized = 1');
         } else if (initialized === 1 && row) validateSnapshot(parseStoredJson(row['payload']));
         else throw new StorageFailure('corrupt');
-        const previous = this.readDemo();
+        let previous = this.readDemo();
         if (previous.seedVersion === 1) {
           let next;
           try {
@@ -140,6 +141,18 @@ export class DemoStore {
             JSON.stringify(next),
           );
           this.writeRuleState(rules);
+          previous = next;
+        }
+        if (previous.seedVersion === 2) {
+          let next;
+          try {
+            next = validateSnapshot(withSecondCard(previous));
+          } catch {
+            throw new StorageFailure('corrupt');
+          }
+          this.demo!.prepare('UPDATE demo_state SET payload = ? WHERE singleton = 1').run(
+            JSON.stringify(next),
+          );
         }
       });
       transaction(this.preferences, () => {
@@ -208,7 +221,7 @@ export class DemoStore {
   restoreDemo(): DemoSnapshot {
     const [demo] = this.requireOpen();
     transaction(demo, () => {
-      const fresh = withSeptemberHistory(freshDemo());
+      const fresh = withSecondCard(withSeptemberHistory(freshDemo()));
       const facts = demo
         .prepare('UPDATE demo_state SET payload = ? WHERE singleton = 1')
         .run(JSON.stringify(fresh));

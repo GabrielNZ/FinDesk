@@ -6,7 +6,7 @@ import type { DemoSnapshot } from '../../shared/storage-api';
 
 /** D136: setembro fictício, recebido uma vez; não é importação real. */
 export function withSeptemberHistory(snapshot: DemoSnapshot): DemoSnapshot {
-  if (snapshot.seedVersion === 2) return snapshot;
+  if (snapshot.seedVersion === 2 || snapshot.seedVersion === 3) return snapshot;
   if (snapshot.seedVersion !== 1) throw new Error('Versão fictícia incompatível.');
   const entries = [
     ['a-e1', 'demo-a', '03', 7000, 'entretenimento', 'servico-mensal'],

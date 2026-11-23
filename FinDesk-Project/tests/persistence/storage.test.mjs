@@ -68,6 +68,10 @@ test('F07a/D136: atualização v1→v2 preserva manuais, recibos, excluídas, ca
       accounts: base.accounts,
       movements: current.facts.movements.filter((m) => !isSeptember(m.id)),
       coverage: base.coverage,
+      cards: base.cards,
+      purchases: base.purchases,
+      invoices: base.invoices,
+      invoiceItems: base.invoiceItems,
     },
   };
   const prefs = store.readPreferences(),
@@ -95,7 +99,7 @@ test('F07a/D136: atualização v1→v2 preserva manuais, recibos, excluídas, ca
     const before = preserved();
     store = new DemoStore(root);
     const after = store.readDemo();
-    assert.equal(after.seedVersion, 2);
+    assert.equal(after.seedVersion, 3);
     assert.deepEqual(
       after.facts.movements.filter((m) => !isSeptember(m.id)),
       legacy.facts.movements,
@@ -140,7 +144,7 @@ test('F07a/D136: falha ao atualizar recibo de chegadas reverte fatos e versão d
     assert.equal(db.prepare('SELECT payload FROM demo_state').get().payload, bytes);
     db.exec('DROP TRIGGER fail_seed_update');
     const next = new DemoStore(root);
-    assert.equal(next.readDemo().seedVersion, 2);
+    assert.equal(next.readDemo().seedVersion, 3);
     next.close();
   } finally {
     db.close();

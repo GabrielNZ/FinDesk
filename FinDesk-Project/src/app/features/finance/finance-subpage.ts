@@ -1,26 +1,24 @@
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { ActivatedRoute } from '@angular/router';
-import { FinanceContext } from './finance-context.service';
 import { CardBoard } from './cards/card-board';
 import { Statement } from './statement/statement';
+import { CardPage } from './card/card-page';
 
 @Component({
   selector: 'fd-finance-subpage',
-  imports: [CardBoard, Statement],
+  imports: [CardBoard, Statement, CardPage],
   template: `
     @if (route()['section'] === 'geral') {
       <fd-card-board />
     } @else if (route()['section'] === 'movimentacoes') {
       <fd-statement />
+    } @else if (route()['section'] === 'cartao') {
+      <fd-card-page />
     } @else {
       <section class="finance-content" [attr.aria-label]="route()['label']">
         <h2>{{ route()['label'] }}</h2>
-        @if (route()['section'] === 'cartao' && !context.hasCard()) {
-          <p>Esta conta não possui cartão na demonstração.</p>
-        } @else {
-          <p>{{ route()['pending'] }}</p>
-        }
+        <p>{{ route()['pending'] }}</p>
       </section>
     }
   `,
@@ -45,7 +43,6 @@ import { Statement } from './statement/statement';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class FinanceSubpage {
-  readonly context = inject(FinanceContext);
   private readonly activatedRoute = inject(ActivatedRoute);
   readonly route = toSignal(this.activatedRoute.data, {
     initialValue: this.activatedRoute.snapshot.data,

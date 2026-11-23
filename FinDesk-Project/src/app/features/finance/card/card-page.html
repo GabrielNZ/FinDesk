@@ -1,0 +1,199 @@
+<section class="card-page" aria-label="Cartões e faturas">
+  @if (cards().length) {
+    <div class="wallet-column">
+      <div class="section-heading">
+        <h2>Cartões</h2>
+        <span>{{ cards().length }} na demonstração</span>
+      </div>
+      <div class="wallet" role="group" aria-label="Selecionar cartão">
+        @for (card of cards(); track card.id) {
+          <button
+            type="button"
+            class="bank-card"
+            [class.selected]="selectedCard()?.id === card.id"
+            [class.secondary]="card.id === 'card-demo-extra'"
+            [class.dragging]="dragging()?.id === card.id"
+            [style.--card-top]="cardTop(card) + 'px'"
+            [style.--drag-x]="(dragging()?.id === card.id ? dragging()!.x : 0) + 'px'"
+            [style.--drag-y]="(dragging()?.id === card.id ? dragging()!.y : 0) + 'px'"
+            [attr.data-wallet-id]="card.id"
+            [attr.aria-label]="accountName(card) + ', cartão final ' + card.lastDigits"
+            [attr.aria-pressed]="selectedCard()?.id === card.id"
+            (click)="click(card)"
+            (keydown)="key($event, card)"
+            (pointerdown)="down($event, card)"
+            (pointermove)="motion($event)"
+            (pointerup)="up($event)"
+            (pointercancel)="cancel()"
+            (lostpointercapture)="cancel()"
+          >
+            <span class="card-bank"
+              ><img src="institutions/nubank.ico" alt="" draggable="false" /><strong>{{
+                accountName(card)
+              }}</strong
+              ><span>•• {{ card.lastDigits }}</span></span
+            >
+            <span class="chip" aria-hidden="true"><span></span></span>
+            <span class="card-bottom"
+              ><span>Demonstração</span><i class="pi pi-credit-card" aria-hidden="true"></i
+            ></span>
+          </button>
+        }
+      </div>
+      <p class="wallet-help">Selecione ou arraste um cartão para destacá-lo.</p>
+      <p class="wallet-reference">Referência fictícia · {{ date(context.snapshot()!.asOf) }}</p>
+    </div>
+    <section class="invoice-panel" aria-label="Fatura do cartão selecionado" aria-live="polite">
+      @if (selectedCard(); as card) {
+        <div class="section-heading invoice-heading">
+          <h2>Fatura</h2>
+          <span>Cartão final {{ card.lastDigits }}</span>
+        </div>
+        @if (selected(); as row) {
+          <div class="invoice-navigation" role="group" aria-label="Navegar entre faturas">
+            <button
+              class="arrow"
+              type="button"
+              aria-label="Fatura anterior"
+              [disabled]="index() <= 0"
+              (click)="move(-1)"
+            >
+              <i class="pi pi-chevron-left" aria-hidden="true"></i>
+            </button>
+            <h3>{{ month(row, true) }}</h3>
+            <button
+              class="arrow"
+              type="button"
+              aria-label="Próxima fatura"
+              [disabled]="index() >= invoices().length - 1"
+              (click)="move(1)"
+            >
+              <i class="pi pi-chevron-right" aria-hidden="true"></i>
+            </button>
+          </div>
+          <div class="invoice-summary" [attr.data-invoice-id]="row.invoice.id">
+            <div class="invoice-value-heading">
+              <p class="amount-label">
+                {{ row.invoice.confirmedTotal !== null ? 'Valor confirmado' : 'Valor conhecido' }}
+              </p>
+              <span class="invoice-status" [class.paid]="row.invoice.status === 'paid'">{{
+                status(row)
+              }}</span>
+            </div>
+            <strong class="invoice-amount">{{
+              money(row.invoice.confirmedTotal ?? row.knownSubtotal)
+            }}</strong>
+            @if (row.invoice.confirmedTotal === null) {
+              <p class="amount-note">
+                {{
+                  row.knownSubtotal
+                    ? 'Itens já conhecidos. O valor final ainda não foi confirmado.'
+                    : row.itemCount > 0
+                      ? 'Não foi possível calcular o valor dos itens conhecidos.'
+                      : 'Ainda não há itens ou total confirmado para esta fatura.'
+                }}
+              </p>
+            }
+            @if (converted() && (row.invoice.confirmedTotal ?? row.knownSubtotal); as original) {
+              <p class="original-amount">Original: {{ originalMoney(original) }}</p>
+            }
+            <dl class="invoice-dates">
+              <div>
+                <dt>Fechamento</dt>
+                <dd>{{ date(row.invoice.closesOn) }}</dd>
+              </div>
+              <div>
+                <dt>Vencimento</dt>
+                <dd>{{ date(row.invoice.dueOn) }}</dd>
+              </div>
+            </dl>
+          </div>
+          <fd-invoice-categories
+            [reading]="row"
+            [currency]="context.currencyMode()"
+            [asOf]="context.snapshot()!.asOf"
+          />
+        } @else {
+          <p class="empty-invoices">Nenhuma fatura salva para este cartão.</p>
+        }
+        <section class="limits" aria-label="Limites do cartão">
+          <div class="limit-heading">
+            <h3>Limites</h3>
+            <span>Fonte {{ card.limitSource }}</span>
+          </div>
+          <div class="limit-plot">
+            <div
+              class="limit-track"
+              role="group"
+              aria-label="Utilização do limite"
+              [style.--limit-x]="limitAnchor() + '%'"
+              (pointerenter)="pointLimit($event, true)"
+              (pointermove)="pointLimit($event)"
+              (pointerleave)="leaveLimit()"
+            >
+              <button
+                type="button"
+                class="limit-part used"
+                [style.width.%]="usedPercent() ?? 0"
+                [attr.aria-label]="'Limite utilizado: ' + money(card.usedLimit)"
+                [attr.aria-describedby]="activeLimit() === 'used' ? 'card-limit-detail' : null"
+                (focus)="focusLimit($event, 'used')"
+                (blur)="limitFocus.set(null)"
+              >
+                <span class="limit-fill" aria-hidden="true"></span>
+              </button>
+              <button
+                type="button"
+                class="limit-part available"
+                [style.width.%]="100 - (usedPercent() ?? 0)"
+                [attr.aria-label]="'Limite disponível: ' + money(card.availableLimit)"
+                [attr.aria-describedby]="activeLimit() === 'available' ? 'card-limit-detail' : null"
+                (focus)="focusLimit($event, 'available')"
+                (blur)="limitFocus.set(null)"
+              >
+                <span class="limit-fill" aria-hidden="true"></span>
+              </button>
+              @if (activeLimit(); as part) {
+                <span
+                  class="limit-cursor"
+                  [class.is-used]="part === 'used'"
+                  [style.left.%]="limitAnchor()"
+                  aria-hidden="true"
+                ></span>
+                <span id="card-limit-detail" role="tooltip" class="limit-tooltip">
+                  <span>{{ part === 'used' ? 'Utilizado' : 'Disponível' }}</span>
+                  <strong>{{
+                    money(part === 'used' ? card.usedLimit : card.availableLimit)
+                  }}</strong>
+                  @if (converted()) {
+                    <small
+                      >Original:
+                      {{
+                        originalMoney(part === 'used' ? card.usedLimit : card.availableLimit)
+                      }}</small
+                    >
+                  }
+                </span>
+              }
+            </div>
+            <span class="limit-total"
+              ><small>Total</small><strong>{{ money(card.totalLimit) }}</strong></span
+            >
+          </div>
+          @if (converted()) {
+            <p class="conversion-note">
+              Cotação fictícia de apresentação · 1 USD = 5 BRL · 29/10/2026.<br />Limite total
+              original: {{ originalMoney(card.totalLimit) }}.
+            </p>
+          }
+        </section>
+      }
+    </section>
+  } @else {
+    <div class="empty-wallet">
+      <i class="pi pi-credit-card" aria-hidden="true"></i>
+      <h2>Nenhum cartão nesta conta</h2>
+      <p>Esta conta não possui cartão na demonstração.</p>
+    </div>
+  }
+</section>
