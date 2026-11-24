@@ -1,6 +1,10 @@
 {
   "extends": "./tsconfig.json",
-  "compilerOptions": { "outDir": "./out/angular", "types": [] },
+  "compilerOptions": {
+    "outDir": "./out/angular",
+    "types": [],
+    "lib": ["ES2022", "DOM", "DOM.Iterable"]
+  },
   "files": ["src/main.ts"],
   "include": ["src/**/*.d.ts", "shared/**/*.ts"]
 }

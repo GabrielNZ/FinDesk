@@ -23,6 +23,11 @@ import { CardPage } from './card/card-page';
     }
   `,
   styles: `
+    :host {
+      display: block;
+      min-width: 0;
+      view-transition-name: finance-submenu;
+    }
     .finance-content {
       border: 1px solid var(--fd-border);
       border-radius: var(--fd-radius);

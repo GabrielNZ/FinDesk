@@ -1,5 +1,65 @@
 @import 'primeicons/primeicons.css';
 
+/* Capturas nativas: apenas o conteúdo dos submenus desliza; o cabeçalho fica parado. */
+:root {
+  view-transition-name: none;
+}
+::view-transition,
+::view-transition-group(*),
+::view-transition-image-pair(*),
+::view-transition-old(*),
+::view-transition-new(*) {
+  pointer-events: none;
+}
+::view-transition-group(finance-submenu) {
+  animation: none;
+  overflow: clip;
+}
+::view-transition-old(finance-submenu),
+::view-transition-new(finance-submenu) {
+  mix-blend-mode: normal;
+  animation: 240ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+:root:active-view-transition-type(finance-forward)::view-transition-old(finance-submenu) {
+  animation-name: finance-slide-out-left;
+}
+:root:active-view-transition-type(finance-forward)::view-transition-new(finance-submenu) {
+  animation-name: finance-slide-in-right;
+}
+:root:active-view-transition-type(finance-backward)::view-transition-old(finance-submenu) {
+  animation-name: finance-slide-out-right;
+}
+:root:active-view-transition-type(finance-backward)::view-transition-new(finance-submenu) {
+  animation-name: finance-slide-in-left;
+}
+@keyframes finance-slide-out-left {
+  to {
+    transform: translateX(-100%);
+  }
+}
+@keyframes finance-slide-in-right {
+  from {
+    transform: translateX(100%);
+  }
+}
+@keyframes finance-slide-out-right {
+  to {
+    transform: translateX(100%);
+  }
+}
+@keyframes finance-slide-in-left {
+  from {
+    transform: translateX(-100%);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-group(*),
+  ::view-transition-old(*),
+  ::view-transition-new(*) {
+    animation: none !important;
+  }
+}
+
 :root {
   color-scheme: dark;
   --fd-bg: #111416;

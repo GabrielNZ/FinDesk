@@ -1,11 +1,12 @@
 import { ApplicationConfig, LOCALE_ID, provideBrowserGlobalErrorListeners } from '@angular/core';
 import { registerLocaleData } from '@angular/common';
 import localePt from '@angular/common/locales/pt';
-import { provideRouter, withHashLocation } from '@angular/router';
+import { provideRouter, withHashLocation, withViewTransitions } from '@angular/router';
 import { definePreset } from '@primeuix/themes';
 import Aura from '@primeuix/themes/aura';
 import { providePrimeNG } from 'primeng/config';
 import { routes } from './app.routes';
+import { financeTransition } from './features/finance/finance-transition';
 
 registerLocaleData(localePt);
 
@@ -54,7 +55,14 @@ const FinDeskPreset = definePreset(Aura, {
 export const appConfig: ApplicationConfig = {
   providers: [
     provideBrowserGlobalErrorListeners(),
-    provideRouter(routes, withHashLocation()),
+    provideRouter(
+      routes,
+      withHashLocation(),
+      withViewTransitions({
+        skipInitialTransition: true,
+        onViewTransitionCreated: financeTransition,
+      }),
+    ),
     { provide: LOCALE_ID, useValue: 'pt-BR' },
     providePrimeNG({
       theme: { preset: FinDeskPreset, options: { darkModeSelector: '.fd-dark', cssLayer: false } },

@@ -6,6 +6,7 @@ import { CircleSelector, type CircleChoice } from './circle-selector';
 import { PeriodControl } from './period-control';
 import { CardLayoutAction } from './cards/card-layout-action';
 import { CardLayoutState } from './cards/card-layout.service';
+import { FINANCE_SUBMENUS } from './finance-submenus';
 
 @Component({
   selector: 'fd-finance-page',
@@ -43,13 +44,7 @@ export class FinancePage {
     { value: 'BRL', label: 'Real · BRL', symbol: 'brl' },
     { value: 'USD', label: 'Dólar · USD', symbol: 'usd' },
   ];
-  readonly submenus = [
-    { path: 'geral', label: 'Geral' },
-    { path: 'movimentacoes', label: 'Movimentações' },
-    { path: 'cartao', label: 'Cartão' },
-    { path: 'compromissos', label: 'Compromissos' },
-    { path: 'assinaturas', label: 'Assinaturas' },
-  ];
+  readonly submenus = FINANCE_SUBMENUS;
 
   constructor() {
     void this.context.load();
