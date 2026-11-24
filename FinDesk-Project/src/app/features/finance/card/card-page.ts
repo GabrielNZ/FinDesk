@@ -21,10 +21,11 @@ import { DEMO_EXCHANGE_RATE } from '../../../../../fixtures/financas/demo';
 import { FinanceContext } from '../finance-context.service';
 import { CardConsultation } from './card-consultation.service';
 import { InvoiceCategories } from './invoice-categories';
+import { InvoicePurchaseList } from './invoice-purchases';
 
 @Component({
   selector: 'fd-card-page',
-  imports: [InvoiceCategories],
+  imports: [InvoiceCategories, InvoicePurchaseList],
   templateUrl: './card-page.html',
   styleUrl: './card-page.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

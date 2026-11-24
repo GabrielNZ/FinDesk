@@ -1,0 +1,255 @@
+<section class="invoice-purchases" aria-label="Compras e parcelas da fatura">
+  @if (query(); as value) {
+    <header>
+      <div>
+        <h2>Compras desta fatura</h2>
+        <p>
+          {{ value.rows.length }}
+          {{ value.rows.length === 1 ? 'item conhecido' : 'itens conhecidos' }} ·
+          {{ month(value.invoice) }}
+        </p>
+      </div>
+      <div class="known-total">
+        <span>Itens conhecidos</span><strong>{{ money(value.knownTotal) }}</strong>
+      </div>
+    </header>
+    @if (differentTotal()) {
+      <p class="notice">Os itens conhecidos diferem do total confirmado da fatura.</p>
+    }
+    @if (!catalogue.value()) {
+      <p class="notice">{{ catalogue.error() ?? 'Carregando categorias e estabelecimentos…' }}</p>
+      @if (catalogue.error()) {
+        <button type="button" class="retry" (click)="catalogue.load()">Tentar novamente</button>
+      }
+    } @else if (value.rows.length) {
+      <div class="purchase-table-wrap">
+        <table class="purchase-table">
+          <caption class="visually-hidden">
+            Itens da fatura do cartão final
+            {{
+              value.card.lastDigits
+            }},
+            {{
+              month(value.invoice)
+            }}.
+          </caption>
+          <thead>
+            <tr>
+              <th scope="col" class="date-column">Data da compra</th>
+              <th scope="col" class="merchant-column">Estabelecimento</th>
+              <th scope="col" class="category-column">Categoria</th>
+              <th scope="col" class="installment-column">Parcela</th>
+              <th scope="col" class="amount-column">Nesta fatura</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (row of value.rows; track row.item.id; let index = $index) {
+              @let meta = category(row.purchase);
+              <tr
+                class="purchase-row"
+                [class.open]="expanded() === row.item.id"
+                [attr.data-purchase-id]="row.purchase.id"
+                [attr.data-item-id]="row.item.id"
+              >
+                <td class="date-column">{{ date(row.purchase.purchasedOn) }}</td>
+                <td class="merchant-column">
+                  <button
+                    type="button"
+                    class="purchase-toggle"
+                    [id]="'invoice-purchase-toggle-' + index"
+                    [attr.aria-label]="
+                      'Detalhes da compra em ' +
+                      catalogue.merchantLabel(row.purchase.merchantId) +
+                      ', ' +
+                      date(row.purchase.purchasedOn) +
+                      ', ' +
+                      money(row.item.amount)
+                    "
+                    [attr.aria-expanded]="expanded() === row.item.id"
+                    [attr.aria-controls]="'invoice-purchase-details-' + index"
+                    (click)="toggle(row)"
+                  >
+                    <i
+                      [class]="
+                        'pi ' +
+                        (expanded() === row.item.id ? 'pi-chevron-down' : 'pi-chevron-right')
+                      "
+                      aria-hidden="true"
+                    ></i
+                    ><span
+                      >{{ catalogue.merchantLabel(row.purchase.merchantId)
+                      }}<small class="compact-category" [style.color]="meta.color">{{
+                        meta.name
+                      }}</small></span
+                    >
+                  </button>
+                </td>
+                <td class="category-column">
+                  <span class="category-label"
+                    ><i
+                      [class]="'pi ' + meta.icon"
+                      [style.color]="meta.color"
+                      aria-hidden="true"
+                    ></i
+                    >{{ meta.name }}</span
+                  >
+                </td>
+                <td class="installment-column">{{ installment(row) }}</td>
+                <td class="amount-column">
+                  <strong>{{ money(row.item.amount) }}</strong>
+                  @if (converted(row.item.amount)) {
+                    <small>{{ original(row.item.amount) }}</small>
+                  }
+                </td>
+              </tr>
+              @if (expanded() === row.item.id) {
+                <tr class="purchase-detail-row">
+                  <td colspan="5">
+                    <div
+                      class="purchase-details"
+                      [id]="'invoice-purchase-details-' + index"
+                      role="region"
+                      [attr.aria-labelledby]="'invoice-purchase-toggle-' + index"
+                      tabindex="0"
+                    >
+                      <dl class="purchase-summary">
+                        <div>
+                          <dt>Total contratado</dt>
+                          <dd>
+                            {{ money(row.purchase.total) }}
+                            @if (converted(row.purchase.total)) {
+                              <small>Original: {{ original(row.purchase.total) }}</small>
+                            }
+                          </dd>
+                        </div>
+                        <div>
+                          <dt>Nesta fatura</dt>
+                          <dd>{{ money(row.item.amount) }}</dd>
+                        </div>
+                        <div>
+                          <dt>Após esta fatura{{ row.complete ? '' : ' (conhecido)' }}</dt>
+                          <dd>
+                            @if (row.afterCount) {
+                              {{ row.afterCount }}
+                              {{ row.afterCount === 1 ? 'parcela' : 'parcelas' }} ·
+                              {{ money(row.afterKnownTotal) }}
+                            } @else {
+                              {{
+                                row.complete
+                                  ? 'Nenhuma parcela posterior'
+                                  : 'Nenhuma parcela posterior conhecida'
+                              }}
+                            }
+                          </dd>
+                        </div>
+                        <div>
+                          <dt>
+                            {{ row.complete ? 'Término da agenda' : 'Último vencimento conhecido' }}
+                          </dt>
+                          <dd>
+                            {{ row.lastKnownDueOn ? date(row.lastKnownDueOn!) : 'Não informado' }}
+                          </dd>
+                        </div>
+                        <div>
+                          <dt>Origem</dt>
+                          <dd>{{ source(row.purchase) }}</dd>
+                        </div>
+                        <div>
+                          <dt>Fonte</dt>
+                          <dd>{{ row.purchase.origin.sourceId }}</dd>
+                        </div>
+                      </dl>
+                      @if (!row.complete) {
+                        <p class="notice">
+                          Agenda informada como parcial: {{ row.schedule.length }} de
+                          {{ row.purchase.installmentCount }} parcelas conhecidas. As parcelas
+                          ausentes não foram estimadas.
+                        </p>
+                      }
+                      <div class="schedule-heading">
+                        <h3>Agenda de parcelas</h3>
+                        <span>
+                          {{ row.schedule.length }}
+                          {{
+                            row.schedule.length === 1 ? 'parcela conhecida' : 'parcelas conhecidas'
+                          }}
+                        </span>
+                      </div>
+                      <table class="installment-table">
+                        <caption class="visually-hidden">
+                          Agenda da compra de
+                          {{
+                            date(row.purchase.purchasedOn)
+                          }}
+                          em
+                          {{
+                            catalogue.merchantLabel(row.purchase.merchantId)
+                          }}.
+                        </caption>
+                        <thead>
+                          <tr>
+                            <th scope="col">Fatura / vencimento</th>
+                            <th scope="col">Parcela</th>
+                            <th scope="col" class="amount-column">Valor</th>
+                            <th scope="col">Situação</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          @for (entry of row.schedule; track entry.item.id) {
+                            <tr
+                              [class.current-invoice]="entry.current"
+                              [attr.data-installment]="entry.item.installmentNumber"
+                            >
+                              <td>
+                                {{ month(entry.invoice)
+                                }}<small
+                                  >{{ date(entry.invoice.dueOn)
+                                  }}{{ entry.current ? ' · Esta fatura' : '' }}</small
+                                >
+                              </td>
+                              <td>
+                                {{ entry.item.installmentNumber }} de
+                                {{ row.purchase.installmentCount }}
+                              </td>
+                              <td class="amount-column">
+                                {{ money(entry.item.amount) }}
+                                @if (converted(entry.item.amount)) {
+                                  <small>{{ original(entry.item.amount) }}</small>
+                                }
+                              </td>
+                              <td>
+                                <span
+                                  class="invoice-state"
+                                  [class.paid]="entry.invoice.status === 'paid'"
+                                  >{{ status(entry.invoice) }}</span
+                                >
+                              </td>
+                            </tr>
+                          }
+                        </tbody>
+                      </table>
+                      <p class="schedule-note">
+                        Agenda informada pelas compras; faturas futuras ainda não são cobranças
+                        confirmadas.
+                      </p>
+                    </div>
+                  </td>
+                </tr>
+              }
+            }
+          </tbody>
+        </table>
+      </div>
+    } @else {
+      <p class="empty">Nenhuma compra conhecida nesta fatura.</p>
+    }
+    @if (currency() !== 'original' && currency() !== value.card.totalLimit.currency) {
+      <p class="conversion-note">
+        Cotação fictícia de apresentação · 1 USD = 5 BRL · 29/10/2026. Valores originais
+        preservados.
+      </p>
+    }
+  } @else {
+    <p class="empty">Não foi possível consultar as compras desta fatura.</p>
+  }
+</section>

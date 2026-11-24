@@ -350,6 +350,12 @@ Fontes consultadas em 28/10/2026:
 
 **D157 — composição por categoria da fatura, confirmada por Gabriel em 23/11/2026:** barra única, do maior gasto para o menor, com cores do catálogo. Cada segmento mantém a largura proporcional e cresce apenas em altura no hover/foco, com dica acompanhando o mouse e mostrando ícone/nome/valor/participação. Expansão temporária, sem salvar tamanho ou alterar a fatura. Somente itens conhecidos da fatura selecionada, seguindo D24; não somar compras contratadas/pagamentos como novos gastos. Antecipação limitada desta análise, sem autorizar o restante da F09.
 
+**D158 — apresentação da F09a, confirmada por Gabriel em 24/11/2026:** tabela compacta abaixo da carteira e fatura, com data da compra, estabelecimento, categoria, parcela e valor nesta fatura. Acompanha cartão/fatura consultados e preserva o contexto global; adapta colunas à largura disponível.
+
+**D159 — detalhes da compra na F09a, confirmados por Gabriel em 24/11/2026:** expansão na própria lista, uma compra por vez, com total contratado, origem e agenda salva de parcelas por fatura. “Após esta fatura” identifica o recorte posterior, sem confundi-lo com dívida total. Expansão temporária; fechamento/Escape preservam a consulta. Agenda incompleta mantém identificação e valores conhecidos, sem gerar parcelas.
+
+**D160 — altura do painel da fatura, solicitada por Gabriel em 24/11/2026:** compactar verticalmente o painel, considerado alto demais na revisão da F09a. Reduzir espaços e padding entre navegação, valor, datas, categorias e limites; preservar valor em destaque, informações, controles e interações das barras. Altura natural conforme conteúdo, sem esticar o painel para acompanhar a carteira e sem corte na janela estreita.
+
 ## Perguntas aguardando resposta e pesquisas futuras
 
 **D134 — minigráfico acumulado da F07a, confirmado por Gabriel em 07/11/2026:** linha de gastos acumulados ao longo dos dias, atual e anterior quando houver cobertura, com seta na ponta da linha atual. Despesas somam no dia; sem nova despesa o acumulado permanece horizontal. Não preencher histórico ausente com zeros; manter intervalos equivalentes, moedas, filtros e base fictícia atuais. Substitui barras/colunas da revisão anterior.

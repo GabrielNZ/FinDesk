@@ -39,6 +39,7 @@ test('F08a: carteira, faturas, conversão, gesto/teclado, contexto preservado, r
     await app.evaluate(({ BrowserWindow }) => {
       BrowserWindow.getAllWindows()[0]?.show();
       BrowserWindow.getAllWindows()[0]?.focus();
+      BrowserWindow.getAllWindows()[0]?.setSize(1380, 960);
     });
     await page.emulateMedia({ reducedMotion: 'reduce' });
     await page.evaluate(async () => {
@@ -122,11 +123,19 @@ test('F08a: carteira, faturas, conversão, gesto/teclado, contexto preservado, r
     const totalBox = (await page.locator('.limit-total').boundingBox())!,
       trackBox = (await page.locator('.limit-track').boundingBox())!;
     expect(totalBox.x).toBeGreaterThanOrEqual(trackBox.x + trackBox.width);
-    const pointLimit = async (fraction: number) => {
+    const pointLimit = async (fraction: number, markerVisible = true) => {
       await page.mouse.move(
         trackBox.x + trackBox.width * fraction,
         trackBox.y + trackBox.height / 2,
       );
+      if (markerVisible) {
+        await expect
+          .poll(async () => {
+            const marker = await page.locator('.limit-cursor').boundingBox();
+            return marker ? marker.x + marker.width / 2 : -1;
+          })
+          .toBeCloseTo(trackBox.x + trackBox.width * fraction, 0);
+      }
     };
     await pointLimit(0.25);
     await expect(tip).toContainText('Utilizado');
@@ -170,7 +179,7 @@ test('F08a: carteira, faturas, conversão, gesto/teclado, contexto preservado, r
     const lastTip = (await tip.boundingBox())!;
     expect(lastTip.x + lastTip.width).toBeLessThanOrEqual(trackBox.x + trackBox.width + 0.5);
     await page.keyboard.press('Escape');
-    await pointLimit(0.98);
+    await pointLimit(0.98, false);
     await expect(tip).toHaveCount(0);
     await page.mouse.move(0, 0);
     await expect(tip).toHaveCount(0);
@@ -256,7 +265,7 @@ test('F08a: carteira, faturas, conversão, gesto/teclado, contexto preservado, r
     await page.locator('.limit-part.used').hover();
     await expect(tip).toContainText('US$ 360,00');
     await expect(page.locator('.limit-total')).toContainText('US$ 600,00');
-    await expect(page.locator('fd-card-page .conversion-note')).toContainText('Cotação fictícia');
+    await expect(page.locator('.invoice-panel .conversion-note')).toContainText('Cotação fictícia');
     await choose(page, 'Moeda', 'original');
     await choose(page, 'Conta', 'demo-u');
     await expect(page.locator('.bank-card')).toHaveCount(0);
