@@ -39,7 +39,7 @@ test('F08a: carteira, faturas, conversão, gesto/teclado, contexto preservado, r
     await app.evaluate(({ BrowserWindow }) => {
       BrowserWindow.getAllWindows()[0]?.show();
       BrowserWindow.getAllWindows()[0]?.focus();
-      BrowserWindow.getAllWindows()[0]?.setSize(1380, 960);
+      BrowserWindow.getAllWindows()[0]?.setSize(1800, 1000);
     });
     await page.emulateMedia({ reducedMotion: 'reduce' });
     await page.evaluate(async () => {
@@ -79,6 +79,14 @@ test('F08a: carteira, faturas, conversão, gesto/teclado, contexto preservado, r
     const baseWidth = (await casa.boundingBox())!.width;
     const plotHeight = (await categories().boundingBox())!.height;
     await page.emulateMedia({ reducedMotion: 'no-preference' });
+    await app!.evaluate(({ BrowserWindow }) => BrowserWindow.getAllWindows()[0]?.focus());
+    await page.locator('.invoice-panel').scrollIntoViewIfNeeded();
+    await page.evaluate(
+      () =>
+        new Promise<void>((resolve) =>
+          requestAnimationFrame(() => requestAnimationFrame(() => resolve())),
+        ),
+    );
     await casa.hover();
     await expect(compositionTip).toContainText('Casa');
     await expect(compositionTip).toContainText('R$ 233,34');
@@ -107,8 +115,8 @@ test('F08a: carteira, faturas, conversão, gesto/teclado, contexto preservado, r
     await card('card-demo').focus();
     await expect(summary()).toHaveAttribute('data-invoice-id', 'fat-nov');
     await expect(summary().locator('.invoice-amount')).toHaveText('R$ 283,24');
-    await expect(summary()).toContainText('Valor conhecido');
-    await expect(summary()).toContainText('Em formação');
+    await expect(summary()).not.toContainText('Valor conhecido');
+    await expect(page.locator('.invoice-status')).toContainText('Em formação');
     await expect(page.locator('.limit-values')).toHaveCount(0);
     await expect(page.locator('.limit-total')).toContainText('R$ 3.000,00');
     const used = page.locator('.limit-part.used'),
@@ -137,19 +145,19 @@ test('F08a: carteira, faturas, conversão, gesto/teclado, contexto preservado, r
           .toBeCloseTo(trackBox.x + trackBox.width * fraction, 0);
       }
     };
-    await pointLimit(0.25);
+    await pointLimit(0.35);
     await expect(tip).toContainText('Utilizado');
     const sharedTip = (await tip.elementHandle())!;
     const firstTipX = (await tip.boundingBox())!.x;
     await pointLimit(0.45);
     await expect
       .poll(async () => (await tip.boundingBox())!.x)
-      .toBeCloseTo(firstTipX + trackBox.width * 0.2, 0);
+      .toBeCloseTo(firstTipX + trackBox.width * 0.1, 0);
     await pointLimit(0.59);
     await expect(tip).toContainText('Utilizado');
     await expect
       .poll(async () => (await tip.boundingBox())!.x)
-      .toBeCloseTo(firstTipX + trackBox.width * 0.34, 0);
+      .toBeCloseTo(firstTipX + trackBox.width * 0.24, 0);
     const beforeBoundary = (await tip.boundingBox())!.x;
     await pointLimit(0.61);
     await expect(tip).toContainText('Disponível');
@@ -211,9 +219,9 @@ test('F08a: carteira, faturas, conversão, gesto/teclado, contexto preservado, r
     await expect(page.locator('.month-strip')).toHaveCount(0);
     await page.getByRole('button', { name: 'Fatura anterior', exact: true }).click();
     await expect(summary().locator('.invoice-amount')).toHaveText('R$ 260,00');
-    await expect(summary()).toContainText('Paga');
+    await expect(page.locator('.invoice-status')).toContainText('Paga');
     await expect(categories().locator('.category-segment')).toHaveCount(3);
-    await expect(summary()).toContainText('Valor confirmado');
+    await expect(summary().locator('.amount-label')).toHaveCount(0);
     await expect(page.getByRole('button', { name: 'Fatura anterior', exact: true })).toBeDisabled();
     await page.getByRole('button', { name: 'Próxima fatura', exact: true }).click();
     await expect(summary()).toHaveAttribute('data-invoice-id', 'fat-nov');
@@ -224,7 +232,7 @@ test('F08a: carteira, faturas, conversão, gesto/teclado, contexto preservado, r
     await page.getByRole('button', { name: 'Próxima fatura', exact: true }).click();
     await expect(summary()).toHaveAttribute('data-invoice-id', 'fat-extra-dez');
     await expect(summary().locator('.invoice-amount')).toHaveText('Valor indisponível');
-    await expect(summary()).toContainText('Futura');
+    await expect(page.locator('.invoice-status')).toContainText('Futura');
     await expect(categories()).toContainText('Nenhum item conhecido nesta fatura');
     await card('card-demo-extra').focus();
     await page.keyboard.press('ArrowLeft');
@@ -304,16 +312,10 @@ test('F08a: carteira, faturas, conversão, gesto/teclado, contexto preservado, r
     await app!.evaluate(({ BrowserWindow }) => {
       BrowserWindow.getAllWindows()[0]?.setSize(820, 920);
     });
+
     await expect
-      .poll(() =>
-        page
-          .locator('.card-page')
-          .evaluate((el) => getComputedStyle(el).gridTemplateColumns.split(' ').length),
-      )
-      .toBe(1);
-    expect(
-      await page.locator('.card-page').evaluate((el) => el.scrollWidth <= el.clientWidth),
-    ).toBe(true);
+      .poll(() => page.locator('.card-page').evaluate((el) => el.scrollWidth <= el.clientWidth))
+      .toBe(true);
     await page.screenshot({ path: 'test-results/f08a-wallet-narrow.png', fullPage: true });
     await page.locator('.invoice-panel').scrollIntoViewIfNeeded();
     await page.screenshot({ path: 'test-results/f08a-invoice-narrow.png' });

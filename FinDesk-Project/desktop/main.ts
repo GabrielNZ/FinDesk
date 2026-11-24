@@ -30,6 +30,7 @@ import {
   parseExpenseLifecycleRequest,
   parseExpenseAnalysisLayoutRequest,
   parseExpenseChartsLayoutRequest,
+  parseInvoiceCardsLayoutRequest,
   StorageFailure,
 } from './storage/contracts';
 import { storageDirectory } from './storage/paths';
@@ -123,6 +124,7 @@ async function start(): Promise<void> {
   }
 
   const readOperations = {
+    [STORAGE_CHANNELS.readInvoiceCardsLayout]: () => storage?.getInvoiceCardsLayout(),
     [STORAGE_CHANNELS.readExpenseChartsLayout]: () => storage?.getExpenseChartsLayout(),
     [STORAGE_CHANNELS.readExpenseAnalysisLayout]: () => storage?.getExpenseAnalysisLayout(),
     [STORAGE_CHANNELS.readExpenseTrash]: () => storage?.getExpenseTrash(),
@@ -147,6 +149,18 @@ async function start(): Promise<void> {
     try {
       return (
         storage?.saveExpenseAnalysisLayout(parseExpenseAnalysisLayoutRequest(args[0])) ??
+        failure(new StorageFailure('unavailable'))
+      );
+    } catch (error) {
+      return failure(error);
+    }
+  });
+  ipcMain.handle(STORAGE_CHANNELS.saveInvoiceCardsLayout, (event, ...args: unknown[]) => {
+    if (!trustedSender(event) || args.length !== 1)
+      return failure(new StorageFailure('invalid-request'));
+    try {
+      return (
+        storage?.saveInvoiceCardsLayout(parseInvoiceCardsLayoutRequest(args[0])) ??
         failure(new StorageFailure('unavailable'))
       );
     } catch (error) {

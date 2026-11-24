@@ -356,6 +356,18 @@ Fontes consultadas em 28/10/2026:
 
 **D160 — altura do painel da fatura, solicitada por Gabriel em 24/11/2026:** compactar verticalmente o painel, considerado alto demais na revisão da F09a. Reduzir espaços e padding entre navegação, valor, datas, categorias e limites; preservar valor em destaque, informações, controles e interações das barras. Altura natural conforme conteúdo, sem esticar o painel para acompanhar a carteira e sem corte na janela estreita.
 
+**D161 — deslizamento dos submenus de Finanças, solicitado por Gabriel em 24/11/2026:** animar horizontalmente a troca de conteúdo conforme a ordem das abas. Avançar desloca para a esquerda e voltar para a direita. Preservar cabeçalho/contexto e movimento reduzido. Critérios em TRANSICOES_SUBMENUS.md; não confirmar por consequência as escolhas pendentes da F09b.
+
+**D162 — composição responsiva da F09b, confirmada por Gabriel em 24/11/2026:** aproveitar o espaço à direita da fatura na janela ampla para o gráfico compacto de evolução. Quando não houver largura suficiente, o gráfico passa automaticamente para baixo. Usar a largura disponível em vez de manter a limitação anterior da grade. Preservar o painel da fatura compacto e a carteira à esquerda.
+
+**D163 — seleção do mês no gráfico da F09b, confirmada por Gabriel em 24/11/2026:** atualizar fatura/compras sem rolar a página automaticamente. Manter o gráfico no lugar da consulta, com mês selecionado explícito e contexto global preservado. Não abrir janela flutuante ou levar a tela até a tabela.
+
+**D164 — cards organizáveis em Cartão, solicitado por Gabriel em 24/11/2026:** Fatura, Evolução das faturas e Compras desta fatura devem permitir arraste, troca de posição e resize pelo canto, como Geral/Movimentações. Reutilizar o mecanismo existente e layout próprio salvo; carteira participa do conjunto para permitir reorganização na área disponível, preservando seus controles internos. Fatura/evolução começam com a mesma altura; preferências do Geral/Movimentações e fatos financeiros permanecem separados.
+
+**D165 — conteúdo compacto da fatura, solicitado por Gabriel em 24/11/2026:** retirar “Itens já conhecidos. O valor final ainda não foi confirmado.” e “Valor confirmado”. Retirar também o rótulo equivalente “Valor conhecido” do painel para manter uma composição consistente, com o estado ao lado do valor. Situação Em formação/Paga/Fechada/Futura e base na evolução continuam identificando o significado dos valores. Erros/ausência e conversão preservados.
+
+**D166 — proporções padrão e alinhamento do vencimento, solicitado por Gabriel em 24/11/2026:** usar o tamanho mostrado no ajuste de tela como padrão de Cartão: carteira 3,2 colunas, fatura 3,676 e evolução 5,146, com fatura/evolução de 400 px. Evolução prioritária e alinhada à direita, compras na linha seguinte. Medidas conferidas por leitura somente do layout salvo; preservar personalizações existentes. Vencimento fica na extremidade direita da mesma linha de datas, junto à borda interna da fatura.
+
 ## Perguntas aguardando resposta e pesquisas futuras
 
 **D134 — minigráfico acumulado da F07a, confirmado por Gabriel em 07/11/2026:** linha de gastos acumulados ao longo dos dias, atual e anterior quando houver cobertura, com seta na ponta da linha atual. Despesas somam no dia; sem nova despesa o acumulado permanece horizontal. Não preencher histórico ausente com zeros; manter intervalos equivalentes, moedas, filtros e base fictícia atuais. Substitui barras/colunas da revisão anterior.

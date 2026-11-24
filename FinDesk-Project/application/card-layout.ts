@@ -12,14 +12,35 @@ export const CARD_GRID = Object.freeze({
 const IDS: readonly FinanceCardId[] = ['categories', 'evolution', 'upcoming'];
 const ANALYSIS_IDS: readonly FinanceCardId[] = ['largest', 'increase', 'decrease', 'usual'];
 const CHART_IDS: readonly FinanceCardId[] = ['categories', 'evolution'];
+const INVOICE_IDS: readonly FinanceCardId[] = [
+  'wallet',
+  'invoice',
+  'invoice-evolution',
+  'invoice-purchases',
+];
 export const cardMinimums = (area: CardArea) =>
-  area === 'finance-analysis'
-    ? { ...CARD_GRID, minColumns: 3, minRows: 2.5, minWidth: 220 }
-    : area === 'finance-charts'
-      ? { ...CARD_GRID, minWidth: 360 }
-      : CARD_GRID;
+  area === 'finance-invoices'
+    ? { ...CARD_GRID, minColumns: 3, minRows: 3.75, minWidth: 300 }
+    : area === 'finance-analysis'
+      ? { ...CARD_GRID, minColumns: 3, minRows: 2.5, minWidth: 220 }
+      : area === 'finance-charts'
+        ? { ...CARD_GRID, minWidth: 360 }
+        : CARD_GRID;
 
 export function defaultCardLayout(area: CardArea = 'finance-general'): CardLayout {
+  if (area === 'finance-invoices')
+    return {
+      version: 3,
+      area,
+      priority: 'invoice-evolution',
+      rowStarts: ['wallet', 'invoice-purchases'],
+      cards: [
+        { id: 'wallet', columns: 3.2, rows: 5.2 },
+        { id: 'invoice', columns: 3.676, rows: 5.2 },
+        { id: 'invoice-evolution', columns: 5.146, rows: 5.2, align: 1 },
+        { id: 'invoice-purchases', columns: 12, rows: 4.5 },
+      ],
+    };
   if (area === 'finance-charts')
     return {
       version: 3,
@@ -69,7 +90,13 @@ export function parseCardLayout(value: unknown, expectedArea?: CardArea): CardLa
   const data = object(value);
   const area = data['area'];
   const ids =
-    area === 'finance-analysis' ? ANALYSIS_IDS : area === 'finance-charts' ? CHART_IDS : IDS;
+    area === 'finance-invoices'
+      ? INVOICE_IDS
+      : area === 'finance-analysis'
+        ? ANALYSIS_IDS
+        : area === 'finance-charts'
+          ? CHART_IDS
+          : IDS;
   const minimums = cardMinimums(area as CardArea);
   const legacy = data['version'] === 1;
   const current = data['version'] === 3;
@@ -82,7 +109,10 @@ export function parseCardLayout(value: unknown, expectedArea?: CardArea): CardLa
           ? 'area,cards,priority,rowStarts,version'
           : 'area,cards,priority,version') ||
     (!legacy && !current && data['version'] !== 2) ||
-    (area !== 'finance-general' && area !== 'finance-analysis' && area !== 'finance-charts') ||
+    (area !== 'finance-general' &&
+      area !== 'finance-analysis' &&
+      area !== 'finance-charts' &&
+      area !== 'finance-invoices') ||
     (expectedArea !== undefined && area !== expectedArea) ||
     (area !== 'finance-general' && !current) ||
     !Array.isArray(data['cards']) ||

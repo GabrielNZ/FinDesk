@@ -108,6 +108,10 @@ export class CardBoard {
     this.resolved().cards.find((box) => box.id === this.drag()?.id),
   );
   readonly headings: Record<FinanceCardId, string> = {
+    wallet: 'Cartões',
+    invoice: 'Fatura',
+    'invoice-evolution': 'Evolução das faturas',
+    'invoice-purchases': 'Compras desta fatura',
     largest: 'Maior gasto',
     increase: 'Maior aumento',
     decrease: 'Maior redução',

@@ -869,6 +869,33 @@ export class DemoStore {
       throw new StorageFailure('corrupt');
     }
   }
+  readInvoiceCardsLayout(): CardLayout | null {
+    const row = this.requireOpen()[1]
+      .prepare("SELECT payload FROM preferences WHERE key = 'layout.finance-invoices.v1'")
+      .get();
+    if (!row) return null;
+    const raw = parseStoredJson(row['payload']);
+    if (raw && typeof raw === 'object' && 'version' in raw && raw.version !== 3)
+      throw new StorageFailure('incompatible');
+    try {
+      return parseCardLayout(raw, 'finance-invoices');
+    } catch {
+      throw new StorageFailure('corrupt');
+    }
+  }
+  saveInvoiceCardsLayout(value: unknown): CardLayout {
+    const checked = parseCardLayout(value, 'finance-invoices');
+    this.readInvoiceCardsLayout();
+    const db = this.requireOpen()[1];
+    transaction(db, () =>
+      db
+        .prepare(
+          "INSERT INTO preferences (key, payload) VALUES ('layout.finance-invoices.v1', ?) ON CONFLICT(key) DO UPDATE SET payload = excluded.payload",
+        )
+        .run(JSON.stringify(checked)),
+    );
+    return this.readInvoiceCardsLayout()!;
+  }
   readExpenseChartsLayout(): CardLayout | null {
     const row = this.requireOpen()[1]
       .prepare("SELECT payload FROM preferences WHERE key = 'layout.finance-charts.v1'")

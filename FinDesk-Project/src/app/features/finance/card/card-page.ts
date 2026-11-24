@@ -22,10 +22,21 @@ import { FinanceContext } from '../finance-context.service';
 import { CardConsultation } from './card-consultation.service';
 import { InvoiceCategories } from './invoice-categories';
 import { InvoicePurchaseList } from './invoice-purchases';
+import { InvoiceEvolutionChart } from './invoice-evolution';
+import { CardBoard } from '../cards/card-board';
+import { CARD_LAYOUT_AREA, CardLayoutState } from '../cards/card-layout.service';
+import { CardLayoutAction } from '../cards/card-layout-action';
 
 @Component({
   selector: 'fd-card-page',
-  imports: [InvoiceCategories, InvoicePurchaseList],
+  imports: [
+    InvoiceCategories,
+    InvoicePurchaseList,
+    InvoiceEvolutionChart,
+    CardBoard,
+    CardLayoutAction,
+  ],
+  providers: [CardLayoutState, { provide: CARD_LAYOUT_AREA, useValue: 'finance-invoices' }],
   templateUrl: './card-page.html',
   styleUrl: './card-page.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -171,6 +182,11 @@ export class CardPage implements OnDestroy {
     const card = this.selectedCard();
     if (card && this.invoices().includes(row))
       this.consultation.selectInvoice(card.id, row.invoice.id);
+  }
+  chooseFromChart(id: string): void {
+    const card = this.selectedCard();
+    if (!card || !this.invoices().some((row) => row.invoice.id === id)) return;
+    this.consultation.selectInvoice(card.id, id);
   }
   move(offset: number): void {
     const next = this.invoices()[this.index() + offset];

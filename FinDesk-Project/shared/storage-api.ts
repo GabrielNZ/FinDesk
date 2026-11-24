@@ -56,6 +56,8 @@ export interface StorageInfo {
 }
 
 export interface StorageApi {
+  getInvoiceCardsLayout(): Promise<StorageResult<CardLayout | null>>;
+  saveInvoiceCardsLayout(value: CardLayout): Promise<StorageResult<CardLayout>>;
   getExpenseChartsLayout(): Promise<StorageResult<CardLayout | null>>;
   saveExpenseChartsLayout(value: CardLayout): Promise<StorageResult<CardLayout>>;
   getExpenseAnalysisLayout(): Promise<StorageResult<CardLayout | null>>;
@@ -86,6 +88,8 @@ export interface StorageApi {
 }
 
 export const STORAGE_CHANNELS = {
+  readInvoiceCardsLayout: 'findesk:invoice-cards-layout-read',
+  saveInvoiceCardsLayout: 'findesk:invoice-cards-layout-save',
   readExpenseChartsLayout: 'findesk:expense-charts-layout-read',
   saveExpenseChartsLayout: 'findesk:expense-charts-layout-save',
   readExpenseAnalysisLayout: 'findesk:expense-analysis-layout-read',

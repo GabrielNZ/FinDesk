@@ -31,6 +31,12 @@ import type {
 
 /** Canal interno para um único worker; sem SQL, eval ou caminho em mensagens. */
 export class StorageClient {
+  getInvoiceCardsLayout(): Promise<StorageResult<CardLayout | null>> {
+    return this.request('read-invoice-cards-layout');
+  }
+  saveInvoiceCardsLayout(value: CardLayout): Promise<StorageResult<CardLayout>> {
+    return this.request('save-invoice-cards-layout', value);
+  }
   getExpenseChartsLayout(): Promise<StorageResult<CardLayout | null>> {
     return this.request('read-expense-charts-layout');
   }

@@ -1,10 +1,12 @@
 <section
   [attr.aria-label]="
-    state.area === 'finance-charts'
-      ? 'Gráficos de despesas da conta'
-      : state.area === 'finance-analysis'
-        ? 'Análises de despesas da conta'
-        : 'Cards do Geral'
+    state.area === 'finance-invoices'
+      ? 'Cards do cartão'
+      : state.area === 'finance-charts'
+        ? 'Gráficos de despesas da conta'
+        : state.area === 'finance-analysis'
+          ? 'Análises de despesas da conta'
+          : 'Cards do Geral'
   "
   [attr.aria-busy]="state.saving() || state.restoring()"
 >
@@ -70,6 +72,8 @@
             class="card-item"
             [class.analysis-card]="state.area === 'finance-analysis'"
             [class.charts-card]="state.area === 'finance-charts'"
+            [class.invoice-card]="state.area === 'finance-invoices'"
+            [class.wallet-card]="state.area === 'finance-invoices' && card.id === 'wallet'"
             [attr.data-card-id]="card.id"
             [attr.data-columns]="card.columns"
             [attr.data-rows]="card.rows"

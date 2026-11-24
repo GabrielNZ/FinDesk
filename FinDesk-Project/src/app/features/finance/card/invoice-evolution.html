@@ -1,0 +1,115 @@
+<section class="invoice-evolution" aria-label="Evolução mensal das faturas">
+  <header>
+    <h2>Evolução das faturas</h2>
+    <span>Por vencimento</span>
+  </header>
+  @if (plot(); as value) {
+    @if (current(); as row) {
+      <div class="selected-summary" aria-live="polite">
+        <span
+          >{{ month(row.month) }} de {{ row.month.slice(0, 4)
+          }}<small>{{ basis(row) }} · {{ status(row) }}</small></span
+        >
+        <strong [class.unavailable]="!row.value">{{ money(row.value) }}</strong>
+      </div>
+    }
+    @if (value.invoices.length) {
+      <div class="legend" aria-hidden="true">
+        <span><i></i>Confirmado</span><span><i class="known"></i>Conhecido</span>
+      </div>
+      <div class="chart-area">
+        <div class="y-axis" aria-hidden="true">
+          @for (tickValue of value.ticks; track $index) {
+            <span>{{ tick(tickValue) }}</span>
+          }
+        </div>
+        <div
+          class="chart-scroller"
+          role="group"
+          aria-label="Faturas por vencimento"
+          tabindex="-1"
+          (keydown)="key($event)"
+        >
+          <div class="columns" [style.--column-count]="value.columns.length">
+            <div class="grid-lines" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
+            @for (row of value.columns; track row.key) {
+              @if (row.kind === 'invoice') {
+                <button
+                  type="button"
+                  class="invoice-column"
+                  [class.selected]="selectedId() === row.key"
+                  [attr.data-invoice-id]="row.key"
+                  [attr.aria-label]="label(row)"
+                  [attr.aria-pressed]="selectedId() === row.key"
+                  [tabIndex]="(focusId() ?? selectedId()) === row.key ? 0 : -1"
+                  [attr.aria-describedby]="activeId() === row.key ? 'invoice-evolution-tip' : null"
+                  (mouseenter)="hover(row.key)"
+                  (mouseleave)="hoverId.set(null)"
+                  (focus)="focus(row.key)"
+                  (blur)="focusedId.set(null)"
+                  (click)="choose(row)"
+                >
+                  <span class="column-plot" aria-hidden="true">
+                    @if (row.value) {
+                      <span
+                        class="column-fill"
+                        [class.known]="row.basis === 'known'"
+                        [class.zero]="row.value.minorUnits === 0"
+                        [style.height.%]="row.height"
+                      ></span>
+                    } @else {
+                      <span class="column-missing">—</span>
+                    }
+                  </span>
+                  <span class="x-label" aria-hidden="true"
+                    >{{ month(row.month) }}<small>{{ row.month.slice(0, 4) }}</small></span
+                  >
+                </button>
+              } @else {
+                <div
+                  class="gap-column"
+                  [attr.aria-label]="
+                    row.count + ' meses sem fatura informada, ' + row.month + ' a ' + row.endMonth
+                  "
+                >
+                  <span>···</span
+                  ><small
+                    >{{ row.count === 1 ? month(row.month) : row.count + ' meses' }}<br />Sem
+                    fatura</small
+                  >
+                </div>
+              }
+            }
+          </div>
+        </div>
+        @if (active(); as row) {
+          <div id="invoice-evolution-tip" role="tooltip">
+            <strong
+              >{{ month(row.month) }} de {{ row.month.slice(0, 4) }} · {{ status(row) }}</strong
+            >
+            <span>{{ money(row.value) }} · {{ basis(row) }}</span>
+            <small>Vencimento {{ date(row.reading.invoice.dueOn) }}</small>
+            @if (converted(row)) {
+              <small>Original: {{ money(row.original) }}</small>
+            }
+            @if (row.unavailable) {
+              <small>{{
+                row.unavailable === 'no-items'
+                  ? 'Sem itens ou total confirmado.'
+                  : row.unavailable === 'precision'
+                    ? 'Não foi possível calcular os itens conhecidos.'
+                    : 'Conversão indisponível.'
+              }}</small>
+            }
+          </div>
+        }
+      </div>
+      <p class="chart-note">Valores conhecidos podem mudar em faturas em formação ou futuras.</p>
+      @if (hasConversion()) {
+        <p class="chart-note">Cotação fictícia · 1 USD = 5 BRL · 29/10/2026.</p>
+      }
+    } @else {
+      <p class="chart-note">Nenhuma fatura informada para este cartão.</p>
+    }
+  }
+</section>

@@ -39,11 +39,13 @@ export class CardLayoutState {
     this.error.set(null);
     this.loading = (async () => {
       try {
-        const result = await (this.area === 'finance-charts'
-          ? api.getExpenseChartsLayout()
-          : this.area === 'finance-analysis'
-            ? api.getExpenseAnalysisLayout()
-            : api.getCardLayout());
+        const result = await (this.area === 'finance-invoices'
+          ? api.getInvoiceCardsLayout()
+          : this.area === 'finance-charts'
+            ? api.getExpenseChartsLayout()
+            : this.area === 'finance-analysis'
+              ? api.getExpenseAnalysisLayout()
+              : api.getCardLayout());
         if (!result.ok) {
           this.error.set(result.error.message);
           this.state.set('failed');
@@ -77,11 +79,13 @@ export class CardLayoutState {
     this.queue = this.queue.then(async () => {
       try {
         const api = window.finDesk!.storage;
-        const result = await (this.area === 'finance-charts'
-          ? api.saveExpenseChartsLayout(layout)
-          : this.area === 'finance-analysis'
-            ? api.saveExpenseAnalysisLayout(layout)
-            : api.saveCardLayout(layout));
+        const result = await (this.area === 'finance-invoices'
+          ? api.saveInvoiceCardsLayout(layout)
+          : this.area === 'finance-charts'
+            ? api.saveExpenseChartsLayout(layout)
+            : this.area === 'finance-analysis'
+              ? api.saveExpenseAnalysisLayout(layout)
+              : api.saveCardLayout(layout));
         if (revision === this.revision && !result.ok) this.failedSave();
       } catch {
         if (revision === this.revision) this.failedSave();
@@ -103,11 +107,13 @@ export class CardLayoutState {
     this.saveError.set(null);
     try {
       const api = window.finDesk!.storage;
-      const result = await (this.area === 'finance-charts'
-        ? api.saveExpenseChartsLayout(defaultCardLayout(this.area))
-        : this.area === 'finance-analysis'
-          ? api.saveExpenseAnalysisLayout(defaultCardLayout(this.area))
-          : api.restoreCardLayout('restore-card-layout'));
+      const result = await (this.area === 'finance-invoices'
+        ? api.saveInvoiceCardsLayout(defaultCardLayout(this.area))
+        : this.area === 'finance-charts'
+          ? api.saveExpenseChartsLayout(defaultCardLayout(this.area))
+          : this.area === 'finance-analysis'
+            ? api.saveExpenseAnalysisLayout(defaultCardLayout(this.area))
+            : api.restoreCardLayout('restore-card-layout'));
       if (!result.ok) {
         this.saveError.set('Não foi possível restaurar o layout. Seus ajustes foram mantidos.');
         return false;

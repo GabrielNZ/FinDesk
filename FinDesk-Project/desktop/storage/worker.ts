@@ -17,6 +17,12 @@ try {
       id = request.id;
       let value: unknown;
       switch (request.operation) {
+        case 'read-invoice-cards-layout':
+          value = store.readInvoiceCardsLayout();
+          break;
+        case 'save-invoice-cards-layout':
+          value = store.saveInvoiceCardsLayout(request.payload);
+          break;
         case 'read-expense-charts-layout':
           value = store.readExpenseChartsLayout();
           break;

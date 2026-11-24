@@ -25,6 +25,17 @@
   min-height: 42px;
   padding: 10px 16px 6px;
 }
+:host(.invoice-card) header {
+  display: none;
+}
+:host(.invoice-card) .card-content {
+  padding: 0;
+  container-type: size;
+}
+:host(.wallet-card) .card-shell {
+  background: transparent;
+  border-color: transparent;
+}
 .card-shell {
   position: relative;
   height: 100%;
