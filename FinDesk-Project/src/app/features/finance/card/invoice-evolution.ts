@@ -1,5 +1,6 @@
 import {
   ChangeDetectionStrategy,
+  afterRenderEffect,
   Component,
   computed,
   effect,
@@ -7,6 +8,8 @@ import {
   output,
   signal,
   untracked,
+  viewChild,
+  type ElementRef,
 } from '@angular/core';
 import { formatCivilDate, formatMoney } from '../../../../../application/finance-context';
 import {
@@ -16,6 +19,7 @@ import {
 import type { DemoSnapshot, FinancePreferences } from '../../../../../shared/storage-api';
 import { DEMO_EXCHANGE_RATE } from '../../../../../fixtures/financas/demo';
 import type { Money } from '../../../../../domain/money';
+import { invoiceVariation } from '../../../../../application/invoice-variation';
 
 @Component({
   selector: 'fd-invoice-evolution',
@@ -38,6 +42,10 @@ export class InvoiceEvolutionChart {
     this.dismissed() ? null : (this.hoverId() ?? this.focusedId()),
   );
   readonly focusId = signal<string | null>(null);
+  private readonly panel = viewChild<ElementRef<HTMLElement>>('panel');
+  private readonly chartArea = viewChild<ElementRef<HTMLElement>>('chartArea');
+  private readonly tip = viewChild<ElementRef<HTMLElement>>('tip');
+  readonly tipPosition = signal<{ id: string; left: number; top: number } | null>(null);
   readonly plot = computed(() =>
     invoiceEvolution(
       this.snapshot(),
@@ -53,11 +61,38 @@ export class InvoiceEvolutionChart {
   readonly active = computed(() =>
     this.plot()?.invoices.find((row) => row.key === this.activeId()),
   );
+  readonly variation = computed(() =>
+    invoiceVariation(
+      this.snapshot(),
+      this.accountId(),
+      this.cardId(),
+      this.selectedId(),
+      this.currency(),
+      DEMO_EXCHANGE_RATE,
+    ),
+  );
   readonly hasConversion = computed(
     () => this.plot()?.invoices.some((row) => this.converted(row)) ?? false,
   );
   readonly money = (value: Money | null) => (value ? formatMoney(value) : 'Valor indisponível');
   readonly date = formatCivilDate;
+  signedMoney(value: Money): string {
+    return `${value.minorUnits > 0 ? '+' : ''}${formatMoney(value)}`;
+  }
+  variationReason(reason: NonNullable<ReturnType<typeof invoiceVariation>>['unavailable']): string {
+    switch (reason) {
+      case 'no-previous':
+        return 'Sem fatura anterior';
+      case 'ambiguous':
+        return 'Referência anterior ambígua';
+      case 'no-items':
+        return 'Comparação sem valor informado';
+      case 'precision':
+        return 'Comparação fora da precisão disponível';
+      default:
+        return 'Conversão da variação indisponível';
+    }
+  }
   constructor() {
     effect(() => {
       this.accountId();
@@ -66,6 +101,46 @@ export class InvoiceEvolutionChart {
       this.focusedId.set(null);
       this.dismissed.set(false);
       this.focusId.set(untracked(this.selectedId));
+    });
+    afterRenderEffect((cleanup) => {
+      const panel = this.panel()?.nativeElement;
+      const area = this.chartArea()?.nativeElement;
+      const tip = this.tip()?.nativeElement;
+      const row = this.active();
+      if (!panel || !area || !tip || !row) return;
+      const column = Array.from(area.querySelectorAll<HTMLElement>('.invoice-column')).find(
+        (node) => node.dataset['invoiceId'] === row.key,
+      );
+      const bar = column?.querySelector<HTMLElement>('.column-fill, .column-missing');
+      const scroller = column?.closest<HTMLElement>('.chart-scroller');
+      if (!bar || !scroller) return;
+      const update = () => {
+        const bounds = panel.getBoundingClientRect();
+        const plot = area.getBoundingClientRect();
+        const fill = bar.getBoundingClientRect();
+        const visible = scroller.getBoundingClientRect();
+        if (fill.right <= visible.left || fill.left >= visible.right) {
+          this.tipPosition.set(null);
+          return;
+        }
+        const size = tip.getBoundingClientRect();
+        const center =
+          (Math.max(fill.left, visible.left) + Math.min(fill.right, visible.right)) / 2;
+        const left = Math.max(
+          bounds.left + 8,
+          Math.min(center - size.width / 2, bounds.right - size.width - 8),
+        );
+        const top = Math.max(bounds.top + 8, fill.top - size.height - 10);
+        this.tipPosition.set({ id: row.key, left: left - plot.left, top: top - plot.top });
+      };
+      update();
+      const observer = new ResizeObserver(update);
+      for (const node of [panel, area, tip, bar]) observer.observe(node);
+      scroller.addEventListener('scroll', update, { passive: true });
+      cleanup(() => {
+        observer.disconnect();
+        scroller.removeEventListener('scroll', update);
+      });
     });
   }
   month(value: string): string {

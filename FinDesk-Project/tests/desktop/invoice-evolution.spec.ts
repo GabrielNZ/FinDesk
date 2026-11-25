@@ -50,6 +50,35 @@ test('F09b: colunas ao lado/abaixo, valores, seleção sem rolar, teclado, conte
       purchases = page.locator('fd-invoice-purchases'),
       main = page.locator('.workspace');
     const column = (id: string) => chart.locator(`[data-invoice-id="${id}"]`);
+    const tipAbove = async (id: string) => {
+      await expect(chart.getByRole('tooltip')).toBeVisible();
+      await expect
+        .poll(async () =>
+          chart.evaluate((node, key) => {
+            const button = Array.from(node.querySelectorAll<HTMLElement>('.invoice-column')).find(
+              (element) => element.dataset['invoiceId'] === key,
+            );
+            const bar = button
+              ?.querySelector('.column-fill, .column-missing')
+              ?.getBoundingClientRect();
+            const tip = node.querySelector('[role="tooltip"]')?.getBoundingClientRect();
+            const bounds = node.querySelector('.invoice-evolution')!.getBoundingClientRect();
+            if (!bar || !tip) return false;
+            const center = bar.left + bar.width / 2;
+            const left = Math.max(
+              bounds.left + 8,
+              Math.min(center - tip.width / 2, bounds.right - tip.width - 8),
+            );
+            return (
+              Math.abs(tip.left - left) < 2 &&
+              Math.abs(tip.bottom + 10 - bar.top) < 2 &&
+              tip.left >= bounds.left &&
+              tip.right <= bounds.right
+            );
+          }, id),
+        )
+        .toBe(true);
+    };
     await expect(chart.locator('.invoice-column')).toHaveCount(7);
     const state = () =>
       page.evaluate(async () => ({
@@ -68,9 +97,21 @@ test('F09b: colunas ao lado/abaixo, valores, seleção sem rolar, teclado, conte
     expect(invoiceBox.height).toBeLessThan(460);
     await expect(chart.locator('.column-fill.known')).toHaveCount(6);
     await expect(chart.locator('.selected-summary')).toContainText('R$ 283,24');
+    const variation = chart.locator('.invoice-variation');
+    await expect(variation).toContainText('+R$ 23,24 · +8,9%');
+    await expect(variation).toContainText('vs out. de 2026 · Parcial');
+    await expect(page.locator('.invoice-panel .invoice-variation')).toHaveCount(0);
     await column('fat-out').hover();
+    await tipAbove('fat-out');
     await expect(chart.getByRole('tooltip')).toContainText('R$ 260,00 · Confirmado');
     await expect(chart.getByRole('tooltip')).toContainText('Paga');
+    const firstTip = (await chart.getByRole('tooltip').boundingBox())!;
+    await column('fat-mar').hover();
+    await tipAbove('fat-mar');
+    expect((await chart.getByRole('tooltip').boundingBox())!.x).toBeGreaterThan(firstTip.x + 100);
+    await chart.screenshot({ path: 'test-results/f09c-tip-march.png' });
+    await column('fat-abr').hover();
+    await tipAbove('fat-abr');
     await page.keyboard.press('Escape');
     await expect(chart.getByRole('tooltip')).toHaveCount(0);
     await main.evaluate((el) => {
@@ -81,6 +122,8 @@ test('F09b: colunas ao lado/abaixo, valores, seleção sem rolar, teclado, conte
     await expect(summary).toHaveAttribute('data-invoice-id', 'fat-dez');
     await expect(purchases.locator('.purchase-row')).toHaveCount(2);
     await expect(column('fat-dez')).toHaveAttribute('aria-pressed', 'true');
+    await expect(variation).toContainText('-R$ 49,91 · −17,6%');
+    await expect(variation).toContainText('vs nov. de 2026 · Parcial');
     expect(await main.evaluate((el) => el.scrollTop)).toBe(scroll);
     await page.getByRole('button', { name: 'Fatura anterior', exact: true }).click();
     await expect(column('fat-nov')).toHaveAttribute('aria-pressed', 'true');
@@ -88,8 +131,11 @@ test('F09b: colunas ao lado/abaixo, valores, seleção sem rolar, teclado, conte
     const keyboardScroll = await main.evaluate((el) => el.scrollTop);
     await page.keyboard.press('End');
     await expect(column('fat-abr')).toBeFocused();
+    await tipAbove('fat-abr');
     await page.keyboard.press('Space');
     await expect(summary).toHaveAttribute('data-invoice-id', 'fat-abr');
+    await expect(variation).toContainText('R$ 0,00 · 0,0%');
+    await expect(variation).toContainText('Parcial');
     expect(await main.evaluate((el) => el.scrollTop)).toBe(keyboardScroll);
     await page.keyboard.press('Home');
     await page.keyboard.press('ArrowRight');
@@ -97,7 +143,10 @@ test('F09b: colunas ao lado/abaixo, valores, seleção sem rolar, teclado, conte
     await expect(summary).toHaveAttribute('data-invoice-id', 'fat-nov');
     await choose(page, 'Moeda', 'USD');
     await expect(chart.locator('.selected-summary strong')).toHaveText('US$ 56,65');
+    await expect(variation).toContainText('+US$ 4,65 · +8,9%');
+    await expect(variation).toContainText('Variação original: +R$ 23,24');
     await column('fat-nov').hover();
+    await tipAbove('fat-nov');
     await expect(chart.getByRole('tooltip')).toContainText('Original: R$ 283,24');
     await choose(page, 'Moeda', 'original');
     await page.mouse.move(0, 0);
@@ -105,6 +154,37 @@ test('F09b: colunas ao lado/abaixo, valores, seleção sem rolar, teclado, conte
       el.scrollTop = 0;
     });
     await page.screenshot({ path: 'test-results/f09b-evolution-wide.png' });
+    await page.locator('.card-page').screenshot({ path: 'test-results/f09c-variation-wide.png' });
+    await page.mouse.move(0, 0);
+    // Exercita o conteúdo na largura mínima sem gravar outra preferência de layout.
+    await chart.evaluate((node) => {
+      node.style.width = '300px';
+    });
+    await column('fat-nov').focus();
+    await page.keyboard.press('End');
+    await tipAbove('fat-abr');
+    expect(
+      await chart.locator('.chart-scroller').evaluate((node) => node.scrollLeft),
+    ).toBeGreaterThan(0);
+    await page.keyboard.press('Home');
+    await tipAbove('fat-out');
+    expect((await column('fat-out').boundingBox())!.x).toBeGreaterThanOrEqual(
+      (await chart.locator('.chart-scroller').boundingBox())!.x,
+    );
+    await chart.evaluate((node) => {
+      node.style.removeProperty('width');
+    });
+    await tipAbove('fat-out');
+    await page.keyboard.press('Escape');
+    const cardHeights = await page
+      .locator('fd-card-page')
+      .evaluate((node) =>
+        ['invoice', 'invoice-evolution'].map(
+          (id) => node.querySelector(`[data-card-id="${id}"]`)!.getBoundingClientRect().height,
+        ),
+      );
+    expect(cardHeights[0]).toBeCloseTo(400, 0);
+    expect(cardHeights[1]).toBeCloseTo(400, 0);
     await app.evaluate(({ BrowserWindow }) => BrowserWindow.getAllWindows()[0]!.setSize(1380, 960));
 
     expect((await chart.boundingBox())!.y).toBeGreaterThan(
@@ -133,11 +213,14 @@ test('F09b: colunas ao lado/abaixo, valores, seleção sem rolar, teclado, conte
     await page.locator('[data-wallet-id="card-demo-extra"]').click({ position: { x: 70, y: 20 } });
     await expect(chart.locator('.invoice-column')).toHaveCount(2);
     await expect(chart.locator('.selected-summary')).toContainText('R$ 89,90');
+    await expect(variation).toContainText('Sem fatura anterior');
     await column('fat-extra-dez').click();
     await expect(column('fat-extra-dez').locator('.column-fill')).toHaveCount(0);
     await expect(column('fat-extra-dez').locator('.column-missing')).toHaveText('—');
     await expect(chart.getByRole('tooltip')).toContainText('Sem itens ou total confirmado');
+    await tipAbove('fat-extra-dez');
     await expect(purchases).toContainText('Nenhuma compra conhecida');
+    await expect(variation).toContainText('Comparação sem valor informado');
     await choose(page, 'Conta', 'demo-u');
     await expect(chart).toHaveCount(0);
     await choose(page, 'Conta', 'demo-a');

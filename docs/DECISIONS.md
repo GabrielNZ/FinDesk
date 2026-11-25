@@ -368,6 +368,12 @@ Fontes consultadas em 28/10/2026:
 
 **D166 — proporções padrão e alinhamento do vencimento, solicitado por Gabriel em 24/11/2026:** usar o tamanho mostrado no ajuste de tela como padrão de Cartão: carteira 3,2 colunas, fatura 3,676 e evolução 5,146, com fatura/evolução de 400 px. Evolução prioritária e alinhada à direita, compras na linha seguinte. Medidas conferidas por leitura somente do layout salvo; preservar personalizações existentes. Vencimento fica na extremidade direita da mesma linha de datas, junto à borda interna da fatura.
 
+**D167 — metodologia da F09c, confirmada por Gabriel em 24/11/2026:** comparar a fatura selecionada com a imediatamente anterior do mesmo cartão por vencimento, usando total confirmado quando disponível e subtotal conhecido nos demais casos. Se qualquer lado ainda não for confirmado, identificar a variação como Parcial, em cor neutra e com referência explícita. Diferença e percentual nominais, sem projetar o valor final; ausência não equivale a zero. Critérios técnicos em VARIACAO_FATURAS.md registrados antes do código.
+
+**D168 — posição da F09c, confirmada por Gabriel em 24/11/2026:** escolhida a Imagem 1 entre as duas prévias exibidas: indicador monetário/percentual no card Evolução das faturas, abaixo do resumo e antes da legenda, com referência e Parcial quando aplicável. Preservar altura, organização, seleção compartilhada e ausência de rolagem automática. Não inserir o indicador no painel Fatura. Nas próximas rodadas, usar caixinhas de pergunta assíncronas conforme preferência expressa.
+
+**D169 — dica ancorada na evolução das faturas, solicitada por Gabriel em 24/11/2026:** a janela de detalhes deve acompanhar a coluna consultada e ficar acima do topo da sua barra, em vez de permanecer fixa à esquerda do gráfico. Mesma âncora por hover/foco e teclado; conter a janela nas bordas do card, recalcular após resize/rolagem interna e preservar Escape, valores e seleção sem rolagem. Correção incorporada à revisão da F09c; não representa aprovação da entrega ou início da F09d.
+
 ## Perguntas aguardando resposta e pesquisas futuras
 
 **D134 — minigráfico acumulado da F07a, confirmado por Gabriel em 07/11/2026:** linha de gastos acumulados ao longo dos dias, atual e anterior quando houver cobertura, com seta na ponta da linha atual. Despesas somam no dia; sem nova despesa o acumulado permanece horizontal. Não preencher histórico ausente com zeros; manter intervalos equivalentes, moedas, filtros e base fictícia atuais. Substitui barras/colunas da revisão anterior.

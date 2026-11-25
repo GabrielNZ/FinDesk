@@ -1,4 +1,4 @@
-<section class="invoice-evolution" aria-label="Evolução mensal das faturas">
+<section #panel class="invoice-evolution" aria-label="Evolução mensal das faturas">
   <header>
     <h2>Evolução das faturas</h2>
     <span>Por vencimento</span>
@@ -12,12 +12,40 @@
         >
         <strong [class.unavailable]="!row.value">{{ money(row.value) }}</strong>
       </div>
+      @if (variation(); as change) {
+        <div class="invoice-variation" aria-live="polite" aria-label="Variação entre faturas">
+          @if (change.value; as difference) {
+            <span class="variation-amount"
+              >{{ signedMoney(difference) }} ·
+              {{ change.percentage ?? 'Sem base percentual' }}</span
+            >
+          } @else {
+            <span class="variation-amount">{{ variationReason(change.unavailable) }}</span>
+          }
+          @if (change.reference; as previous) {
+            <small [title]="'Vencimento da referência: ' + date(previous.invoice.dueOn)">
+              vs {{ month(previous.invoice.dueOn.slice(0, 7)) }} de
+              {{ previous.invoice.dueOn.slice(0, 4) }}{{ change.partial ? ' · Parcial' : '' }}
+              <span class="sr-only"
+                >, vencimento {{ date(previous.invoice.dueOn) }},
+                {{ previous.invoice.confirmedTotal ? 'Confirmado' : 'Conhecido' }}:
+                {{ money(previous.invoice.confirmedTotal ?? previous.knownSubtotal) }}</span
+              >
+            </small>
+          }
+          @if (
+            change.original && change.original.currency !== currency() && currency() !== 'original'
+          ) {
+            <small>Variação original: {{ signedMoney(change.original) }}</small>
+          }
+        </div>
+      }
     }
     @if (value.invoices.length) {
       <div class="legend" aria-hidden="true">
         <span><i></i>Confirmado</span><span><i class="known"></i>Conhecido</span>
       </div>
-      <div class="chart-area">
+      <div #chartArea class="chart-area">
         <div class="y-axis" aria-hidden="true">
           @for (tickValue of value.ticks; track $index) {
             <span>{{ tick(tickValue) }}</span>
@@ -83,7 +111,14 @@
           </div>
         </div>
         @if (active(); as row) {
-          <div id="invoice-evolution-tip" role="tooltip">
+          <div
+            #tip
+            id="invoice-evolution-tip"
+            role="tooltip"
+            [style.left.px]="tipPosition()?.left ?? 0"
+            [style.top.px]="tipPosition()?.top ?? 0"
+            [style.visibility]="tipPosition()?.id === row.key ? 'visible' : 'hidden'"
+          >
             <strong
               >{{ month(row.month) }} de {{ row.month.slice(0, 4) }} · {{ status(row) }}</strong
             >
