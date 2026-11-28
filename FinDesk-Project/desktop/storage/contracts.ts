@@ -157,9 +157,9 @@ export function validateSnapshot(value: unknown): DemoSnapshot {
   try {
     const data = record(value);
     if (
-      data['formatVersion'] !== 1 ||
+      (data['formatVersion'] !== 1 && data['formatVersion'] !== 2) ||
       data['seedId'] !== 'demo-financas-v1' ||
-      (data['seedVersion'] !== 1 && data['seedVersion'] !== 2 && data['seedVersion'] !== 3) ||
+      ![1, 2, 3, 4].includes(data['seedVersion'] as number) ||
       data['timezone'] !== 'America/Sao_Paulo'
     )
       throw new StorageFailure('incompatible');
@@ -177,11 +177,14 @@ export function validateSnapshot(value: unknown): DemoSnapshot {
       'subscriptions',
       'coverage',
     ];
+    if (data['formatVersion'] === 2) names.push('cardRefunds');
     if (Object.keys(facts).sort().join(',') !== names.sort().join(','))
       throw new StorageFailure('corrupt');
     for (const name of names) if (!Array.isArray(facts[name])) throw new StorageFailure('corrupt');
     const snapshot = value as DemoSnapshot;
     validateFacts(snapshot.facts);
+    if ((snapshot.facts.cardRefunds ?? []).some((refund) => refund.on > snapshot.asOf))
+      throw new StorageFailure('corrupt');
     return snapshot;
   } catch (error) {
     if (error instanceof StorageFailure && error.code === 'incompatible') throw error;

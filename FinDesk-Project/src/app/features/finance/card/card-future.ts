@@ -73,9 +73,12 @@ export class CardFuturePanel {
     ];
   }
   kind(item: FutureItem) {
-    return { installment: 'Parcelamento', recurring: 'Recorrência registrada', other: 'À vista' }[
-      item.kind
-    ];
+    return {
+      installment: 'Parcelamento',
+      recurring: 'Recorrência registrada',
+      other: 'À vista',
+      refund: 'Estorno',
+    }[item.kind];
   }
   converted(value: Money | null): boolean {
     return value !== null && this.currency() !== 'original' && this.currency() !== value.currency;

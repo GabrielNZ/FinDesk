@@ -59,7 +59,12 @@
           (keydown)="key($event)"
         >
           <div class="columns" [style.--column-count]="value.columns.length">
-            <div class="grid-lines" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
+            <div class="grid-lines" aria-hidden="true">
+              @for (tickValue of value.ticks; track $index) {
+                <i></i>
+              }
+              <b class="zero-line" [style.top.%]="value.zero"></b>
+            </div>
             @for (row of value.columns; track row.key) {
               @if (row.kind === 'invoice') {
                 <button
@@ -83,10 +88,13 @@
                         class="column-fill"
                         [class.known]="row.basis === 'known'"
                         [class.zero]="row.value.minorUnits === 0"
+                        [class.credit]="row.value.minorUnits < 0"
                         [style.height.%]="row.height"
+                        [style.bottom.%]="row.value.minorUnits >= 0 ? 100 - value.zero : null"
+                        [style.top.%]="row.value.minorUnits < 0 ? value.zero : null"
                       ></span>
                     } @else {
-                      <span class="column-missing">—</span>
+                      <span class="column-missing" [style.bottom.%]="100 - value.zero">—</span>
                     }
                   </span>
                   <span class="x-label" aria-hidden="true"

@@ -48,6 +48,7 @@ export function validateFacts(facts: FinanceFacts): void {
   const purchases = indexById(facts.purchases);
   const invoices = indexById(facts.invoices);
   indexById(facts.invoiceItems);
+  const refunds = indexById(facts.cardRefunds ?? []);
   const salaries = indexById(facts.salaries);
   const subscriptions = indexById(facts.subscriptions);
 
@@ -92,13 +93,15 @@ export function validateFacts(facts: FinanceFacts): void {
     civilDate(invoice.closesOn);
     civilDate(invoice.dueOn);
     if (invoice.confirmedTotal) {
-      nonnegative(invoice.confirmedTotal);
+      money(invoice.confirmedTotal.minorUnits, invoice.confirmedTotal.currency);
       if (invoice.confirmedTotal.currency !== card.totalLimit.currency)
         throw new RangeError('Moeda da fatura incompatível.');
     }
     if (invoice.status === 'paid') {
       if (!invoice.paidByMovementId || !invoice.confirmedTotal)
         throw new RangeError('Fatura paga sem valor e pagamento.');
+      if (invoice.confirmedTotal.minorUnits < 0)
+        throw new RangeError('Liquidação de crédito exige tratamento próprio da fonte.');
       const payment = requireFact(movements, invoice.paidByMovementId);
       if (
         payment.kind !== 'invoice-payment' ||
@@ -143,6 +146,36 @@ export function validateFacts(facts: FinanceFacts): void {
           total.minorUnits !== purchase.total.minorUnits))
     )
       throw new RangeError('Agenda de parcelas não corresponde à compra.');
+  }
+  const refunded = new Map<string, bigint>();
+  const refundOrigins = new Set<string>();
+  for (const refund of refunds.values()) {
+    const purchase = requireFact(purchases, refund.purchaseId);
+    const invoice = requireFact(invoices, refund.invoiceId);
+    validateOrigin(refund.origin);
+    civilDate(refund.on);
+    nonnegative(refund.amount);
+    if (
+      refund.nature !== 'observed' ||
+      refund.amount.minorUnits === 0 ||
+      refund.amount.currency !== purchase.total.currency ||
+      invoice.cardId !== purchase.cardId ||
+      refund.on < purchase.purchasedOn
+    )
+      throw new RangeError('Estorno incompatível com a compra ou fatura.');
+    const total = (refunded.get(purchase.id) ?? 0n) + BigInt(refund.amount.minorUnits);
+    if (total > BigInt(purchase.total.minorUnits))
+      throw new RangeError('Estornos de principal excedem o valor da compra.');
+    refunded.set(purchase.id, total);
+    if (refund.origin.externalId !== null) {
+      const key = JSON.stringify([
+        purchase.cardId,
+        refund.origin.sourceId,
+        refund.origin.externalId,
+      ]);
+      if (refundOrigins.has(key)) throw new RangeError('Origem de estorno duplicada no cartão.');
+      refundOrigins.add(key);
+    }
   }
   const externalKeys = new Set<string>();
   for (const movement of movements.values()) {
@@ -224,8 +257,10 @@ export function invoiceKnownSubtotal(facts: FinanceFacts, invoiceId: string): Mo
   validateFacts(facts);
   const invoice = requireFact(indexById(facts.invoices), invoiceId);
   const card = requireFact(indexById(facts.cards), invoice.cardId);
-  return sumMoney(
-    card.totalLimit.currency,
-    facts.invoiceItems.filter((item) => item.invoiceId === invoiceId).map((item) => item.amount),
-  );
+  return sumMoney(card.totalLimit.currency, [
+    ...facts.invoiceItems.filter((item) => item.invoiceId === invoiceId).map((item) => item.amount),
+    ...(facts.cardRefunds ?? [])
+      .filter((refund) => refund.invoiceId === invoiceId)
+      .map((refund) => money(-refund.amount.minorUnits, refund.amount.currency)),
+  ]);
 }

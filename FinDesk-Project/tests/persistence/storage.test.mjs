@@ -62,6 +62,7 @@ test('F07a/D136: atualização v1→v2 preserva manuais, recibos, excluídas, ca
     base = createDemoScenario().facts;
   const legacy = {
     ...current,
+    formatVersion: 1,
     seedVersion: 1,
     facts: {
       ...current.facts,
@@ -74,6 +75,7 @@ test('F07a/D136: atualização v1→v2 preserva manuais, recibos, excluídas, ca
       invoiceItems: base.invoiceItems,
     },
   };
+  delete legacy.facts.cardRefunds;
   const prefs = store.readPreferences(),
     categories = store.readCategories(),
     token = store.getExpenseEdit(manual).token;
@@ -99,7 +101,7 @@ test('F07a/D136: atualização v1→v2 preserva manuais, recibos, excluídas, ca
     const before = preserved();
     store = new DemoStore(root);
     const after = store.readDemo();
-    assert.equal(after.seedVersion, 3);
+    assert.equal(after.seedVersion, 4);
     assert.deepEqual(
       after.facts.movements.filter((m) => !isSeptember(m.id)),
       legacy.facts.movements,
@@ -128,7 +130,7 @@ test('F07a/D136: falha ao atualizar recibo de chegadas reverte fatos e versão d
   const root = await temporary(t),
     first = new DemoStore(root),
     scenario = createDemoScenario();
-  const legacy = { ...first.readDemo(), seedVersion: 1, facts: scenario.facts };
+  const legacy = { ...first.readDemo(), formatVersion: 1, seedVersion: 1, facts: scenario.facts };
   first.close();
   const db = new DatabaseSync(join(root, 'demo.sqlite'));
   try {
@@ -144,7 +146,7 @@ test('F07a/D136: falha ao atualizar recibo de chegadas reverte fatos e versão d
     assert.equal(db.prepare('SELECT payload FROM demo_state').get().payload, bytes);
     db.exec('DROP TRIGGER fail_seed_update');
     const next = new DemoStore(root);
-    assert.equal(next.readDemo().seedVersion, 3);
+    assert.equal(next.readDemo().seedVersion, 4);
     next.close();
   } finally {
     db.close();
@@ -730,7 +732,7 @@ test('FIN-047/048: estrutura financeira inválida e versão futura do agregado p
     const store = new DemoStore(root);
     const data = store.readDemo();
     store.close();
-    if (incompatible) data.formatVersion = 2;
+    if (incompatible) data.formatVersion = 3;
     else data.facts.movements[0].kind = 'unknown';
     const filename = join(root, 'demo.sqlite');
     const db = new DatabaseSync(filename);

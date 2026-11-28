@@ -58,7 +58,7 @@ export class InvoiceCategories {
         merchantId: null as string | null,
         meta: this.category(part.categoryId),
       }));
-    const total = this.reading().knownSubtotal;
+    const total = this.reading().purchasesSubtotal;
     if (!total || total.minorUnits <= 0) return [];
     let cumulative = 0n;
     return (this.merchants()?.parts ?? [])
@@ -95,11 +95,12 @@ export class InvoiceCategories {
   });
   readonly converted = computed(
     () =>
-      this.currency() !== 'original' && this.currency() !== this.reading().knownSubtotal?.currency,
+      this.currency() !== 'original' &&
+      this.currency() !== this.reading().purchasesSubtotal?.currency,
   );
   readonly unavailable = computed(
     () =>
-      (this.reading().itemCount > 0 && !this.reading().knownSubtotal) ||
+      (this.reading().itemCount > 0 && !this.reading().purchasesSubtotal) ||
       this.parts().some((part) => !this.present(part.amount)),
   );
   readonly differentTotal = computed(() => {

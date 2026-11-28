@@ -89,10 +89,19 @@
                     money(row.invoice.confirmedTotal ?? row.knownSubtotal)
                   }}</strong>
                 </div>
+                @if (row.refundCount) {
+                  <p class="invoice-refunds">
+                    <span>Compras {{ money(row.purchasesSubtotal) }}</span
+                    ><span>Estornos −{{ money(row.refundsSubtotal) }}</span>
+                  </p>
+                }
+                @if ((row.invoice.confirmedTotal ?? row.knownSubtotal)?.minorUnits! < 0) {
+                  <p class="amount-note">Crédito na fatura</p>
+                }
                 @if (row.invoice.confirmedTotal === null && !row.knownSubtotal) {
                   <p class="amount-note">
                     {{
-                      row.itemCount > 0
+                      row.itemCount + row.refundCount > 0
                         ? 'Não foi possível calcular o valor dos itens conhecidos.'
                         : 'Ainda não há itens ou total confirmado para esta fatura.'
                     }}

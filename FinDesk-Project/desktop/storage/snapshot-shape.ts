@@ -1,4 +1,4 @@
-/** Estrutura do agregado financeiro v1 no disco; não é parser de importação. */
+/** Estruturas versionadas do agregado no disco; não é parser de importação. */
 type Rule = (value: unknown) => boolean;
 const text: Rule = (value) => typeof value === 'string';
 const nullable =
@@ -68,79 +68,105 @@ const movement: Rule = (value) => {
   }
 };
 
-export const snapshotShape: Rule = shape({
-  formatVersion: oneOf(1),
+const factFields = {
+  accounts: list(shape({ id: text, name: text, openingOn: text, openingBalance: money })),
+  movements: list(movement),
+  cards: list(
+    shape({
+      id: text,
+      accountId: text,
+      lastDigits: text,
+      totalLimit: money,
+      usedLimit: money,
+      availableLimit: money,
+      limitSource: text,
+    }),
+  ),
+  purchases: list(
+    shape({
+      id: text,
+      cardId: text,
+      purchasedOn: text,
+      total: money,
+      installmentCount: integer,
+      scheduleCoverage: oneOf('complete', 'partial'),
+      categoryId: nullable(text),
+      merchantId: text,
+      subscriptionId: nullable(text),
+      origin,
+    }),
+  ),
+  invoices: list(
+    shape({
+      id: text,
+      cardId: text,
+      closesOn: text,
+      dueOn: text,
+      status: oneOf('open', 'closed', 'paid', 'future'),
+      confirmedTotal: nullable(money),
+      paidByMovementId: nullable(text),
+    }),
+  ),
+  invoiceItems: list(
+    shape({
+      id: text,
+      nature: oneOf('observed'),
+      invoiceId: text,
+      purchaseId: text,
+      installmentNumber: integer,
+      amount: money,
+    }),
+  ),
+  salaries: list(shape({ id: text, accountId: text, expectedOn: text, expectedAmount: money })),
+  subscriptions: list(
+    shape({
+      id: text,
+      periodicity: oneOf('monthly', 'annual'),
+      billingAmount: money,
+      nextExpectedOn: text,
+    }),
+  ),
+  coverage: list(
+    shape({
+      accountId: text,
+      sourceId: text,
+      range: shape({ start: text, end: text }),
+      lastAttemptAt: text,
+      lastSuccessAt: text,
+      status: oneOf('current', 'incomplete', 'failed'),
+    }),
+  ),
+};
+
+const snapshotFields = {
   seedId: oneOf('demo-financas-v1'),
-  seedVersion: oneOf(1, 2, 3),
   asOf: text,
   timezone: oneOf('America/Sao_Paulo'),
+};
+const legacySnapshot = shape({
+  ...snapshotFields,
+  formatVersion: oneOf(1),
+  seedVersion: oneOf(1, 2, 3),
+  facts: shape(factFields),
+});
+const currentSnapshot = shape({
+  ...snapshotFields,
+  formatVersion: oneOf(2),
+  seedVersion: oneOf(4),
   facts: shape({
-    accounts: list(shape({ id: text, name: text, openingOn: text, openingBalance: money })),
-    movements: list(movement),
-    cards: list(
+    ...factFields,
+    cardRefunds: list(
       shape({
-        id: text,
-        accountId: text,
-        lastDigits: text,
-        totalLimit: money,
-        usedLimit: money,
-        availableLimit: money,
-        limitSource: text,
-      }),
-    ),
-    purchases: list(
-      shape({
-        id: text,
-        cardId: text,
-        purchasedOn: text,
-        total: money,
-        installmentCount: integer,
-        scheduleCoverage: oneOf('complete', 'partial'),
-        categoryId: nullable(text),
-        merchantId: text,
-        subscriptionId: nullable(text),
-        origin,
-      }),
-    ),
-    invoices: list(
-      shape({
-        id: text,
-        cardId: text,
-        closesOn: text,
-        dueOn: text,
-        status: oneOf('open', 'closed', 'paid', 'future'),
-        confirmedTotal: nullable(money),
-        paidByMovementId: nullable(text),
-      }),
-    ),
-    invoiceItems: list(
-      shape({
-        id: text,
         nature: oneOf('observed'),
-        invoiceId: text,
-        purchaseId: text,
-        installmentNumber: integer,
-        amount: money,
-      }),
-    ),
-    salaries: list(shape({ id: text, accountId: text, expectedOn: text, expectedAmount: money })),
-    subscriptions: list(
-      shape({
         id: text,
-        periodicity: oneOf('monthly', 'annual'),
-        billingAmount: money,
-        nextExpectedOn: text,
-      }),
-    ),
-    coverage: list(
-      shape({
-        accountId: text,
-        sourceId: text,
-        range: shape({ start: text, end: text }),
-        lastAttemptAt: text,
-        lastSuccessAt: text,
-        status: oneOf('current', 'incomplete', 'failed'),
+        purchaseId: text,
+        invoiceId: text,
+        on: text,
+        amount: money,
+        origin,
       }),
     ),
   }),
 });
+
+export const snapshotShape: Rule = (value) => legacySnapshot(value) || currentSnapshot(value);

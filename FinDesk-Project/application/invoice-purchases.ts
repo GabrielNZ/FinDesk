@@ -1,6 +1,6 @@
-import type { Card, Invoice, InvoiceItem, Purchase } from '../domain/finance-facts';
+import type { Card, CardRefund, Invoice, InvoiceItem, Purchase } from '../domain/finance-facts';
 import type { CivilDate } from '../domain/civil-date';
-import { sumMoney, type Money } from '../domain/money';
+import { money, sumMoney, type Money } from '../domain/money';
 import type { DemoSnapshot } from '../shared/storage-api';
 import { cardInvoices } from './card-invoices';
 
@@ -10,7 +10,11 @@ export interface ScheduledInstallment {
   readonly current: boolean;
 }
 export interface InvoicePurchaseRow {
-  readonly item: InvoiceItem;
+  readonly id: string;
+  readonly item: InvoiceItem | null;
+  readonly refund: CardRefund | null;
+  readonly amount: Money;
+  readonly on: CivilDate;
   readonly purchase: Purchase;
   readonly schedule: readonly ScheduledInstallment[];
   readonly knownScheduleTotal: Money;
@@ -54,17 +58,42 @@ export function invoicePurchases(
     });
     schedules.set(item.purchaseId, schedule);
   }
-  const rows = snapshot.facts.invoiceItems
-    .filter((item) => item.invoiceId === invoiceId)
-    .map((item): InvoicePurchaseRow => {
-      const purchase = purchases.get(item.purchaseId)!;
-      const schedule = [...schedules.get(purchase.id)!].sort(
+  const entries = [
+    ...snapshot.facts.invoiceItems
+      .filter((item) => item.invoiceId === invoiceId)
+      .map((item) => ({
+        item,
+        refund: null,
+        id: `item-${item.id}`,
+        purchaseId: item.purchaseId,
+        amount: item.amount,
+        on: purchases.get(item.purchaseId)!.purchasedOn,
+      })),
+    ...(snapshot.facts.cardRefunds ?? [])
+      .filter((refund) => refund.invoiceId === invoiceId)
+      .map((refund) => ({
+        item: null,
+        refund,
+        id: `refund-${refund.id}`,
+        purchaseId: refund.purchaseId,
+        amount: money(-refund.amount.minorUnits, refund.amount.currency),
+        on: refund.on,
+      })),
+  ];
+  const rows = entries
+    .map((entry): InvoicePurchaseRow => {
+      const purchase = purchases.get(entry.purchaseId)!;
+      const schedule = [...(schedules.get(purchase.id) ?? [])].sort(
         (a, b) => a.item.installmentNumber - b.item.installmentNumber,
       );
       const after = schedule.filter((entry) => entry.invoice.dueOn > reading.invoice.dueOn);
       const dates = schedule.map((entry) => entry.invoice.dueOn).sort();
       return {
-        item,
+        id: entry.id,
+        item: entry.item,
+        refund: entry.refund,
+        amount: entry.amount,
+        on: entry.on,
         purchase,
         schedule,
         knownScheduleTotal: sumMoney(
@@ -83,9 +112,9 @@ export function invoicePurchases(
     })
     .sort(
       (a, b) =>
-        b.purchase.purchasedOn.localeCompare(a.purchase.purchasedOn) ||
+        b.on.localeCompare(a.on) ||
         a.purchase.id.localeCompare(b.purchase.id) ||
-        a.item.installmentNumber - b.item.installmentNumber,
+        a.id.localeCompare(b.id),
     );
   return { card, invoice: reading.invoice, rows, knownTotal: reading.knownSubtotal };
 }

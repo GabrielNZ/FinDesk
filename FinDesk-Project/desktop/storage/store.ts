@@ -55,6 +55,7 @@ import { isAbsolute, join } from 'node:path';
 import { createDemoScenario } from '../../fixtures/financas/demo';
 import { withSeptemberHistory } from '../../fixtures/financas/comparison-history';
 import { withSecondCard } from '../../fixtures/financas/card-wallet';
+import { withCardRefund } from '../../fixtures/financas/card-refund';
 import type { DemoSnapshot, FinancePreferences, StorageInfo } from '../../shared/storage-api';
 import { parsePreferences, parseStoredJson, StorageFailure, validateSnapshot } from './contracts';
 import { DEMO_MIGRATIONS, migrate, PREFERENCE_MIGRATIONS } from './migrations';
@@ -153,6 +154,18 @@ export class DemoStore {
           this.demo!.prepare('UPDATE demo_state SET payload = ? WHERE singleton = 1').run(
             JSON.stringify(next),
           );
+          previous = next;
+        }
+        if (previous.seedVersion === 3) {
+          let next;
+          try {
+            next = validateSnapshot(withCardRefund(previous));
+          } catch {
+            throw new StorageFailure('corrupt');
+          }
+          this.demo!.prepare('UPDATE demo_state SET payload = ? WHERE singleton = 1').run(
+            JSON.stringify(next),
+          );
         }
       });
       transaction(this.preferences, () => {
@@ -221,7 +234,7 @@ export class DemoStore {
   restoreDemo(): DemoSnapshot {
     const [demo] = this.requireOpen();
     transaction(demo, () => {
-      const fresh = withSecondCard(withSeptemberHistory(freshDemo()));
+      const fresh = withCardRefund(withSecondCard(withSeptemberHistory(freshDemo())));
       const facts = demo
         .prepare('UPDATE demo_state SET payload = ? WHERE singleton = 1')
         .run(JSON.stringify(fresh));

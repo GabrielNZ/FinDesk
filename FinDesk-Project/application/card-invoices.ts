@@ -1,6 +1,7 @@
 import type { Card, Invoice } from '../domain/finance-facts';
 import { validateFacts } from '../domain/finance';
-import { convertForDisplay, money, sumMoney, type ExchangeRate, type Money } from '../domain/money';
+import { invoiceRegisteredAmounts } from '../domain/card-refunds';
+import { convertForDisplay, money, type ExchangeRate, type Money } from '../domain/money';
 import type { DemoSnapshot, FinancePreferences } from '../shared/storage-api';
 import { ALL_ACCOUNTS } from './finance-context';
 
@@ -15,6 +16,9 @@ export function walletCards(snapshot: DemoSnapshot, accountId: string): readonly
 export interface InvoiceReading {
   readonly invoice: Invoice;
   readonly knownSubtotal: Money | null;
+  readonly purchasesSubtotal: Money | null;
+  readonly refundsSubtotal: Money | null;
+  readonly refundCount: number;
   readonly itemCount: number;
   readonly categories: readonly InvoiceCategoryPart[];
 }
@@ -48,25 +52,30 @@ export function cardInvoices(
     )
     .map((invoice) => {
       const items = snapshot.facts.invoiceItems.filter((item) => item.invoiceId === invoice.id);
+      const refundCount = (snapshot.facts.cardRefunds ?? []).filter(
+        (refund) => refund.invoiceId === invoice.id,
+      ).length;
       let knownSubtotal: Money | null = null;
-      if (items.length) {
+      let purchasesSubtotal: Money | null = null;
+      let refundsSubtotal: Money | null = null;
+      if (items.length || refundCount) {
         try {
-          knownSubtotal = sumMoney(
-            card.totalLimit.currency,
-            items.map((item) => item.amount),
-          );
+          const amounts = invoiceRegisteredAmounts(snapshot.facts, invoice.id);
+          knownSubtotal = amounts.net;
+          purchasesSubtotal = amounts.purchases;
+          refundsSubtotal = amounts.refunds;
         } catch {
           /* Precisão excedida: não oferecer subtotal parcial. */
         }
       }
       const categories: InvoiceCategoryPart[] = [];
-      if (knownSubtotal && knownSubtotal.minorUnits > 0) {
+      if (purchasesSubtotal && purchasesSubtotal.minorUnits > 0) {
         const totals = new Map<string | null, bigint>();
         for (const item of items) {
           const category = purchases.get(item.purchaseId)!.categoryId;
           totals.set(category, (totals.get(category) ?? 0n) + BigInt(item.amount.minorUnits));
         }
-        const total = BigInt(knownSubtotal.minorUnits);
+        const total = BigInt(purchasesSubtotal.minorUnits);
         let previous = 0n;
         const percentage = (value: bigint) => Number((value * 1000000n) / total) / 10000;
         for (const [categoryId, amount] of [...totals]
@@ -88,7 +97,15 @@ export function cardInvoices(
           });
         }
       }
-      return { invoice, knownSubtotal, itemCount: items.length, categories };
+      return {
+        invoice,
+        knownSubtotal,
+        purchasesSubtotal,
+        refundsSubtotal,
+        refundCount,
+        itemCount: items.length,
+        categories,
+      };
     });
 }
 

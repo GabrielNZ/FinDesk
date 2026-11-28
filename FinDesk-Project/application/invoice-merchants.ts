@@ -33,7 +33,7 @@ export function invoiceMerchants(
     (row) => row.invoice.id === invoiceId,
   );
   if (!reading) return null;
-  const total = reading.knownSubtotal;
+  const total = reading.purchasesSubtotal;
   if (!total)
     return {
       reading,

@@ -126,7 +126,7 @@ test('F09e: legado preservado, futuro registrado, detalhes locais, moeda, filtro
     await expect.poll(async () => (await futureCard.boundingBox())!.height).toBeGreaterThan(height);
     expect(await main.evaluate((node) => node.scrollTop)).toBe(scroll);
     await expect(page.locator('.invoice-summary')).toHaveAttribute('data-invoice-id', 'fat-nov');
-    await expect(page.locator('fd-invoice-purchases .purchase-row')).toHaveCount(3);
+    await expect(page.locator('fd-invoice-purchases .purchase-row')).toHaveCount(4);
     expect(bytes()).toBe(beforeBytes);
     await choose(page, 'Moeda', 'USD');
     await expect(panel.locator('.future-total strong')).toHaveText('US$ 213,33');
@@ -138,12 +138,12 @@ test('F09e: legado preservado, futuro registrado, detalhes locais, moeda, filtro
       .getByRole('button', { name: 'Estabelecimentos', exact: true })
       .click();
     await page.locator('fd-invoice-categories [data-merchant="loja"]').click();
-    await expect(page.locator('fd-invoice-purchases .purchase-row')).toHaveCount(2);
+    await expect(page.locator('fd-invoice-purchases .purchase-row')).toHaveCount(3);
     await expect(panel.locator('.future-total strong')).toHaveText('R$ 1.066,66');
     await expect(panel.locator('[data-future-item]')).toHaveCount(2);
     await page.getByRole('button', { name: 'Fatura anterior', exact: true }).click();
     await expect(panel.locator('.future-detail')).toHaveCount(0);
-    await expect(panel.locator('.future-total strong')).toHaveText('R$ 1.349,90');
+    await expect(panel.locator('.future-total strong')).toHaveText('R$ 1.299,90');
     await future('fat-nov').click();
     await expect(panel.locator('.future-detail')).toContainText('Recorrência registrada');
     await page.getByRole('button', { name: 'Próxima fatura', exact: true }).click();

@@ -6,14 +6,20 @@
         <p>Após {{ month(value.reference.invoice.dueOn) }} · Por vencimento</p>
       </div>
       <div class="future-total">
-        <span>Subtotal conhecido</span><strong>{{ money(value.value) }}</strong>
+        <span>Líquido conhecido</span><strong>{{ money(value.value) }}</strong>
         @if (converted(value.original)) {
           <small>Original: {{ money(value.original) }}</small>
         }
       </div>
     </header>
     @if (value.invoices.length) {
-      <div class="future-bars" role="group" aria-label="Faturas posteriores registradas">
+      <div
+        class="future-bars"
+        [class.signed]="value.signed"
+        [style.--future-count]="value.invoices.length"
+        role="group"
+        aria-label="Faturas posteriores registradas"
+      >
         @for (row of value.invoices; track row.reading.invoice.id) {
           <button
             type="button"
@@ -41,19 +47,25 @@
                 <i
                   class="future-fill"
                   [class.zero]="row.value.minorUnits === 0"
-                  [style.width.%]="row.percent"
+                  [class.credit]="row.value.minorUnits < 0"
+                  [style.--future-size]="row.percent + '%'"
                 ></i>
               } @else {
                 <span class="future-missing">—</span>
               }
             </span>
-            <strong>{{
-              row.value
-                ? money(row.value)
-                : row.unavailable === 'no-items'
-                  ? 'Sem itens'
-                  : 'Indisponível'
-            }}</strong>
+            <strong
+              >{{
+                row.value
+                  ? money(row.value)
+                  : row.unavailable === 'no-items'
+                    ? 'Sem itens'
+                    : 'Indisponível'
+              }}
+              @if (row.value && row.value.minorUnits < 0) {
+                <small>Crédito</small>
+              }
+            </strong>
           </button>
         }
       </div>
@@ -117,8 +129,8 @@
                 </tr>
               </thead>
               <tbody>
-                @for (entry of row.items; track entry.item.id) {
-                  <tr [attr.data-future-item]="entry.item.id">
+                @for (entry of row.items; track entry.kind + ':' + entry.id) {
+                  <tr [attr.data-future-item]="entry.id">
                     <td>
                       {{ catalogue.merchantLabel(entry.purchase.merchantId)
                       }}<small>Compra em {{ date(entry.purchase.purchasedOn) }}</small>
@@ -126,8 +138,10 @@
                     <td>
                       {{ kind(entry)
                       }}<small>
-                        @if (entry.purchase.installmentCount > 1) {
-                          {{ entry.item.installmentNumber }} de
+                        @if (entry.refund) {
+                          Crédito em {{ date(entry.refund.on) }}
+                        } @else if (entry.purchase.installmentCount > 1) {
+                          {{ entry.item!.installmentNumber }} de
                           {{ entry.purchase.installmentCount }}
                         } @else {
                           À vista
@@ -139,8 +153,8 @@
                     </td>
                     <td class="amount">
                       {{ money(entry.value) }}
-                      @if (converted(entry.item.amount)) {
-                        <small>{{ money(entry.item.amount) }}</small>
+                      @if (converted(entry.amount)) {
+                        <small>{{ money(entry.amount) }}</small>
                       }
                     </td>
                   </tr>
@@ -165,8 +179,8 @@
     }
     <footer><span>Recorrências previstas</span><strong>Ainda não projetadas</strong></footer>
     <p class="notice">
-      Itens registrados após a referência; não é dívida total nem valor final de faturas em
-      formação.
+      Compras menos estornos registrados após a referência; não é dívida total nem valor final de
+      faturas em formação.
     </p>
     @if (converted(value.original)) {
       <p class="notice">

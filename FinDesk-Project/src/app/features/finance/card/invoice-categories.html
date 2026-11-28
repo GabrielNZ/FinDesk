@@ -16,7 +16,7 @@
         Estabelecimentos
       </button>
     </div>
-    <span>Itens conhecidos</span>
+    <span>Compras brutas</span>
   </div>
   @if (!catalogue.value()) {
     @if (catalogue.error()) {
@@ -31,7 +31,7 @@
     <div
       class="category-track"
       role="group"
-      aria-label="Composição dos itens da fatura"
+      aria-label="Composição das compras brutas da fatura"
       [style.--category-x]="anchor() + '%'"
       (pointerenter)="point($event, true)"
       (pointermove)="point($event)"
@@ -97,8 +97,8 @@
     </div>
     @if (differentTotal()) {
       <p class="category-state">
-        Base conhecida: {{ money(reading().knownSubtotal) }}. Os itens conhecidos não correspondem
-        ao total confirmado.
+        Líquido conhecido: {{ money(reading().knownSubtotal) }}. Os itens conhecidos não
+        correspondem ao total confirmado.
       </p>
     }
     @if (converted()) {

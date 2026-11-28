@@ -1,11 +1,14 @@
-import type { InvoiceItem, Purchase } from '../domain/finance-facts';
-import { sumMoney, type ExchangeRate, type Money } from '../domain/money';
+import type { CardRefund, InvoiceItem, Purchase } from '../domain/finance-facts';
+import { money, sumMoney, type ExchangeRate, type Money } from '../domain/money';
 import type { DemoSnapshot, FinancePreferences } from '../shared/storage-api';
 import { cardInvoices, presentCardMoney, type InvoiceReading } from './card-invoices';
 
-export type FutureItemKind = 'installment' | 'recurring' | 'other';
+export type FutureItemKind = 'installment' | 'recurring' | 'other' | 'refund';
 export interface FutureItem {
-  readonly item: InvoiceItem;
+  readonly id: string;
+  readonly item: InvoiceItem | null;
+  readonly refund: CardRefund | null;
+  readonly amount: Money;
   readonly purchase: Purchase;
   readonly kind: FutureItemKind;
   readonly value: Money | null;
@@ -17,8 +20,10 @@ export interface FutureInvoice {
   readonly items: readonly FutureItem[];
   readonly percent: number;
   readonly unavailable: 'no-items' | 'precision' | 'conversion' | null;
+  readonly signed: boolean;
 }
 export interface CardFuture {
+  readonly signed: boolean;
   readonly reference: InvoiceReading;
   readonly invoices: readonly FutureInvoice[];
   readonly original: Money | null;
@@ -44,10 +49,13 @@ export function cardFuture(
   const purchases = new Map(snapshot.facts.purchases.map((row) => [row.id, row]));
   const subsequent = readings.filter((row) => row.invoice.dueOn > reference.invoice.dueOn);
   const largest = subsequent.reduce(
-    (max, row) => Math.max(max, row.knownSubtotal?.minorUnits ?? 0),
+    (max, row) => Math.max(max, Math.abs(row.knownSubtotal?.minorUnits ?? 0)),
     0,
   );
   const present = (amount: Money | null) => presentCardMoney(amount, currency, snapshot.asOf, rate);
+  const signed = subsequent.some(
+    (row) => row.knownSubtotal !== null && row.knownSubtotal.minorUnits < 0,
+  );
   const invoices = subsequent.map((reading): FutureInvoice => {
     const original = reading.knownSubtotal;
     const value = present(original);
@@ -56,7 +64,10 @@ export function cardFuture(
       .map((item): FutureItem => {
         const purchase = purchases.get(item.purchaseId)!;
         return {
+          id: item.id,
           item,
+          refund: null,
+          amount: item.amount,
           purchase,
           kind:
             purchase.installmentCount > 1
@@ -69,21 +80,37 @@ export function cardFuture(
       })
       .sort(
         (a, b) =>
-          b.purchase.purchasedOn.localeCompare(a.purchase.purchasedOn) ||
-          a.item.id.localeCompare(b.item.id),
+          b.purchase.purchasedOn.localeCompare(a.purchase.purchasedOn) || a.id.localeCompare(b.id),
       );
+    for (const refund of snapshot.facts.cardRefunds ?? []) {
+      if (refund.invoiceId !== reading.invoice.id) continue;
+      const amount = money(-refund.amount.minorUnits, refund.amount.currency);
+      items.push({
+        id: `refund-${refund.id}`,
+        item: null,
+        refund,
+        amount,
+        purchase: purchases.get(refund.purchaseId)!,
+        kind: 'refund',
+        value: present(amount),
+      });
+    }
     return {
       reading,
       original,
       value,
       items,
+      signed,
       percent:
         original && largest > 0
-          ? Number((BigInt(original.minorUnits) * 1000000n) / BigInt(largest)) / 10000
+          ? Number(
+              (BigInt(Math.abs(original.minorUnits)) * 1000000n) /
+                (BigInt(largest) * (signed ? 2n : 1n)),
+            ) / 10000
           : 0,
       unavailable:
         original === null
-          ? reading.itemCount
+          ? reading.itemCount + reading.refundCount
             ? 'precision'
             : 'no-items'
           : !value
@@ -103,11 +130,13 @@ export function cardFuture(
   }
   const value = present(original);
   return {
+    signed,
     reference,
     invoices,
     original,
     value,
-    missingInvoices: invoices.filter((row) => row.reading.itemCount === 0).length,
+    missingInvoices: invoices.filter((row) => row.reading.itemCount + row.reading.refundCount === 0)
+      .length,
     incompletePurchases: snapshot.facts.purchases.filter(
       (purchase) => purchase.cardId === cardId && purchase.scheduleCoverage === 'partial',
     ).length,

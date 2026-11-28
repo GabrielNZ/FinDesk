@@ -1,5 +1,7 @@
 # F09e — Comprometimento futuro do cartão
 
+**Ampliação F09f/D176–D179:** subtotal e barras passam a usar compras menos estornos registrados na fatura de destino, incluindo crédito isolado como valor conhecido negativo. Detalhe identifica o crédito e a compra vinculada sem alterar a agenda original. Havendo negativo, barras compartilham eixo com zero central e créditos abaixo; proporções continuam na moeda original. Exemplo após novembro permanece R$ 1.066,66; após outubro passa a R$ 1.299,90. Sem transportar créditos, projetar assinaturas ou substituir itens por total confirmado. Critérios em [ESTORNOS_CARTAO.md](ESTORNOS_CARTAO.md).
+
 ## Objetivo e autorização
 
 Gabriel aprovou a F09d até D173 e autorizou a próxima pequena entrega ao responder “proximo!”, retomado em 28/11/2026. Objetivo de produto: consultar o comprometimento futuro do cartão, distinguindo parcelas/itens registrados de recorrências previstas (§9.4, FIN-030). Aprovação, execução e verificações efetivas ficam exclusivamente em [PROJECT_STATUS.md](../../PROJECT_STATUS.md).

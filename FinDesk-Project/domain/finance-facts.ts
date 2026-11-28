@@ -84,6 +84,18 @@ export interface InvoiceItem {
   readonly amount: Money;
 }
 
+/** Crédito observado na fatura; não altera a compra nem sua agenda de parcelas. */
+export interface CardRefund {
+  readonly nature: 'observed';
+  readonly id: string;
+  readonly purchaseId: string;
+  readonly invoiceId: string;
+  readonly on: CivilDate;
+  /** Magnitude positiva; a leitura da fatura aplica o sinal de crédito. */
+  readonly amount: Money;
+  readonly origin: Origin;
+}
+
 export interface SalaryExpectation {
   readonly id: string;
   readonly accountId: string;
@@ -115,6 +127,8 @@ export interface FinanceFacts {
   readonly purchases: readonly Purchase[];
   readonly invoices: readonly Invoice[];
   readonly invoiceItems: readonly InvoiceItem[];
+  /** Ausente somente no contrato legado, anterior ao suporte a estornos. */
+  readonly cardRefunds?: readonly CardRefund[];
   readonly salaries: readonly SalaryExpectation[];
   readonly subscriptions: readonly SubscriptionFact[];
   readonly coverage: readonly SourceCoverage[];

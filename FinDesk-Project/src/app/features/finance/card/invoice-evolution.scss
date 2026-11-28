@@ -160,6 +160,11 @@ header > span {
 .grid-lines i {
   border-top: 1px solid #a3aca918;
 }
+.zero-line {
+  position: absolute;
+  width: 100%;
+  border-top: 1px solid #a3aca948;
+}
 .invoice-column {
   height: 100%;
   position: relative;
@@ -174,16 +179,23 @@ header > span {
   cursor: pointer;
 }
 .column-plot {
+  position: relative;
   display: flex;
   align-items: flex-end;
   justify-content: center;
   height: calc(100% - 44px);
 }
 .column-fill {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
   width: 100%;
   max-width: 34px;
   border-radius: 4px 4px 0 0;
   background: var(--fd-accent);
+}
+.column-fill.credit {
+  border-radius: 0 0 4px 4px;
 }
 .column-fill.known {
   background: repeating-linear-gradient(135deg, #a9c8b550 0 3px, transparent 3px 6px);
@@ -205,6 +217,7 @@ header > span {
   outline-offset: 0;
 }
 .column-missing {
+  position: absolute;
   padding-bottom: 8px;
   color: var(--fd-muted);
   font-size: 17px;

@@ -12,6 +12,8 @@ Rastreabilidade e catálogo preparados em F01a: [requisitos por ID](docs/financa
 
 ## Produto e decisões confirmadas
 
+F09f/D176–D179: estorno observado ligado à compra original é crédito na fatura de destino, com origem/data preservadas. Compras e agenda permanecem intactas; sem entrada de caixa ou alteração inferida de limites. Fatura/tabela/indicadores usam líquido registrado; composição Categorias/Estabelecimentos mantém compras brutas explícitas. Crédito negativo aparece abaixo de zero, sem transporte automático; percentual de variação somente contra base positiva. Exemplo autorizado: R$ 50 em novembro, líquido R$ 233,24 e futuro posterior R$ 1.066,66. Agregado formato 2/seed 4 lê e atualiza legado atomicamente, preservando personalizações/layout. Critérios em [ESTORNOS_CARTAO.md](docs/financas/ESTORNOS_CARTAO.md).
+
 Aplicativo desktop pessoal de finanças e investimentos de Gabriel, inicialmente para Windows. Interface e documentação em português brasileiro. Nome definido: **FinDesk**. Investimentos são o principal diferencial, com uma área financeira correta e útil como base.
 
 Stack definida: Angular, Electron e TypeScript. Sem servidor separado necessário na primeira versão, sem autenticação própria no MVP e sem execução contínua com o aplicativo fechado. Prioridade a funcionamento local e ausência de custos recorrentes ou infraestrutura remota obrigatória.

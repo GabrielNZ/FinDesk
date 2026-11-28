@@ -66,8 +66,8 @@ test('F09a: compras, agenda exata, expansão por teclado, moeda, contexto e jane
     };
     const six = list.locator('[data-purchase-id="compra-6x"] .purchase-toggle');
     const three = list.locator('[data-purchase-id="compra-3x"] .purchase-toggle');
-    await expect(rows).toHaveCount(3);
-    await expect(list.locator('.known-total strong')).toHaveText('R$ 283,24');
+    await expect(rows).toHaveCount(4);
+    await expect(list.locator('.known-total strong')).toHaveText('R$ 233,24');
     const baseline = await page.evaluate(async () => ({
       demo: await window.finDesk!.storage.getDemo(),
       prefs: await window.finDesk!.storage.getPreferences(),
@@ -130,7 +130,7 @@ test('F09a: compras, agenda exata, expansão por teclado, moeda, contexto e jane
     await expect(details).toHaveCount(1);
     await choose(page, 'Moeda', 'USD');
     await expect(three).toHaveAttribute('aria-expanded', 'true');
-    await expect(list.locator('.known-total strong')).toHaveText('US$ 56,65');
+    await expect(list.locator('.known-total strong')).toHaveText('US$ 46,65');
     await expect(list.locator('[data-purchase-id="compra-6x"] .amount-column')).toContainText(
       'US$ 40,00',
     );
@@ -164,7 +164,7 @@ test('F09a: compras, agenda exata, expansão por teclado, moeda, contexto e jane
     await choose(page, 'Conta', 'demo-a');
     await page.locator('[data-wallet-id="card-demo"]').click({ position: { x: 70, y: 20 } });
     await page.getByRole('button', { name: 'Próxima fatura', exact: true }).click();
-    await expect(rows).toHaveCount(3);
+    await expect(rows).toHaveCount(4);
     await six.click();
     await app.evaluate(({ BrowserWindow }) => {
       BrowserWindow.getAllWindows()[0]?.setSize(820, 920);

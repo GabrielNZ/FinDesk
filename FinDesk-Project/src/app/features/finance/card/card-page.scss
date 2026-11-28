@@ -1,3 +1,16 @@
+.invoice-refunds {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 3px 12px;
+  margin: 2px 0 0;
+  color: var(--fd-muted);
+  font-size: 10px;
+  line-height: 1.5;
+  font-variant-numeric: tabular-nums;
+}
+.invoice-summary:has(.invoice-refunds) .invoice-dates {
+  margin-top: 6px;
+}
 :host {
   display: block;
   min-width: 0;

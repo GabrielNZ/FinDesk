@@ -96,9 +96,9 @@ test('F09b: colunas ao lado/abaixo, valores, seleção sem rolar, teclado, conte
     expect(chartBox.y).toBeCloseTo(invoiceBox.y, 0);
     expect(invoiceBox.height).toBeLessThan(460);
     await expect(chart.locator('.column-fill.known')).toHaveCount(6);
-    await expect(chart.locator('.selected-summary')).toContainText('R$ 283,24');
+    await expect(chart.locator('.selected-summary')).toContainText('R$ 233,24');
     const variation = chart.locator('.invoice-variation');
-    await expect(variation).toContainText('+R$ 23,24 · +8,9%');
+    await expect(variation).toContainText('-R$ 26,76 · −10,3%');
     await expect(variation).toContainText('vs out. de 2026 · Parcial');
     await expect(page.locator('.invoice-panel .invoice-variation')).toHaveCount(0);
     await column('fat-out').hover();
@@ -122,7 +122,7 @@ test('F09b: colunas ao lado/abaixo, valores, seleção sem rolar, teclado, conte
     await expect(summary).toHaveAttribute('data-invoice-id', 'fat-dez');
     await expect(purchases.locator('.purchase-row')).toHaveCount(2);
     await expect(column('fat-dez')).toHaveAttribute('aria-pressed', 'true');
-    await expect(variation).toContainText('-R$ 49,91 · −17,6%');
+    await expect(variation).toContainText('+R$ 0,09 · 0,0%');
     await expect(variation).toContainText('vs nov. de 2026 · Parcial');
     expect(await main.evaluate((el) => el.scrollTop)).toBe(scroll);
     await page.getByRole('button', { name: 'Fatura anterior', exact: true }).click();
@@ -142,12 +142,12 @@ test('F09b: colunas ao lado/abaixo, valores, seleção sem rolar, teclado, conte
     await page.keyboard.press('Enter');
     await expect(summary).toHaveAttribute('data-invoice-id', 'fat-nov');
     await choose(page, 'Moeda', 'USD');
-    await expect(chart.locator('.selected-summary strong')).toHaveText('US$ 56,65');
-    await expect(variation).toContainText('+US$ 4,65 · +8,9%');
-    await expect(variation).toContainText('Variação original: +R$ 23,24');
+    await expect(chart.locator('.selected-summary strong')).toHaveText('US$ 46,65');
+    await expect(variation).toContainText('-US$ 5,35 · −10,3%');
+    await expect(variation).toContainText('Variação original: -R$ 26,76');
     await column('fat-nov').hover();
     await tipAbove('fat-nov');
-    await expect(chart.getByRole('tooltip')).toContainText('Original: R$ 283,24');
+    await expect(chart.getByRole('tooltip')).toContainText('Original: R$ 233,24');
     await choose(page, 'Moeda', 'original');
     await page.mouse.move(0, 0);
     await main.evaluate((el) => {

@@ -55,7 +55,7 @@ export class InvoicePurchaseList {
     try {
       return sumMoney(
         query.card.totalLimit.currency,
-        this.rows().map((row) => row.item.amount),
+        this.rows().map((row) => row.amount),
       );
     } catch {
       return null;
@@ -104,9 +104,10 @@ export class InvoicePurchaseList {
     );
   }
   installment(row: InvoicePurchaseRow): string {
+    if (row.refund) return 'Estorno';
     return row.purchase.installmentCount === 1
       ? 'À vista'
-      : `${row.item.installmentNumber} de ${row.purchase.installmentCount}`;
+      : `${row.item!.installmentNumber} de ${row.purchase.installmentCount}`;
   }
   status(invoice: Invoice): string {
     return { paid: 'Paga', closed: 'Fechada', open: 'Em formação', future: 'Futura' }[
@@ -120,14 +121,14 @@ export class InvoicePurchaseList {
       timeZone: 'UTC',
     }).format(new Date(`${invoice.dueOn}T12:00:00Z`));
   }
-  source(purchase: Purchase): string {
+  source(purchase: Pick<Purchase, 'origin'>): string {
     return { manual: 'Cadastro manual', file: 'Arquivo', integration: 'Integração' }[
       purchase.origin.kind
     ];
   }
   toggle(row: InvoicePurchaseRow): void {
     this.prepareCollapse();
-    this.expanded.update((id) => (id === row.item.id ? null : row.item.id));
+    this.expanded.update((id) => (id === row.id ? null : row.id));
   }
   private prepareCollapse(): void {
     const panel = this.element.nativeElement.querySelector<HTMLElement>(
@@ -159,7 +160,7 @@ export class InvoicePurchaseList {
     }
     event.preventDefault();
     event.stopPropagation();
-    const index = this.rows().findIndex((row) => row.item.id === id);
+    const index = this.rows().findIndex((row) => row.id === id);
     this.prepareCollapse();
     this.expanded.set(null);
     const buttons =

@@ -10,7 +10,7 @@
         </p>
       </div>
       <div class="known-total">
-        <span>{{ merchantId() !== null ? 'Subtotal filtrado' : 'Itens conhecidos' }}</span
+        <span>{{ merchantId() !== null ? 'Subtotal filtrado' : 'Líquido conhecido' }}</span
         ><strong>{{ money(subtotal()) }}</strong>
       </div>
     </header>
@@ -48,7 +48,7 @@
           </caption>
           <thead>
             <tr>
-              <th scope="col" class="date-column">Data da compra</th>
+              <th scope="col" class="date-column">Data</th>
               <th scope="col" class="merchant-column">Estabelecimento</th>
               <th scope="col" class="category-column">Categoria</th>
               <th scope="col" class="installment-column">Parcela</th>
@@ -56,36 +56,42 @@
             </tr>
           </thead>
           <tbody>
-            @for (row of rows(); track row.item.id; let index = $index) {
+            @for (row of rows(); track row.id; let index = $index) {
               @let meta = category(row.purchase);
               <tr
                 class="purchase-row"
-                [class.open]="expanded() === row.item.id"
-                [attr.data-purchase-id]="row.purchase.id"
-                [attr.data-item-id]="row.item.id"
+                [class.refund-row]="row.refund !== null"
+                [class.open]="expanded() === row.id"
+                [attr.data-purchase-id]="row.refund ? null : row.purchase.id"
+                [attr.data-refund-id]="row.refund?.id"
+                [attr.data-refund-purchase-id]="row.refund ? row.purchase.id : null"
+                [attr.data-item-id]="row.item?.id"
               >
-                <td class="date-column">{{ date(row.purchase.purchasedOn) }}</td>
+                <td class="date-column">{{ date(row.on) }}</td>
                 <td class="merchant-column">
                   <button
                     type="button"
                     class="purchase-toggle"
                     [id]="'invoice-purchase-toggle-' + index"
                     [attr.aria-label]="
-                      'Detalhes da compra em ' +
+                      (row.refund ? 'Detalhes do estorno em ' : 'Detalhes da compra em ') +
                       catalogue.merchantLabel(row.purchase.merchantId) +
                       ', ' +
-                      date(row.purchase.purchasedOn) +
+                      date(row.on) +
                       ', ' +
-                      money(row.item.amount)
+                      money(row.amount)
                     "
-                    [attr.aria-expanded]="expanded() === row.item.id"
+                    [attr.aria-expanded]="expanded() === row.id"
                     [attr.aria-controls]="'invoice-purchase-details-' + index"
                     (click)="toggle(row)"
                   >
                     <i class="pi pi-chevron-right" aria-hidden="true"></i
                     ><span
-                      >{{ catalogue.merchantLabel(row.purchase.merchantId)
-                      }}<small class="compact-category" [style.color]="meta.color">{{
+                      >{{ catalogue.merchantLabel(row.purchase.merchantId) }}
+                      @if (row.refund) {
+                        <small class="refund-label">Estorno</small>
+                      }
+                      <small class="compact-category" [style.color]="meta.color">{{
                         meta.name
                       }}</small></span
                     >
@@ -103,13 +109,13 @@
                 </td>
                 <td class="installment-column">{{ installment(row) }}</td>
                 <td class="amount-column">
-                  <strong>{{ money(row.item.amount) }}</strong>
-                  @if (converted(row.item.amount)) {
-                    <small>{{ original(row.item.amount) }}</small>
+                  <strong>{{ money(row.amount) }}</strong>
+                  @if (converted(row.amount)) {
+                    <small>{{ original(row.amount) }}</small>
                   }
                 </td>
               </tr>
-              @if (expanded() === row.item.id) {
+              @if (expanded() === row.id) {
                 <tr class="purchase-detail-row" animate.leave="purchase-row-leave">
                   <td colspan="5">
                     <div class="purchase-reveal" animate.enter="purchase-enter">
@@ -121,6 +127,23 @@
                         tabindex="0"
                       >
                         <dl class="purchase-summary">
+                          @if (row.refund; as refund) {
+                            <div>
+                              <dt>Compra original</dt>
+                              <dd>
+                                {{ catalogue.merchantLabel(row.purchase.merchantId) }} ·
+                                {{ date(row.purchase.purchasedOn)
+                                }}<small>{{ row.purchase.id }}</small>
+                              </dd>
+                            </div>
+                            <div>
+                              <dt>Crédito registrado</dt>
+                              <dd>
+                                {{ date(refund.on)
+                                }}<small>{{ refund.origin.externalId ?? refund.id }}</small>
+                              </dd>
+                            </div>
+                          }
                           <div>
                             <dt>Total contratado</dt>
                             <dd>
@@ -132,7 +155,7 @@
                           </div>
                           <div>
                             <dt>Nesta fatura</dt>
-                            <dd>{{ money(row.item.amount) }}</dd>
+                            <dd>{{ money(row.amount) }}</dd>
                           </div>
                           <div>
                             <dt>Após esta fatura{{ row.complete ? '' : ' (conhecido)' }}</dt>
@@ -162,11 +185,11 @@
                           </div>
                           <div>
                             <dt>Origem</dt>
-                            <dd>{{ source(row.purchase) }}</dd>
+                            <dd>{{ source(row.refund ?? row.purchase) }}</dd>
                           </div>
                           <div>
                             <dt>Fonte</dt>
-                            <dd>{{ row.purchase.origin.sourceId }}</dd>
+                            <dd>{{ (row.refund ?? row.purchase).origin.sourceId }}</dd>
                           </div>
                         </dl>
                         @if (!row.complete) {

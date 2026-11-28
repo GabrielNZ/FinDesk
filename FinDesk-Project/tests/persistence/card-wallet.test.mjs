@@ -23,11 +23,14 @@ async function temporary(t) {
   return root;
 }
 function oldWallet(snapshot) {
+  const legacyFacts = { ...snapshot.facts };
+  delete legacyFacts.cardRefunds;
   return {
     ...snapshot,
+    formatVersion: 1,
     seedVersion: 2,
     facts: {
-      ...snapshot.facts,
+      ...legacyFacts,
       cards: snapshot.facts.cards.filter((c) => c.id !== 'card-demo-extra'),
       purchases: snapshot.facts.purchases.filter((p) => p.id !== 'compra-extra-demo'),
       invoices: snapshot.facts.invoices.filter((i) => i.cardId !== 'card-demo-extra'),
@@ -101,7 +104,7 @@ test('F08a/D150: atualização v2→v3 preserva fatos, manuais/excluídas/recibo
     const before = auxiliary(db);
     store = new DemoStore(root);
     const next = store.readDemo();
-    assert.equal(next.seedVersion, 3);
+    assert.equal(next.seedVersion, 4);
     assert.equal(next.facts.cards.length, legacy.facts.cards.length + 1);
     assert.equal(auxiliary(db), before);
     for (const key of ['movements', 'accounts', 'salaries', 'subscriptions', 'coverage'])
@@ -118,7 +121,7 @@ test('F08a/D150: atualização v2→v3 preserva fatos, manuais/excluídas/recibo
     assert.deepEqual(store.readDemo(), next);
     assert.equal(auxiliary(db), before);
     store.restoreDemo();
-    assert.equal(store.readDemo().seedVersion, 3);
+    assert.equal(store.readDemo().seedVersion, 4);
     assert.equal(store.readDemo().facts.cards.length, 2);
     assert.deepEqual(store.readPreferences(), prefs);
     assert.deepEqual(store.readCardLayout(), general);
@@ -164,7 +167,7 @@ test('F08a/D150: falha na atualização e colisão preservam bytes da seed anter
     db.prepare('UPDATE demo_state SET payload=?').run(bytes);
     const store = new DemoStore(root);
     try {
-      assert.equal(store.readDemo().seedVersion, 3);
+      assert.equal(store.readDemo().seedVersion, 4);
     } finally {
       store.close();
     }

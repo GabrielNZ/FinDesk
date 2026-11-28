@@ -18,9 +18,9 @@ import type {
 } from './expenses';
 
 export interface DemoSnapshot {
-  readonly formatVersion: 1;
+  readonly formatVersion: 1 | 2;
   readonly seedId: 'demo-financas-v1';
-  readonly seedVersion: 1 | 2 | 3;
+  readonly seedVersion: 1 | 2 | 3 | 4;
   readonly asOf: CivilDate;
   readonly timezone: 'America/Sao_Paulo';
   readonly facts: FinanceFacts;

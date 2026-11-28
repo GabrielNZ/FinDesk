@@ -154,11 +154,13 @@ export class InvoiceEvolutionChart {
     ];
   }
   basis(row: InvoiceEvolutionColumn): string {
-    return row.basis === 'confirmed'
-      ? 'Confirmado'
-      : row.basis === 'known'
-        ? 'Conhecido'
-        : 'Sem valor informado';
+    const basis =
+      row.basis === 'confirmed'
+        ? 'Confirmado'
+        : row.basis === 'known'
+          ? 'Conhecido'
+          : 'Sem valor informado';
+    return row.value && row.value.minorUnits < 0 ? `Crédito · ${basis}` : basis;
   }
   label(row: InvoiceEvolutionColumn): string {
     return `${this.month(row.month)} de ${row.month.slice(0, 4)}, vencimento ${this.date(row.reading.invoice.dueOn)}, ${this.money(row.value)}, ${this.basis(row)}, ${this.status(row)}`;

@@ -57,6 +57,10 @@ Gabriel confirmou “Tabela compacta e expansão na lista (recomendado)” em 24
 
 `fd-invoice-purchases` ocupa a largura abaixo da carteira/fatura. Uma expansão temporária mostra total contratado, recorte atual/posterior, origem, término conhecido e agenda. Em largura estreita, categoria passa para baixo do estabelecimento. Fatura sem itens mostra ausência, não zero. Troca de conta/cartão/fatura recolhe; moeda mantém a compra aberta, com originais e cotação fictícia identificados. Escape retorna ao acionador com `preventScroll`; o navegador continua limitando a rolagem ao tamanho existente da página após recolher.
 
+## Ampliação F09f
+
+D176–D179 acrescentam linhas de estorno observado ligadas à compra original, preservando esta agenda. A tabela usa líquido conhecido, data de cada registro e detalhe de origem/vínculo; filtro por estabelecimento inclui seus créditos da fatura. Ordenação segue a data do registro, com IDs para desempate. Sem criar parcela negativa ou apagar parcelas; fato de crédito próprio, com origem/data preservadas. Regras e critérios em [ESTORNOS_CARTAO.md](ESTORNOS_CARTAO.md); a ausência de modelo de estorno descrita no levantamento da F09a foi resolvida nesta etapa própria.
+
 ## Validação pertinente
 
 Consulta pura por conta/cartão/fatura e compra, parcelas inteiras/exatas, fontes distintas, moedas, cobertura parcial, falta de dados, divergência entre itens/total confirmado e ausência de dupla contagem do pagamento. Interface Electron: composição escolhida, expansão/retorno, teclado, contexto e valores preservados, troca de faturas/cartões, futuras sem itens e janela estreita. Somente perfis temporários. Resultados efetivos registrados em PROJECT_STATUS.

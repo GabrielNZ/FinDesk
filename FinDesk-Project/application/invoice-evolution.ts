@@ -24,6 +24,8 @@ export interface InvoiceEvolution {
   readonly columns: readonly (InvoiceEvolutionColumn | InvoiceEvolutionGap)[];
   readonly invoices: readonly InvoiceEvolutionColumn[];
   readonly ticks: readonly Money[];
+  /** Posição do zero, em percentual a partir do topo da área de desenho. */
+  readonly zero: number;
 }
 const monthIndex = (month: string) =>
   Number(month.slice(0, 4)) * 12 + Number(month.slice(5, 7)) - 1;
@@ -57,7 +59,7 @@ export function invoiceEvolution(
             ? ('known' as const)
             : null,
       unavailable: !original
-        ? reading.itemCount
+        ? reading.itemCount + reading.refundCount
           ? ('precision' as const)
           : ('no-items' as const)
         : !value
@@ -66,7 +68,7 @@ export function invoiceEvolution(
     };
   });
   const largest = rows.reduce(
-    (max, row) => (row.value ? Math.max(max, row.value.minorUnits) : max),
+    (max, row) => (row.value ? Math.max(max, Math.abs(row.value.minorUnits)) : max),
     0,
   );
   const maximum = BigInt(Math.max(largest, 100));
@@ -75,9 +77,11 @@ export function invoiceEvolution(
   const nice = step * magnitude;
   const upper = nice > BigInt(Number.MAX_SAFE_INTEGER) ? BigInt(Number.MAX_SAFE_INTEGER) : nice;
   const unit = currency === 'original' ? card.totalLimit.currency : currency;
+  const signed = rows.some((row) => row.value !== null && row.value.minorUnits < 0);
+  const span = upper * (signed ? 2n : 1n);
   const invoices: InvoiceEvolutionColumn[] = rows.map((row) => ({
     ...row,
-    height: row.value ? Number((BigInt(row.value.minorUnits) * 10000n) / upper) / 100 : 0,
+    height: row.value ? Number((BigInt(Math.abs(row.value.minorUnits)) * 10000n) / span) / 100 : 0,
   }));
   const columns: (InvoiceEvolutionColumn | InvoiceEvolutionGap)[] = [];
   let previous: number | null = null;
@@ -100,6 +104,9 @@ export function invoiceEvolution(
   return {
     columns,
     invoices,
-    ticks: [3n, 2n, 1n, 0n].map((step) => money(Number((upper * step) / 3n), unit)),
+    ticks: signed
+      ? [upper, upper / 2n, 0n, -upper / 2n, -upper].map((value) => money(Number(value), unit))
+      : [3n, 2n, 1n, 0n].map((step) => money(Number((upper * step) / 3n), unit)),
+    zero: signed ? 50 : 100,
   };
 }

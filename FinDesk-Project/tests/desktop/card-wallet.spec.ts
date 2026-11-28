@@ -114,7 +114,7 @@ test('F08a: carteira, faturas, conversão, gesto/teclado, contexto preservado, r
     ).toBe('none');
     await card('card-demo').focus();
     await expect(summary()).toHaveAttribute('data-invoice-id', 'fat-nov');
-    await expect(summary().locator('.invoice-amount')).toHaveText('R$ 283,24');
+    await expect(summary().locator('.invoice-amount')).toHaveText('R$ 233,24');
     await expect(summary()).not.toContainText('Valor conhecido');
     await expect(page.locator('.invoice-status')).toContainText('Em formação');
     await expect(page.locator('.limit-values')).toHaveCount(0);
@@ -264,8 +264,8 @@ test('F08a: carteira, faturas, conversão, gesto/teclado, contexto preservado, r
     await expect(summary()).toHaveAttribute('data-invoice-id', 'fat-extra-dez');
     await card('card-demo').click({ position: { x: 70, y: 35 } });
     await choose(page, 'Moeda', 'USD');
-    await expect(summary().locator('.invoice-amount')).toHaveText('US$ 56,65');
-    await expect(summary().locator('.original-amount')).toHaveText('Original: R$ 283,24');
+    await expect(summary().locator('.invoice-amount')).toHaveText('US$ 46,65');
+    await expect(summary().locator('.original-amount')).toHaveText('Original: R$ 233,24');
     await categories().locator('[data-category="casa"]').hover();
     await expect(compositionTip).toContainText('US$ 46,67');
     await expect(compositionTip).toContainText('Original: R$ 233,34');

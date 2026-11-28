@@ -52,7 +52,8 @@ export function invoiceVariation(
     return {
       ...base,
       unavailable:
-        (!left && current.itemCount > 0) || (!right && reference.itemCount > 0)
+        (!left && current.itemCount + current.refundCount > 0) ||
+        (!right && reference.itemCount + reference.refundCount > 0)
           ? 'precision'
           : 'no-items',
     };
@@ -67,7 +68,7 @@ export function invoiceVariation(
   const denominator = BigInt(right.minorUnits);
   const numerator = BigInt(original.minorUnits) * 1000n;
   const magnitude = numerator < 0n ? -numerator : numerator;
-  const tenths = denominator === 0n ? null : (magnitude + denominator / 2n) / denominator;
+  const tenths = denominator <= 0n ? null : (magnitude + denominator / 2n) / denominator;
   const percentage =
     tenths === null
       ? null

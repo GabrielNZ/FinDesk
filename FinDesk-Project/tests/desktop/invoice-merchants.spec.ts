@@ -71,11 +71,11 @@ test('F09d: alternância, dica, filtro/remoção, contexto, expansão, moeda e t
     expect((await merchant('loja').boundingBox())!.width).toBeCloseTo(width, 1);
     const scroll = await main.evaluate((node) => node.scrollTop);
     await merchant('loja').click();
-    await expect(rows).toHaveCount(2);
+    await expect(rows).toHaveCount(3);
     await expect(list.locator('.known-total')).toContainText('Subtotal filtrado');
-    await expect(list.locator('.known-total strong')).toHaveText('R$ 233,34');
+    await expect(list.locator('.known-total strong')).toHaveText('R$ 183,34');
     await expect(merchant('loja')).toHaveAttribute('aria-pressed', 'true');
-    await expect(page.locator('.invoice-amount')).toHaveText('R$ 283,24');
+    await expect(page.locator('.invoice-amount')).toHaveText('R$ 233,24');
     expect(await main.evaluate((node) => node.scrollTop)).toBe(scroll);
     await page.mouse.move(0, 0);
     await list.locator('h2').evaluate((node) => node.focus({ preventScroll: true }));
@@ -83,7 +83,7 @@ test('F09d: alternância, dica, filtro/remoção, contexto, expansão, moeda e t
     await list.locator('[data-purchase-id="compra-6x"] .purchase-toggle').click();
     await expect(list.locator('.purchase-details')).toHaveCount(1);
     await choose(page, 'Moeda', 'USD');
-    await expect(list.locator('.known-total strong')).toHaveText('US$ 46,67');
+    await expect(list.locator('.known-total strong')).toHaveText('US$ 36,67');
     await expect(list.locator('.purchase-details')).toHaveCount(1);
     await merchant('loja').hover();
     await expect(composition.getByRole('tooltip')).toContainText('Original: R$ 233,34');
@@ -92,7 +92,7 @@ test('F09d: alternância, dica, filtro/remoção, contexto, expansão, moeda e t
     await expect(list.locator('.purchase-details')).toHaveCount(0);
     await expect(list.locator('.merchant-filter')).toHaveCount(1);
     await page.keyboard.press('Escape');
-    await expect(rows).toHaveCount(3);
+    await expect(rows).toHaveCount(4);
     await expect(list.locator('h2')).toBeFocused();
     await choose(page, 'Moeda', 'original');
     await merchant('loja').focus();
@@ -102,14 +102,14 @@ test('F09d: alternância, dica, filtro/remoção, contexto, expansão, moeda e t
     await expect(rows).toHaveCount(1);
     await expect(list.locator('.known-total strong')).toHaveText('R$ 49,90');
     await list.getByRole('button', { name: 'Remover filtro de estabelecimento: Netflix' }).click();
-    await expect(rows).toHaveCount(3);
+    await expect(rows).toHaveCount(4);
     await expect(list.locator('h2')).toBeFocused();
     await merchant('loja').click();
     await page.getByRole('button', { name: 'Próxima fatura', exact: true }).click();
     await expect(list.locator('.merchant-filter')).toHaveCount(0);
     await expect(rows).toHaveCount(2);
     await page.getByRole('button', { name: 'Fatura anterior', exact: true }).click();
-    await expect(rows).toHaveCount(3);
+    await expect(rows).toHaveCount(4);
     await merchant('loja').click();
     await page.locator('[data-wallet-id="card-demo-extra"]').click({ position: { x: 70, y: 20 } });
     await expect(list.locator('.merchant-filter')).toHaveCount(0);
@@ -122,7 +122,7 @@ test('F09d: alternância, dica, filtro/remoção, contexto, expansão, moeda e t
     await composition.scrollIntoViewIfNeeded();
     await merchant('loja').click();
     await composition.screenshot({ path: 'test-results/f09d-merchants-composition-narrow.png' });
-    await expect(rows).toHaveCount(2);
+    await expect(rows).toHaveCount(3);
     for (const item of [composition, list, main])
       expect(await item.evaluate((node) => node.scrollWidth <= node.clientWidth)).toBe(true);
     await list.scrollIntoViewIfNeeded();
