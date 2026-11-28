@@ -12,6 +12,35 @@
   justify-content: space-between;
   align-items: baseline;
   gap: 10px;
+  flex-wrap: wrap;
+}
+.composition-modes {
+  display: flex;
+  gap: 10px;
+}
+.composition-modes button {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--fd-muted);
+  font: inherit;
+  font-size: 12px;
+  cursor: pointer;
+}
+.composition-modes button[aria-pressed='true'] {
+  color: var(--fd-text);
+  font-weight: 500;
+}
+.composition-modes button:focus-visible {
+  outline: 2px solid var(--fd-accent);
+  outline-offset: 4px;
+  border-radius: 2px;
+}
+.category-segment.merchant-segment {
+  cursor: pointer;
+}
+.category-segment.filtered .segment-fill {
+  box-shadow: 0 0 0 1px var(--fd-text);
 }
 h3 {
   margin: 0;

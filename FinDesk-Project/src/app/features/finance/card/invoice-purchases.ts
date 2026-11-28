@@ -6,6 +6,7 @@ import {
   effect,
   inject,
   input,
+  output,
   signal,
 } from '@angular/core';
 import {
@@ -14,7 +15,7 @@ import {
 } from '../../../../../application/invoice-purchases';
 import { presentCardMoney } from '../../../../../application/card-invoices';
 import { formatCivilDate, formatMoney } from '../../../../../application/finance-context';
-import type { Money } from '../../../../../domain/money';
+import { sumMoney, type Money } from '../../../../../domain/money';
 import type { Invoice, Purchase } from '../../../../../domain/finance-facts';
 import type { DemoSnapshot, FinancePreferences } from '../../../../../shared/storage-api';
 import { DEMO_EXCHANGE_RATE } from '../../../../../fixtures/financas/demo';
@@ -28,6 +29,8 @@ import { CategoryStore } from '../statement/category-store.service';
   host: { '(keydown.escape)': 'escape($event)' },
 })
 export class InvoicePurchaseList {
+  readonly merchantId = input<string | null>(null);
+  readonly filterCleared = output<void>();
   readonly snapshot = input.required<DemoSnapshot>();
   readonly accountId = input.required<string>();
   readonly cardId = input.required<string>();
@@ -39,6 +42,25 @@ export class InvoicePurchaseList {
   readonly query = computed(() =>
     invoicePurchases(this.snapshot(), this.accountId(), this.cardId(), this.invoiceId()),
   );
+  readonly rows = computed(
+    () =>
+      this.query()?.rows.filter(
+        (row) => this.merchantId() === null || row.purchase.merchantId === this.merchantId(),
+      ) ?? [],
+  );
+  readonly subtotal = computed(() => {
+    const query = this.query();
+    if (!query || !this.rows().length) return null;
+    if (this.merchantId() === null) return query.knownTotal;
+    try {
+      return sumMoney(
+        query.card.totalLimit.currency,
+        this.rows().map((row) => row.item.amount),
+      );
+    } catch {
+      return null;
+    }
+  });
   readonly differentTotal = computed(() => {
     const query = this.query();
     return (
@@ -54,6 +76,8 @@ export class InvoicePurchaseList {
       this.accountId();
       this.cardId();
       this.invoiceId();
+      this.merchantId();
+      this.prepareCollapse();
       this.expanded.set(null);
     });
     if (!this.catalogue.value()) void this.catalogue.load();
@@ -102,14 +126,41 @@ export class InvoicePurchaseList {
     ];
   }
   toggle(row: InvoicePurchaseRow): void {
+    this.prepareCollapse();
     this.expanded.update((id) => (id === row.item.id ? null : row.item.id));
+  }
+  private prepareCollapse(): void {
+    const panel = this.element.nativeElement.querySelector<HTMLElement>(
+      '.purchase-detail-row:not(.purchase-row-leave) .purchase-reveal',
+    );
+    if (!panel) return;
+    panel.style.setProperty('--purchase-close-height', `${panel.getBoundingClientRect().height}px`);
+    const row = panel.closest<HTMLElement>('.purchase-detail-row');
+    if (row) {
+      row.style.setProperty('--purchase-close-opacity', getComputedStyle(panel).opacity);
+      row.inert = true;
+      row.setAttribute('aria-hidden', 'true');
+    }
+    panel.querySelector('.purchase-details')?.removeAttribute('id');
+  }
+  clearFilter(): void {
+    this.filterCleared.emit();
+    this.element.nativeElement.querySelector<HTMLElement>('h2')?.focus({ preventScroll: true });
   }
   escape(event: Event): void {
     const id = this.expanded();
-    if (!id) return;
+    if (!id) {
+      if (this.merchantId() !== null) {
+        event.preventDefault();
+        event.stopPropagation();
+        this.clearFilter();
+      }
+      return;
+    }
     event.preventDefault();
     event.stopPropagation();
-    const index = this.query()?.rows.findIndex((row) => row.item.id === id) ?? -1;
+    const index = this.rows().findIndex((row) => row.item.id === id);
+    this.prepareCollapse();
     this.expanded.set(null);
     const buttons =
       this.element.nativeElement.querySelectorAll<HTMLButtonElement>('.purchase-toggle');

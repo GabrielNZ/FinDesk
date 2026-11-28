@@ -1,6 +1,21 @@
-<section class="invoice-categories" aria-label="Categorias da fatura">
+<section class="invoice-categories" aria-label="Composição da fatura">
   <div class="category-heading">
-    <h3>Categorias da fatura</h3>
+    <div class="composition-modes" role="group" aria-label="Agrupar composição por">
+      <button
+        type="button"
+        [attr.aria-pressed]="mode() === 'categories'"
+        (click)="mode.set('categories')"
+      >
+        Categorias
+      </button>
+      <button
+        type="button"
+        [attr.aria-pressed]="mode() === 'merchants'"
+        (click)="mode.set('merchants')"
+      >
+        Estabelecimentos
+      </button>
+    </div>
     <span>Itens conhecidos</span>
   </div>
   @if (!catalogue.value()) {
@@ -12,7 +27,7 @@
     }
   } @else if (unavailable()) {
     <p class="category-state">Valores indisponíveis para a composição.</p>
-  } @else if (reading().categories.length) {
+  } @else if (parts().length) {
     <div
       class="category-track"
       role="group"
@@ -23,25 +38,39 @@
       (pointerleave)="leave()"
       (keydown)="key($event)"
     >
-      @for (part of reading().categories; track part.categoryId; let index = $index) {
-        @let meta = category(part.categoryId);
+      @for (part of parts(); track part.key; let index = $index) {
+        @let meta = part.meta;
         <button
           type="button"
           class="category-segment"
           [class.active]="activeIndex() === index"
+          [class.merchant-segment]="part.merchantId !== null"
+          [class.filtered]="part.merchantId !== null && merchantFilter() === part.merchantId"
           [style.width.%]="part.width"
           [style.--category-color]="meta.color"
-          [attr.data-category]="part.categoryId ?? 'uncategorized'"
-          [attr.aria-label]="meta.name + ': ' + money(part.amount) + ', ' + part.share"
+          [attr.data-category]="mode() === 'categories' ? part.key : null"
+          [attr.data-merchant]="part.merchantId"
+          [attr.aria-pressed]="
+            part.merchantId !== null ? merchantFilter() === part.merchantId : null
+          "
+          [attr.aria-label]="
+            meta.name +
+            ': ' +
+            money(part.amount) +
+            ', ' +
+            part.share +
+            (part.merchantId !== null ? ', filtrar compras' : '')
+          "
           [attr.aria-describedby]="activeIndex() === index ? 'invoice-category-detail' : null"
           (focus)="focusPart($event, index)"
           (blur)="focus.set(null)"
+          (click)="part.merchantId !== null && merchantSelected.emit(part.merchantId)"
         >
           <span class="segment-fill" aria-hidden="true"></span>
         </button>
       }
       @if (active(); as part) {
-        @let meta = category(part.categoryId);
+        @let meta = part.meta;
         <span
           class="category-dot"
           [style.left.%]="anchor()"
@@ -60,6 +89,9 @@
           @if (converted()) {
             <small>Original: {{ originalMoney(part.amount) }}</small>
           }
+          @if (part.merchantId !== null) {
+            <small>Clique para filtrar as compras.</small>
+          }
         </span>
       }
     </div>
@@ -76,7 +108,7 @@
     <p class="category-state">
       {{
         reading().itemCount
-          ? 'Nenhum valor a distribuir entre categorias.'
+          ? 'Nenhum valor a distribuir nesta fatura.'
           : 'Nenhum item conhecido nesta fatura.'
       }}
     </p>

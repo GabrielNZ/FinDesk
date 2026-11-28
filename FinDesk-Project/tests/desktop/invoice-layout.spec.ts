@@ -147,6 +147,58 @@ test('D164/D165: cards do cartão movem, redimensionam, preservam instância/fat
     await expect
       .poll(async () => (await saved(page))?.cards.map((c) => c.id))
       .toEqual(['wallet', 'invoice', 'invoice-evolution', 'invoice-purchases']);
+    // D172: expansão é um mínimo visual; reorganização/resize não a gravam como altura preferida.
+    await app!.evaluate(({ BrowserWindow }) =>
+      BrowserWindow.getAllWindows()[0]!.setSize(1800, 1000),
+    );
+    const list = page.locator('fd-invoice-purchases');
+    const sizeBeforeExpansion = await saved(page);
+    await list.locator('[data-purchase-id="compra-6x"] .purchase-toggle').click();
+    await expect
+      .poll(async () => (await card('invoice-purchases').boundingBox())!.height)
+      .toBeGreaterThan(600);
+    expect(await saved(page)).toEqual(sizeBeforeExpansion);
+    await card('invoice-purchases').locator('.card-shell').focus();
+    await page.keyboard.press('Home');
+    await expect.poll(async () => (await saved(page))?.cards[0]?.id).toBe('invoice-purchases');
+    await expect
+      .poll(async () => {
+        const top = (await card('invoice-purchases').boundingBox())!;
+        return (await card('wallet').boundingBox())!.y >= top.y + top.height;
+      })
+      .toBe(true);
+    const purchasesRows = (await saved(page))!.cards.find(
+      (c) => c.id === 'invoice-purchases',
+    )!.rows;
+    const purchaseResize = page.locator('[data-resize-id="invoice-purchases"]');
+    await purchaseResize.scrollIntoViewIfNeeded();
+    const purchaseHandle = (await purchaseResize.boundingBox())!;
+    await page.mouse.move(
+      purchaseHandle.x + purchaseHandle.width - 2,
+      purchaseHandle.y + purchaseHandle.height - 2,
+    );
+    await page.mouse.down();
+    await page.mouse.move(
+      purchaseHandle.x + purchaseHandle.width - 82,
+      purchaseHandle.y + purchaseHandle.height - 2,
+      { steps: 10 },
+    );
+    await page.mouse.up();
+    await expect
+      .poll(
+        async () =>
+          (await saved(page))?.cards.find((c) => c.id === 'invoice-purchases')?.columns ?? 12,
+      )
+      .toBeLessThan(12);
+    expect((await saved(page))!.cards.find((c) => c.id === 'invoice-purchases')!.rows).toBe(
+      purchasesRows,
+    );
+    await list.locator('[data-purchase-id="compra-6x"] .purchase-toggle').click();
+    await expect
+      .poll(async () => (await card('invoice-purchases').boundingBox())!.height)
+      .toBeLessThan(500);
+    await restore.click();
+    await restore.click();
     const after = await page.evaluate(async () => ({
       demo: await window.finDesk!.storage.getDemo(),
       prefs: await window.finDesk!.storage.getPreferences(),

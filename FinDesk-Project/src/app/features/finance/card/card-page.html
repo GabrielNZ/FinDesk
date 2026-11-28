@@ -116,6 +116,11 @@
                 </dl>
               </div>
               <fd-invoice-categories
+                [snapshot]="context.snapshot()!"
+                [accountId]="context.accountId()"
+                [cardId]="card.id"
+                [merchantFilter]="merchantFilter()"
+                (merchantSelected)="merchantFilter.set($event)"
                 [reading]="row"
                 [currency]="context.currencyMode()"
                 [asOf]="context.snapshot()!.asOf"
@@ -215,6 +220,8 @@
         @if (selectedCard(); as card) {
           @if (selected(); as row) {
             <fd-invoice-purchases
+              [merchantId]="merchantFilter()"
+              (filterCleared)="merchantFilter.set(null)"
               [snapshot]="context.snapshot()!"
               [accountId]="context.accountId()"
               [cardId]="card.id"

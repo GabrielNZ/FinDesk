@@ -34,6 +34,27 @@ header p {
   gap: 5px;
   text-align: right;
 }
+.merchant-filter {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin: -4px 0 10px;
+  padding: 5px 9px;
+  border: 1px solid var(--fd-border);
+  border-radius: 6px;
+  background: #a9c8b514;
+  color: var(--fd-text);
+  font-size: 11px;
+  cursor: pointer;
+}
+.merchant-filter i {
+  font-size: 9px;
+}
+.merchant-filter:focus-visible,
+h2:focus-visible {
+  outline: 2px solid var(--fd-accent);
+  outline-offset: 3px;
+}
 .known-total span {
   font-size: 10px;
   color: var(--fd-muted);
@@ -112,6 +133,51 @@ td small {
   flex-shrink: 0;
   color: var(--fd-muted);
   font-size: 10px;
+  transition: transform 320ms cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+.purchase-toggle[aria-expanded='true'] > i {
+  transform: rotate(90deg);
+}
+.purchase-reveal {
+  interpolate-size: allow-keywords;
+}
+.purchase-enter {
+  animation: purchase-open 320ms cubic-bezier(0.22, 0.61, 0.36, 1) both;
+  overflow: clip;
+}
+.purchase-row-leave {
+  animation: purchase-fade-out 320ms cubic-bezier(0.22, 0.61, 0.36, 1) both;
+  pointer-events: none;
+}
+.purchase-row-leave .purchase-reveal {
+  animation: purchase-close 320ms cubic-bezier(0.22, 0.61, 0.36, 1) both;
+  overflow: clip;
+}
+@keyframes purchase-open {
+  from {
+    height: 0;
+    opacity: 0;
+  }
+  to {
+    height: auto;
+    opacity: 1;
+  }
+}
+@keyframes purchase-close {
+  from {
+    height: var(--purchase-close-height, auto);
+  }
+  to {
+    height: 0;
+  }
+}
+@keyframes purchase-fade-out {
+  from {
+    opacity: var(--purchase-close-opacity, 1);
+  }
+  to {
+    opacity: 0;
+  }
 }
 .purchase-toggle > span {
   min-width: 0;
@@ -292,5 +358,15 @@ button:focus-visible,
   }
   h2 {
     font-size: 15px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .purchase-enter,
+  .purchase-row-leave,
+  .purchase-row-leave .purchase-reveal {
+    animation: none;
+  }
+  .purchase-toggle > i {
+    transition: none;
   }
 }

@@ -266,6 +266,33 @@ export interface ResolvedCardLayout {
   readonly height: number;
 }
 
+/** Expansão transitória do conteúdo: desloca linhas abaixo, sem alterar preferências. */
+export function fitCardContent(
+  layout: ResolvedCardLayout,
+  minimums: Readonly<Partial<Record<FinanceCardId, number>>>,
+): ResolvedCardLayout {
+  if (!Object.keys(minimums).length) return layout;
+  const cards: CardBox[] = [];
+  let offset = 0;
+  for (let index = 0; index < layout.cards.length;) {
+    const y = layout.cards[index]!.y;
+    const row: CardBox[] = [];
+    while (index < layout.cards.length && layout.cards[index]!.y === y)
+      row.push(layout.cards[index++]!);
+    let before = 0,
+      after = 0;
+    for (const box of row) {
+      const minimum = minimums[box.id] ?? 0;
+      const height = Math.max(box.height, Number.isFinite(minimum) ? minimum : 0);
+      cards.push({ ...box, y: box.y + offset, height });
+      before = Math.max(before, box.height);
+      after = Math.max(after, height);
+    }
+    offset += after - before;
+  }
+  return { cards, height: layout.height + offset };
+}
+
 /** Encaixe curto na altura de um vizinho da mesma linha, com saída suave. */
 export function assistedCardHeight(
   id: FinanceCardId,

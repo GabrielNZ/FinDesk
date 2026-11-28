@@ -2,6 +2,7 @@
   class="card-shell"
   tabindex="0"
   [class.focused-shell]="focused()"
+  [class.content-fitted-shell]="fitContent()"
   [attr.aria-labelledby]="'card-heading-' + placement().id"
   [attr.aria-describedby]="'card-help-' + placement().id"
   [attr.aria-expanded]="focused()"
@@ -14,7 +15,7 @@
   <header>
     <h3 [id]="'card-heading-' + placement().id">{{ heading() }}</h3>
   </header>
-  <div class="card-content"><ng-content /></div>
+  <div #body class="card-content"><ng-content /></div>
   <button
     class="resize-handle"
     type="button"

@@ -1,4 +1,13 @@
-import { ChangeDetectionStrategy, Component, input, output } from '@angular/core';
+import {
+  afterRenderEffect,
+  ChangeDetectionStrategy,
+  Component,
+  input,
+  output,
+  untracked,
+  viewChild,
+  type ElementRef,
+} from '@angular/core';
 import type { CardPlacement } from '../../../../../shared/card-layout';
 
 @Component({
@@ -8,6 +17,9 @@ import type { CardPlacement } from '../../../../../shared/card-layout';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class DashboardCard {
+  readonly fitContent = input(false);
+  readonly contentHeight = output<number>();
+  private readonly body = viewChild<ElementRef<HTMLElement>>('body');
   readonly placement = input.required<CardPlacement>();
   readonly heading = input.required<string>();
   readonly focused = input(false);
@@ -17,6 +29,22 @@ export class DashboardCard {
   readonly moveKey = output<KeyboardEvent>();
   readonly resizeKey = output<KeyboardEvent>();
   readonly focusRequested = output<void>();
+
+  constructor() {
+    afterRenderEffect((cleanup) => {
+      if (!this.fitContent()) return;
+      const content = this.body()?.nativeElement.firstElementChild;
+      if (!(content instanceof HTMLElement)) return;
+      const measure = () =>
+        untracked(() =>
+          this.contentHeight.emit(Math.ceil(content.getBoundingClientRect().height) + 2),
+        );
+      measure();
+      const observer = new ResizeObserver(measure);
+      observer.observe(content);
+      cleanup(() => observer.disconnect());
+    });
+  }
 
   private interactive(target: EventTarget | null): boolean {
     return (

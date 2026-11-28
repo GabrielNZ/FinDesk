@@ -11,7 +11,34 @@ const {
   cardInsertionIndex,
   previewCardDrop,
   assistedCardHeight,
+  fitCardContent,
 } = require('../../out/application/card-layout.js');
+
+test('D172: altura natural desloca as linhas seguintes, sem aumentar vizinhos ou alterar preferências', () => {
+  const preferences = defaultCardLayout('finance-invoices');
+  const original = resolveCardLayout(preferences, 1500);
+  const before = JSON.stringify({ preferences, original });
+  // Compras em uma linha com vizinho e outras linhas abaixo.
+  const boxes = {
+    height: 932,
+    cards: [
+      { id: 'invoice-purchases', x: 0, y: 0, width: 700, height: 344 },
+      { id: 'wallet', x: 716, y: 0, width: 400, height: 400 },
+      { id: 'invoice', x: 0, y: 416, width: 500, height: 240 },
+      { id: 'invoice-evolution', x: 0, y: 672, width: 600, height: 260 },
+    ],
+  };
+  const expanded = fitCardContent(boxes, { 'invoice-purchases': 900 });
+  assert.equal(expanded.cards[0].height, 900);
+  assert.equal(expanded.cards[1].height, 400);
+  assert.equal(expanded.cards[2].y, 916);
+  assert.equal(expanded.cards[3].y, 1172);
+  assert.equal(expanded.height, 1432);
+  assert.deepEqual(fitCardContent(boxes, { 'invoice-purchases': 100 }), boxes);
+  assert.deepEqual(fitCardContent(boxes, { 'invoice-purchases': Infinity }), boxes);
+  assert.equal(fitCardContent(original, {}), original);
+  assert.equal(JSON.stringify({ preferences, original }), before);
+});
 
 test('F03a / FIN-003: mover e redimensionar preserva todos os cards e não altera o layout anterior', () => {
   const original = defaultCardLayout();

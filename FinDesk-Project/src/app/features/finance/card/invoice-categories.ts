@@ -1,10 +1,20 @@
-import { ChangeDetectionStrategy, Component, computed, inject, input, signal } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  effect,
+  inject,
+  input,
+  output,
+  signal,
+} from '@angular/core';
 import type { InvoiceReading } from '../../../../../application/card-invoices';
 import { presentCardMoney } from '../../../../../application/card-invoices';
 import { formatMoney } from '../../../../../application/finance-context';
 import type { CivilDate } from '../../../../../domain/civil-date';
 import type { Money } from '../../../../../domain/money';
-import type { FinancePreferences } from '../../../../../shared/storage-api';
+import type { DemoSnapshot, FinancePreferences } from '../../../../../shared/storage-api';
+import { invoiceMerchants } from '../../../../../application/invoice-merchants';
 import { DEMO_EXCHANGE_RATE } from '../../../../../fixtures/financas/demo';
 import { CategoryStore } from '../statement/category-store.service';
 
@@ -15,6 +25,12 @@ import { CategoryStore } from '../statement/category-store.service';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class InvoiceCategories {
+  readonly snapshot = input.required<DemoSnapshot>();
+  readonly accountId = input.required<string>();
+  readonly cardId = input.required<string>();
+  readonly merchantFilter = input<string | null>(null);
+  readonly merchantSelected = output<string>();
+  readonly mode = signal<'categories' | 'merchants'>('categories');
   readonly reading = input.required<InvoiceReading>();
   readonly currency = input.required<FinancePreferences['currencyMode']>();
   readonly asOf = input.required<CivilDate>();
@@ -24,7 +40,51 @@ export class InvoiceCategories {
   private readonly pointer = signal<number | null>(null);
   private readonly dismissed = signal(false);
   readonly activeIndex = computed(() => (this.dismissed() ? null : (this.hover() ?? this.focus())));
-  readonly active = computed(() => this.reading().categories[this.activeIndex() ?? -1] ?? null);
+  readonly merchants = computed(() =>
+    invoiceMerchants(
+      this.snapshot(),
+      this.accountId(),
+      this.cardId(),
+      this.reading().invoice.id,
+      this.currency(),
+      DEMO_EXCHANGE_RATE,
+    ),
+  );
+  readonly parts = computed(() => {
+    if (this.mode() === 'categories')
+      return this.reading().categories.map((part) => ({
+        ...part,
+        key: part.categoryId ?? 'uncategorized',
+        merchantId: null as string | null,
+        meta: this.category(part.categoryId),
+      }));
+    const total = this.reading().knownSubtotal;
+    if (!total || total.minorUnits <= 0) return [];
+    let cumulative = 0n;
+    return (this.merchants()?.parts ?? [])
+      .filter((part) => part.original.minorUnits > 0)
+      .map((part) => {
+        const start = Number((cumulative * 1000000n) / BigInt(total.minorUnits)) / 10000;
+        cumulative += BigInt(part.original.minorUnits);
+        const end = Number((cumulative * 1000000n) / BigInt(total.minorUnits)) / 10000;
+        return {
+          key: part.merchantId,
+          merchantId: part.merchantId,
+          categoryId: null,
+          amount: part.original,
+          start,
+          end,
+          width: end - start,
+          share: part.share!,
+          meta: {
+            name: this.catalogue.merchantLabel(part.merchantId),
+            icon: 'pi-shopping-cart',
+            color: this.merchantColor(part.merchantId),
+          },
+        };
+      });
+  });
+  readonly active = computed(() => this.parts()[this.activeIndex() ?? -1] ?? null);
   readonly anchor = computed(() => {
     const part = this.active();
     return this.hover() !== null && this.pointer() !== null
@@ -40,7 +100,7 @@ export class InvoiceCategories {
   readonly unavailable = computed(
     () =>
       (this.reading().itemCount > 0 && !this.reading().knownSubtotal) ||
-      this.reading().categories.some((part) => !this.present(part.amount)),
+      this.parts().some((part) => !this.present(part.amount)),
   );
   readonly differentTotal = computed(() => {
     const row = this.reading();
@@ -53,6 +113,19 @@ export class InvoiceCategories {
   readonly originalMoney = formatMoney;
   constructor() {
     if (!this.catalogue.value()) void this.catalogue.load();
+    effect(() => {
+      this.mode();
+      this.reading();
+      this.leave();
+      this.focus.set(null);
+      this.dismissed.set(false);
+    });
+  }
+  private merchantColor(id: string): string {
+    const colors = ['#a9c8b5', '#b6a3cf', '#d6b385', '#84b6d4', '#cf9e9e'];
+    let hash = 0;
+    for (const char of id) hash = (hash * 31 + char.charCodeAt(0)) >>> 0;
+    return colors[hash % colors.length]!;
   }
   present(amount: Money | null) {
     return presentCardMoney(amount, this.currency(), this.asOf(), DEMO_EXCHANGE_RATE);
@@ -72,13 +145,13 @@ export class InvoiceCategories {
   }
   point(event: PointerEvent, entering = false): void {
     const bounds = (event.currentTarget as HTMLElement).getBoundingClientRect();
-    if (!bounds.width || !this.reading().categories.length) return;
+    if (!bounds.width || !this.parts().length) return;
     const position = Math.max(
       0,
       Math.min(100, ((event.clientX - bounds.left) * 100) / bounds.width),
     );
-    const index = this.reading().categories.findIndex((part) => position < part.end);
-    const next = index < 0 ? this.reading().categories.length - 1 : index;
+    const index = this.parts().findIndex((part) => position < part.end);
+    const next = index < 0 ? this.parts().length - 1 : index;
     this.pointer.set(position);
     if (entering || next !== this.hover()) this.dismissed.set(false);
     this.hover.set(next);
@@ -99,7 +172,7 @@ export class InvoiceCategories {
       event.stopPropagation();
       return;
     }
-    const parts = this.reading().categories;
+    const parts = this.parts();
     const index = this.focus() ?? this.hover() ?? 0;
     const next =
       event.key === 'Home'

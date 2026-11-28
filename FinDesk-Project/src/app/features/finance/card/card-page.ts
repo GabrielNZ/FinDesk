@@ -2,6 +2,7 @@ import {
   ChangeDetectionStrategy,
   Component,
   computed,
+  effect,
   HostListener,
   inject,
   signal,
@@ -73,6 +74,15 @@ export class CardPage implements OnDestroy {
   readonly index = computed(() =>
     this.invoices().findIndex((row) => row.invoice.id === this.selected()?.invoice.id),
   );
+  readonly merchantFilter = signal<string | null>(null);
+  constructor() {
+    effect(() => {
+      this.context.accountId();
+      this.selectedCard();
+      this.selected();
+      this.merchantFilter.set(null);
+    });
+  }
   readonly dragging = signal<{ id: string; x: number; y: number } | null>(null);
   readonly limitHover = signal<'used' | 'available' | null>(null);
   readonly limitFocus = signal<'used' | 'available' | null>(null);

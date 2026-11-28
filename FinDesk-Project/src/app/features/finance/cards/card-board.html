@@ -42,7 +42,7 @@
         class="card-board"
         [class.reordering]="!!drag()"
         [class.focus-view]="!!focused()"
-        [style.--focus-height.px]="focusHeight()"
+        [style.--focus-height.px]="focusedHeight()"
         [style.height.px]="boardHeight()"
       >
         @if (heightAssist(); as assist) {
@@ -96,7 +96,7 @@
               drag()?.id === card.id
                 ? drag()!.height
                 : focused() === card.id
-                  ? focusHeight()
+                  ? focusedHeight()
                   : box.height
             "
             [hidden]="!!focused() && focused() !== card.id"
@@ -105,6 +105,8 @@
             [placement]="card"
             [heading]="headings[card.id]"
             [focused]="focused() === card.id"
+            [fitContent]="fitContent(card.id)"
+            (contentHeight)="contentHeight(card.id, $event)"
             [disabled]="state.restoring() || confirming()"
             (moveStart)="start($event, card, 'move')"
             (resizeStart)="start($event, card, 'resize')"

@@ -26,6 +26,7 @@ import {
   reorderCard,
   resizeCard,
   resolveCardLayout,
+  fitCardContent,
 } from '../../../../../application/card-layout';
 import type { CardLayout, CardPlacement, FinanceCardId } from '../../../../../shared/card-layout';
 import { CardLayoutState } from './card-layout.service';
@@ -96,12 +97,19 @@ export class CardBoard {
   } | null>(null);
   readonly announcement = signal('');
   readonly cards = computed(() => (this.preview() ?? this.state.layout()).cards);
+  private readonly contentMinimums = signal<Partial<Record<FinanceCardId, number>>>({});
+  readonly focusedHeight = computed(() =>
+    Math.max(this.focusHeight(), this.contentMinimums()[this.focused()!] ?? 0),
+  );
   readonly resolved = computed(() =>
-    resolveCardLayout(this.preview() ?? this.state.layout(), this.boardWidth()),
+    fitCardContent(
+      resolveCardLayout(this.preview() ?? this.state.layout(), this.boardWidth()),
+      this.contentMinimums(),
+    ),
   );
   readonly boardHeight = computed(() =>
     this.focused()
-      ? this.focusHeight()
+      ? this.focusedHeight()
       : Math.max(this.resolved().height, this.drag()?.canvasHeight ?? 0),
   );
   readonly dropSlot = computed(() =>
@@ -168,6 +176,13 @@ export class CardBoard {
   }
   boxFor(id: FinanceCardId): CardBox {
     return this.resolved().cards.find((box) => box.id === id)!;
+  }
+  fitContent(id: FinanceCardId): boolean {
+    return this.state.area === 'finance-invoices' && id === 'invoice-purchases';
+  }
+  contentHeight(id: FinanceCardId, height: number): void {
+    if (!this.fitContent(id) || this.contentMinimums()[id] === height) return;
+    this.contentMinimums.update((values) => ({ ...values, [id]: height }));
   }
   private workspace(): HTMLElement | null {
     return this.element.nativeElement.closest<HTMLElement>('.workspace');
@@ -305,7 +320,9 @@ export class CardBoard {
               ),
             );
       const desiredHeight = this.clamp(
-        gesture.rect.height + dy,
+        (this.fitContent(gesture.id)
+          ? original.rows * (CARD_GRID.rowHeight + CARD_GRID.gap) - CARD_GRID.gap
+          : gesture.rect.height) + dy,
         cardMinimums(this.state.area).minRows * (CARD_GRID.rowHeight + CARD_GRID.gap) -
           CARD_GRID.gap,
         CARD_GRID.maxRows * (CARD_GRID.rowHeight + CARD_GRID.gap) - CARD_GRID.gap,

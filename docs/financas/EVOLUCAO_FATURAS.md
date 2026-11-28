@@ -53,6 +53,8 @@ A composição inicial não acrescentou personalização. D164 passou a exigir o
 
 ## Implementação
 
+**Revisão posterior D172, na F09d:** Compras desta fatura cresce com a altura natural e usa a rolagem da página. Altura salva é um mínimo e a expansão não é persistida. Linhas seguintes descem sem sobreposição; resize/arraste e foco temporário seguem válidos. Substitui as referências históricas abaixo à rolagem interna somente para Compras, preservando o comportamento dos demais cards. Critérios e implementação em COMPOSICAO_ESTABELECIMENTOS.md.
+
 **Revisão D169:** por solicitação de Gabriel durante a revisão da F09c, dica de detalhes ancorada no centro/topo da barra consultada, acima dela, com 10 px de distância. Contenção nas bordas do card; zero e ausência mantêm âncora no marcador. Medição após renderização, ResizeObserver local e evento de rolagem horizontal atualizam a posição; cleanup ao trocar/fechar/destruir. Hover/foco/Escape preservados; sem timer, dependência ou mudança nos cálculos/layouts. Critérios anteriores ao código em VARIACAO_FATURAS.md; verificações efetivas no PROJECT_STATUS.
 
 **Revisão D166, critérios anteriores ao ajuste:** usar como novo padrão as proporções que Gabriel mostrou e já salvou na interface. Leitura somente da chave de layout: carteira 3,2 colunas, fatura 3,676, evolução 5,146 com `align: 1`, prioridade da evolução e início de linha das compras; alturas de 400 px mantidas. Novos perfis/Restaurar layout passam a usar esse padrão; não normalizar ou sobrescrever layouts personalizados. Alinhar conteúdo da segunda coluna de datas à direita, mantendo Fechamento à esquerda e Vencimento na ponta direita da mesma linha.

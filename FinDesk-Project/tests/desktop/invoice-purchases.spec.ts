@@ -50,6 +50,20 @@ test('F09a: compras, agenda exata, expansão por teclado, moeda, contexto e jane
     const list = page.locator('fd-invoice-purchases');
     const rows = list.locator('.purchase-row');
     const details = list.locator('.purchase-details');
+    const purchaseCard = page.locator('[data-card-id="invoice-purchases"]');
+    const noInternalScroll = async () => {
+      await expect
+        .poll(() =>
+          purchaseCard
+            .locator('.card-content')
+            .evaluate(
+              (el) =>
+                el.scrollHeight <= el.clientHeight + 1 &&
+                getComputedStyle(el).overflowY === 'visible',
+            ),
+        )
+        .toBe(true);
+    };
     const six = list.locator('[data-purchase-id="compra-6x"] .purchase-toggle');
     const three = list.locator('[data-purchase-id="compra-3x"] .purchase-toggle');
     await expect(rows).toHaveCount(3);
@@ -63,6 +77,8 @@ test('F09a: compras, agenda exata, expansão por teclado, moeda, contexto e jane
     }));
     await list.scrollIntoViewIfNeeded();
     await page.screenshot({ path: 'test-results/f09a-purchases-wide.png' });
+    const collapsedHeight = (await purchaseCard.boundingBox())!.height;
+    const savedSize = await page.evaluate(() => window.finDesk!.storage.getInvoiceCardsLayout());
     await six.focus();
     await page.keyboard.press('Enter');
     await expect(six).toHaveAttribute('aria-expanded', 'true');
@@ -72,6 +88,20 @@ test('F09a: compras, agenda exata, expansão por teclado, moeda, contexto e jane
     await expect(details.locator('.purchase-summary')).toContainText('5 parcelas · R$ 1.000,00');
     await expect(details.locator('.current-invoice')).toHaveCount(1);
     await expect(details.locator('.current-invoice')).toContainText('1 de 6');
+    await expect
+      .poll(async () => (await purchaseCard.boundingBox())!.height)
+      .toBeGreaterThan(collapsedHeight + 200);
+    await noInternalScroll();
+    expect(await page.evaluate(() => window.finDesk!.storage.getInvoiceCardsLayout())).toEqual(
+      savedSize,
+    );
+    await purchaseCard.locator('.card-shell').focus();
+    await page.keyboard.press('Enter');
+    await expect(purchaseCard).toHaveClass(/focused-card/);
+    await noInternalScroll();
+    await page.keyboard.press('Escape');
+    await expect(purchaseCard).not.toHaveClass(/focused-card/);
+    await list.screenshot({ path: 'test-results/d172-expanded-purchases-wide.png' });
     await details.scrollIntoViewIfNeeded();
     await page.screenshot({ path: 'test-results/f09a-schedule-wide.png' });
     await three.click();
@@ -92,6 +122,9 @@ test('F09a: compras, agenda exata, expansão por teclado, moeda, contexto e jane
     await page.keyboard.press('Escape');
     await expect(details).toHaveCount(0);
     await expect(three).toBeFocused();
+    await expect
+      .poll(async () => (await purchaseCard.boundingBox())!.height)
+      .toBeCloseTo(collapsedHeight, 0);
     expect(await main.evaluate((el) => el.scrollTop)).toBe(scroll);
     await page.keyboard.press('Space');
     await expect(details).toHaveCount(1);
@@ -137,6 +170,8 @@ test('F09a: compras, agenda exata, expansão por teclado, moeda, contexto e jane
       BrowserWindow.getAllWindows()[0]?.setSize(820, 920);
     });
     await details.scrollIntoViewIfNeeded();
+    await noInternalScroll();
+    await list.screenshot({ path: 'test-results/d172-expanded-purchases-narrow.png' });
     await page.screenshot({ path: 'test-results/f09a-schedule-narrow.png' });
     for (const element of [
       page.locator('.card-page'),
