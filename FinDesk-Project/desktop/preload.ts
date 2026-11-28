@@ -6,6 +6,12 @@ import type { StorageApi } from '../shared/storage-api';
 const api: DesktopApi = Object.freeze({
   getRuntimeInfo: (): Promise<DesktopRuntimeInfo> => ipcRenderer.invoke('findesk:runtime-info'),
   storage: Object.freeze<StorageApi>({
+    getCommitmentCardsLayout: () => ipcRenderer.invoke('findesk:commitment-cards-layout-read'),
+    saveCommitmentCardsLayout: (value) =>
+      ipcRenderer.invoke('findesk:commitment-cards-layout-save', value),
+    getCommitmentPreferences: () => ipcRenderer.invoke('findesk:commitment-preferences-read'),
+    saveCommitmentPreferences: (value) =>
+      ipcRenderer.invoke('findesk:commitment-preferences-save', value),
     getInvoiceCardsLayout: () => ipcRenderer.invoke('findesk:invoice-cards-layout-read'),
     saveInvoiceCardsLayout: (value) =>
       ipcRenderer.invoke('findesk:invoice-cards-layout-save', value),

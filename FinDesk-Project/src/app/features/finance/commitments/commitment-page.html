@@ -1,0 +1,256 @@
+<section class="commitment-page" aria-label="Compromissos">
+  @if (!ready()) {
+    @if (error()) {
+      <p role="alert">{{ error() }}</p>
+      <button type="button" (click)="load()">Tentar novamente</button>
+    } @else {
+      <p role="status">Carregando compromissos…</p>
+    }
+  } @else {
+    <div class="commitment-tools">
+      <div class="period-options" role="group" aria-label="Período de compromissos">
+        <button
+          type="button"
+          [attr.aria-pressed]="preferences().period === 'finance'"
+          (click)="save({ period: 'finance' })"
+        >
+          Seguir Finanças
+        </button>
+        <button
+          type="button"
+          [attr.aria-pressed]="preferences().period === 'next-30-days'"
+          (click)="save({ period: 'next-30-days' })"
+        >
+          Próximos 30 dias
+        </button>
+      </div>
+      <span class="period-information"
+        ><span class="period-range">{{
+          range() ? date(range()!.start) + ' — ' + date(range()!.end) : 'Período indisponível'
+        }}</span
+        ><small>Referência fictícia · {{ date(context.snapshot()!.asOf) }}</small></span
+      >
+      <div class="view-options" role="group" aria-label="Apresentação dos compromissos">
+        @for (view of views; track view.value) {
+          <button
+            type="button"
+            [attr.aria-pressed]="preferences().view === view.value"
+            (click)="save({ view: view.value })"
+            (keydown)="viewKey($event, view.value)"
+          >
+            {{ view.label }}
+          </button>
+        }
+      </div>
+      <fd-card-layout-action />
+    </div>
+    <div class="commitment-filters" role="group" aria-label="Situação dos compromissos">
+      @for (option of filters; track option.value) {
+        <button
+          type="button"
+          [attr.aria-pressed]="filter() === option.value"
+          (click)="filter.set(option.value)"
+        >
+          {{ option.label }}
+        </button>
+      }
+      @if (day(); as selected) {
+        <button
+          type="button"
+          class="clear-day"
+          (click)="clear()"
+          [attr.aria-label]="'Mostrar todos os dias; selecionado ' + date(selected)"
+        >
+          {{ date(selected) }} · Todos os dias <i class="pi pi-times" aria-hidden="true"></i>
+        </button>
+      }
+    </div>
+    @if (saveError()) {
+      <p role="alert">
+        {{ saveError() }} <button type="button" (click)="save({})">Tentar salvar novamente</button>
+      </p>
+    }
+    @if (query(); as value) {
+      <fd-card-board [content]="content" [displayOnly]="only()" />
+      <ng-template #content let-id>
+        @if (id === 'commitment-agenda') {
+          <div class="detail-panel" tabindex="-1" (keydown.escape)="clearDetail($event)">
+            @if (day() || pendingId()) {
+              <div
+                class="selection-navigation"
+                role="group"
+                aria-label="Selecionar compromisso"
+                (keydown)="itemKey($event)"
+              >
+                <span
+                  >{{ pendingId() ? 'Pendência anterior' : date(day()!) }}
+                  @if (selectedRows().length > 1) {
+                    <small aria-live="polite"
+                      >{{ selectedIndex() + 1 }} de {{ selectedRows().length }}</small
+                    >
+                  }
+                </span>
+                @if (selectedRows().length > 1) {
+                  <button
+                    type="button"
+                    aria-label="Compromisso anterior"
+                    [disabled]="selectedIndex() === 0"
+                    (click)="moveItem(-1)"
+                  >
+                    <i class="pi pi-chevron-left" aria-hidden="true"></i>
+                  </button>
+                  <button
+                    type="button"
+                    aria-label="Próximo compromisso"
+                    [disabled]="selectedIndex() === selectedRows().length - 1"
+                    (click)="moveItem(1)"
+                  >
+                    <i class="pi pi-chevron-right" aria-hidden="true"></i>
+                  </button>
+                }
+              </div>
+            }
+            <fd-commitment-detail
+              [row]="selected()"
+              [snapshot]="context.snapshot()!"
+              [currency]="context.currencyMode()"
+              [emptyMessage]="
+                day()
+                  ? 'Nenhum compromisso neste dia e filtro.'
+                  : 'Selecione um dia ou uma pendência para consultar o compromisso.'
+              "
+            />
+          </div>
+        } @else {
+          <section class="calendar" aria-label="Calendário de compromissos">
+            <div class="calendar-heading">
+              <h2>Calendário</h2>
+              <div class="interval-total">
+                <span
+                  >No intervalo · {{ value.periodRows.length }}
+                  {{ value.periodRows.length === 1 ? 'item' : 'itens' }}</span
+                >
+                @for (total of periodTotal().values; track total.currency) {
+                  <strong>{{ money(total) }}</strong>
+                }
+                @if (periodTotal().unavailable) {
+                  <small>Subtotal indisponível</small>
+                }
+                @if (periodTotal().partial) {
+                  <small
+                    >{{ periodTotal().partial }}
+                    {{
+                      periodTotal().partial === 1
+                        ? 'valor parcial conhecido'
+                        : 'valores parciais conhecidos'
+                    }}</small
+                  >
+                }
+                @if (periodTotal().missing) {
+                  <small>{{ periodTotal().missing }} sem valor informado</small>
+                }
+                @for (credit of periodTotal().credits; track credit.currency) {
+                  <small>Créditos {{ money(credit) }}</small>
+                }
+              </div>
+            </div>
+            <div class="calendar-navigation">
+              <button
+                type="button"
+                aria-label="Mês anterior no calendário"
+                [disabled]="!canMove(-1)"
+                (click)="move(-1)"
+              >
+                <i class="pi pi-chevron-left" aria-hidden="true"></i>
+              </button>
+              <h3>{{ monthLabel() }}</h3>
+              <button
+                type="button"
+                aria-label="Próximo mês no calendário"
+                [disabled]="!canMove(1)"
+                (click)="move(1)"
+              >
+                <i class="pi pi-chevron-right" aria-hidden="true"></i>
+              </button>
+            </div>
+            <div class="calendar-grid" role="grid" [attr.aria-label]="monthLabel()">
+              <div class="week weekdays" role="row">
+                @for (weekday of ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom']; track weekday) {
+                  <span role="columnheader">{{ weekday }}</span>
+                }
+              </div>
+              @for (week of weeks(); track $index) {
+                <div class="week" role="row">
+                  @for (cell of week; track $index) {
+                    <div role="gridcell">
+                      @if (cell.on; as on) {
+                        <button
+                          type="button"
+                          [disabled]="!cell.enabled"
+                          [class.selected]="day() === on"
+                          [class.today]="context.snapshot()?.asOf === on"
+                          [attr.data-calendar-date]="on"
+                          [attr.aria-pressed]="day() === on"
+                          [tabIndex]="tabDay() === on ? 0 : -1"
+                          [attr.aria-label]="date(on) + ', ' + cell.count + ' compromissos'"
+                          (focus)="calendarFocus.set(on)"
+                          (click)="select(on)"
+                          (keydown)="key($event, on)"
+                        >
+                          <span>{{ cell.day }}</span>
+                          @if (cell.count) {
+                            <small>{{ cell.count }}</small>
+                          }
+                        </button>
+                      }
+                    </div>
+                  }
+                </div>
+              }
+            </div>
+            <p class="calendar-note">Selecione um dia para consultar seus itens.</p>
+            <section class="previous-cards" aria-label="Pendências anteriores">
+              <header>
+                <h3>Pendências anteriores</h3>
+                <span
+                  >{{ value.previous.length }} {{ value.previous.length === 1 ? 'item' : 'itens' }}
+                  @for (total of previousTotal().values; track total.currency) {
+                    <strong>{{ money(total) }}</strong>
+                  }
+                </span>
+              </header>
+              @if (previousTotal().unavailable) {
+                <p class="calendar-note">Subtotal anterior indisponível.</p>
+              }
+              @if (previousTotal().missing) {
+                <p class="calendar-note">
+                  {{ previousTotal().missing }} pendências sem valor informado, fora do subtotal.
+                </p>
+              }
+              <div class="pending-grid">
+                @for (row of value.previous; track row.id) {
+                  <button
+                    type="button"
+                    class="pending-card"
+                    [attr.data-pending-id]="row.id"
+                    [attr.aria-pressed]="pendingId() === row.id"
+                    (click)="selectPending(row)"
+                  >
+                    <span>{{ row.name }}</span
+                    ><strong>{{ amount(row) }}</strong
+                    ><small>{{ date(row.dueOn) }}</small
+                    ><small class="pending-status">{{ status(row) }}</small>
+                  </button>
+                } @empty {
+                  <p class="calendar-note">Sem pendências anteriores registradas.</p>
+                }
+              </div>
+            </section>
+          </section>
+        }
+      </ng-template>
+    } @else {
+      <p class="empty-state">Não foi possível determinar o período desta conta.</p>
+    }
+  }
+</section>

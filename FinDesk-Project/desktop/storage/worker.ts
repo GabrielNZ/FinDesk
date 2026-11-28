@@ -17,6 +17,18 @@ try {
       id = request.id;
       let value: unknown;
       switch (request.operation) {
+        case 'read-commitment-cards-layout':
+          value = store.readCommitmentCardsLayout();
+          break;
+        case 'save-commitment-cards-layout':
+          value = store.saveCommitmentCardsLayout(request.payload);
+          break;
+        case 'read-commitment-preferences':
+          value = store.readCommitmentPreferences();
+          break;
+        case 'save-commitment-preferences':
+          value = store.saveCommitmentPreferences(request.payload);
+          break;
         case 'read-invoice-cards-layout':
           value = store.readInvoiceCardsLayout();
           break;

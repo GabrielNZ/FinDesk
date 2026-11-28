@@ -4,10 +4,11 @@ import { ActivatedRoute } from '@angular/router';
 import { CardBoard } from './cards/card-board';
 import { Statement } from './statement/statement';
 import { CardPage } from './card/card-page';
+import { CommitmentPage } from './commitments/commitment-page';
 
 @Component({
   selector: 'fd-finance-subpage',
-  imports: [CardBoard, Statement, CardPage],
+  imports: [CardBoard, Statement, CardPage, CommitmentPage],
   template: `
     @if (route()['section'] === 'geral') {
       <fd-card-board />
@@ -15,6 +16,8 @@ import { CardPage } from './card/card-page';
       <fd-statement />
     } @else if (route()['section'] === 'cartao') {
       <fd-card-page />
+    } @else if (route()['section'] === 'compromissos') {
+      <fd-commitment-page />
     } @else {
       <section class="finance-content" [attr.aria-label]="route()['label']">
         <h2>{{ route()['label'] }}</h2>

@@ -1,0 +1,111 @@
+<section class="commitment-information" aria-label="Informações do compromisso">
+  @if (row(); as value) {
+    <header>
+      <h2>Compromisso</h2>
+      <span class="status" [class.overdue]="value.status === 'overdue'">{{ status() }}</span>
+    </header>
+    <h3>{{ value.name }}</h3>
+    <strong class="commitment-value">{{ money(shown()) }}</strong>
+    @if (value.partial && value.amount) {
+      <p class="value-note">Parcial conhecido</p>
+    }
+    @if (value.amount && currency() !== 'original' && currency() !== value.currency) {
+      <p class="value-note">Original: {{ money(value.amount) }}</p>
+    }
+    <dl class="primary-facts">
+      <div>
+        <dt>Vencimento</dt>
+        <dd>{{ date(value.dueOn) }}</dd>
+      </div>
+      <div>
+        <dt>Conta de origem</dt>
+        <dd>{{ account() }}</dd>
+      </div>
+    </dl>
+    <dl class="destination-facts">
+      <div>
+        <dt>Destino</dt>
+        <dd>{{ destination() }}</dd>
+      </div>
+      <div>
+        <dt>Categoria</dt>
+        <dd>
+          @if (catalogue.value()) {
+            @for (category of categories(); track category.id) {
+              <span class="category"
+                ><i
+                  [class]="'pi ' + category.icon"
+                  [style.color]="category.color"
+                  aria-hidden="true"
+                ></i
+                >{{ category.name }}</span
+              >
+            }
+            @if (!categories().length) {
+              Não informada
+            }
+          } @else if (catalogue.error()) {
+            <button type="button" (click)="catalogue.load()">Tentar carregar categorias</button>
+          } @else {
+            Carregando…
+          }
+        </dd>
+      </div>
+    </dl>
+    <div class="history-section">
+      <div>
+        <span>Frequência</span><strong>{{ frequency() }}</strong>
+      </div>
+      <div>
+        <span>Histórico conhecido</span
+        ><strong
+          >{{ payments() }}
+          {{ payments() === 1 ? 'pagamento registrado' : 'pagamentos registrados' }}</strong
+        >
+      </div>
+    </div>
+    <div class="variation-section">
+      <span>Variação em relação ao último registro</span>
+      @if (variation(); as change) {
+        @if (change.value; as difference) {
+          <strong
+            >{{ signed(difference)
+            }}<small
+              >{{ change.percentage ?? 'Sem base percentual'
+              }}{{ change.partial ? ' · Parcial' : '' }}</small
+            ></strong
+          >
+          @if (change.reference; as reference) {
+            <small>Referência: {{ date(reference.invoice.dueOn) }}</small>
+          }
+        } @else {
+          <strong class="unavailable">Sem referência disponível</strong>
+        }
+      } @else if (billDifference(); as difference) {
+        <strong
+          >{{ signed(difference)
+          }}<small>{{ insight()?.percentage ?? 'Sem base percentual' }}</small></strong
+        >
+        @if (insight()?.previous; as previous) {
+          <small
+            >{{ date(previous.dueOn) }} · {{ money(previous.amount) }} → {{ date(value.dueOn) }} ·
+            {{ money(value.amount) }}</small
+          >
+        }
+      } @else {
+        <strong class="unavailable">Sem referência disponível</strong>
+      }
+    </div>
+    @if (value.payment; as payment) {
+      <p class="payment-note">
+        Pagamento identificado em {{ date(payment.on) }} · {{ money(payment.delta) }}
+      </p>
+    }
+  } @else {
+    <h2>Compromisso</h2>
+    <div class="empty-detail">
+      <i class="pi pi-calendar" aria-hidden="true"></i>
+      <p>{{ emptyMessage() }}</p>
+    </div>
+  }
+</section>

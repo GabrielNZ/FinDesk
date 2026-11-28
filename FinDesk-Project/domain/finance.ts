@@ -51,6 +51,8 @@ export function validateFacts(facts: FinanceFacts): void {
   const refunds = indexById(facts.cardRefunds ?? []);
   const salaries = indexById(facts.salaries);
   const subscriptions = indexById(facts.subscriptions);
+  const commitments = indexById(facts.commitments ?? []);
+  const series = indexById(facts.commitmentSeries ?? []);
 
   for (const account of accounts.values()) {
     civilDate(account.openingOn);
@@ -225,6 +227,90 @@ export function validateFacts(facts: FinanceFacts): void {
         if (invoice.paidByMovementId !== movement.id)
           throw new RangeError('Pagamento duplicado ou sem vínculo recíproco.');
       }
+    }
+  }
+  const commitmentPayments = new Set<string>();
+  const commitmentOrigins = new Set<string>();
+  const historyIds = new Set<string>();
+  for (const item of series.values()) {
+    const account = requireFact(accounts, item.accountId);
+    validateOrigin(item.origin);
+    if (
+      !item.destination.trim() ||
+      !['monthly', 'annual'].includes(item.frequency) ||
+      item.categoryId === ''
+    )
+      throw new RangeError('Série de compromisso inválida.');
+    for (const record of item.priorHistory) {
+      civilDate(record.dueOn);
+      validateOrigin(record.origin);
+      if (
+        !record.id.trim() ||
+        historyIds.has(record.id) ||
+        record.nature !== 'observed' ||
+        record.dueOn >= account.openingOn
+      )
+        throw new RangeError('Histórico anterior inválido ou duplicado.');
+      historyIds.add(record.id);
+      if (record.amount !== null) {
+        nonnegative(record.amount);
+        if (record.amount.currency !== account.openingBalance.currency)
+          throw new RangeError('Moeda histórica incompatível.');
+      }
+      if (record.paidOn !== null) {
+        civilDate(record.paidOn);
+        if (record.paidOn >= account.openingOn)
+          throw new RangeError('Pagamento histórico fora da abertura.');
+      }
+      if (record.origin.externalId !== null) {
+        const key = JSON.stringify([
+          item.accountId,
+          record.origin.sourceId,
+          record.origin.externalId,
+        ]);
+        if (commitmentOrigins.has(key)) throw new RangeError('Origem histórica duplicada.');
+        commitmentOrigins.add(key);
+      }
+    }
+  }
+  for (const occurrence of commitments.values()) {
+    const account = requireFact(accounts, occurrence.accountId);
+    civilDate(occurrence.dueOn);
+    validateOrigin(occurrence.origin);
+    if (occurrence.seriesId != null) {
+      if (
+        requireFact(series, occurrence.seriesId).accountId !== occurrence.accountId ||
+        occurrence.dueOn < account.openingOn
+      )
+        throw new RangeError('Série vinculada à ocorrência incompatível.');
+    }
+    if (!occurrence.name.trim()) throw new RangeError('Compromisso sem nome.');
+    if (occurrence.amount !== null) {
+      nonnegative(occurrence.amount);
+      if (occurrence.amount.currency !== account.openingBalance.currency)
+        throw new RangeError('Moeda do compromisso incompatível.');
+    }
+    if (occurrence.origin.externalId !== null) {
+      const key = JSON.stringify([
+        occurrence.accountId,
+        occurrence.origin.sourceId,
+        occurrence.origin.externalId,
+      ]);
+      if (commitmentOrigins.has(key)) throw new RangeError('Origem de compromisso duplicada.');
+      commitmentOrigins.add(key);
+    }
+    if (occurrence.paymentMovementId !== null) {
+      const payment = requireFact(movements, occurrence.paymentMovementId);
+      if (
+        commitmentPayments.has(payment.id) ||
+        payment.kind !== 'expense' ||
+        payment.accountId !== occurrence.accountId ||
+        occurrence.amount === null ||
+        payment.delta.currency !== occurrence.amount.currency ||
+        payment.delta.minorUnits !== -occurrence.amount.minorUnits
+      )
+        throw new RangeError('Pagamento do compromisso incompatível ou duplicado.');
+      commitmentPayments.add(payment.id);
     }
   }
   for (const coverage of facts.coverage) {

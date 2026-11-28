@@ -1,0 +1,161 @@
+:host {
+  display: block;
+  min-width: 0;
+}
+.commitment-information {
+  padding: 22px 24px;
+}
+header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+}
+h2 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 500;
+}
+.status {
+  font-size: 10px;
+  color: var(--fd-muted);
+}
+.status.overdue {
+  color: #d6b385;
+}
+h3 {
+  margin: 25px 0 12px;
+  font-size: 23px;
+  font-weight: 500;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+}
+.commitment-value {
+  display: block;
+  font-family: var(--fd-font-heading);
+  font-size: clamp(32px, 12cqw, 56px);
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.2;
+  overflow-wrap: anywhere;
+}
+.value-note {
+  color: var(--fd-muted);
+  font-size: 11px;
+  margin: 5px 0 0;
+}
+dl {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 20px;
+  margin: 24px 0 0;
+}
+dt,
+.history-section span,
+.variation-section > span {
+  color: var(--fd-muted);
+  font-size: 11px;
+  line-height: 1.5;
+}
+dd {
+  margin: 8px 0 0;
+  font-size: 16px;
+  font-weight: 500;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+.destination-facts {
+  grid-template-columns: 1fr;
+  border-top: 1px solid var(--fd-border);
+  padding-top: 20px;
+}
+.destination-facts dd {
+  font-size: 19px;
+}
+.category {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-right: 12px;
+}
+.category i {
+  font-size: 15px;
+}
+.history-section {
+  display: grid;
+  gap: 20px;
+  margin-top: 24px;
+  padding-top: 20px;
+  border-top: 1px solid var(--fd-border);
+}
+.history-section strong {
+  display: block;
+  margin-top: 7px;
+  font-size: 19px;
+  font-weight: 500;
+}
+.variation-section {
+  border-top: 1px solid var(--fd-border);
+  margin-top: 24px;
+  padding-top: 20px;
+}
+.variation-section > strong {
+  display: block;
+  font-size: 26px;
+  font-weight: 500;
+  margin-top: 10px;
+}
+.variation-section small {
+  display: block;
+  font-size: 11px;
+  color: var(--fd-muted);
+  margin-top: 6px;
+}
+.variation-section .unavailable {
+  color: var(--fd-muted);
+  font-size: 14px;
+}
+.payment-note {
+  font-size: 11px;
+  color: var(--fd-muted);
+  margin: 20px 0 0;
+  line-height: 1.6;
+}
+.empty-detail {
+  display: grid;
+  align-content: center;
+  justify-items: center;
+  min-height: 300px;
+  text-align: center;
+  color: var(--fd-muted);
+}
+.empty-detail i {
+  font-size: 32px;
+}
+.empty-detail p {
+  font-size: 13px;
+  line-height: 1.7;
+  max-width: 240px;
+}
+button {
+  padding: 0;
+  border: 0;
+  color: var(--fd-accent);
+  background: transparent;
+  font: inherit;
+  font-size: 12px;
+  cursor: pointer;
+}
+button:focus-visible {
+  outline: 2px solid var(--fd-accent);
+  outline-offset: 3px;
+}
+@container (max-width: 380px) {
+  .commitment-information {
+    padding: 20px 16px;
+  }
+  dd {
+    font-size: 14px;
+  }
+}

@@ -149,24 +149,86 @@ const legacySnapshot = shape({
   seedVersion: oneOf(1, 2, 3),
   facts: shape(factFields),
 });
-const currentSnapshot = shape({
+const refundFields = {
+  ...factFields,
+  cardRefunds: list(
+    shape({
+      nature: oneOf('observed'),
+      id: text,
+      purchaseId: text,
+      invoiceId: text,
+      on: text,
+      amount: money,
+      origin,
+    }),
+  ),
+};
+const refundSnapshot = shape({
   ...snapshotFields,
   formatVersion: oneOf(2),
   seedVersion: oneOf(4),
+  facts: shape(refundFields),
+});
+const occurrenceFields = {
+  id: text,
+  name: text,
+  accountId: text,
+  dueOn: text,
+  amount: nullable(money),
+  paymentMovementId: nullable(text),
+  origin,
+};
+const commitmentSnapshot = shape({
+  ...snapshotFields,
+  formatVersion: oneOf(3),
+  seedVersion: oneOf(5),
   facts: shape({
-    ...factFields,
-    cardRefunds: list(
+    ...refundFields,
+    commitments: list(
       shape({
-        nature: oneOf('observed'),
         id: text,
-        purchaseId: text,
-        invoiceId: text,
-        on: text,
-        amount: money,
+        name: text,
+        accountId: text,
+        dueOn: text,
+        amount: nullable(money),
+        paymentMovementId: nullable(text),
         origin,
       }),
     ),
   }),
 });
+const currentSnapshot = shape({
+  ...snapshotFields,
+  formatVersion: oneOf(4),
+  seedVersion: oneOf(6),
+  facts: shape({
+    ...refundFields,
+    commitments: list(shape({ ...occurrenceFields, seriesId: nullable(text) })),
+    commitmentSeries: list(
+      shape({
+        id: text,
+        accountId: text,
+        destination: text,
+        categoryId: nullable(text),
+        frequency: oneOf('monthly', 'annual'),
+        origin,
+        priorHistory: list(
+          shape({
+            nature: oneOf('observed'),
+            id: text,
+            dueOn: text,
+            amount: nullable(money),
+            paidOn: nullable(text),
+            origin,
+          }),
+        ),
+      }),
+    ),
+  }),
+});
 
-export const snapshotShape: Rule = (value) => legacySnapshot(value) || currentSnapshot(value);
+export const snapshotShape: Rule = (value) =>
+  legacySnapshot(value) ||
+  refundSnapshot(value) ||
+  commitmentSnapshot(value) ||
+  currentSnapshot(value);

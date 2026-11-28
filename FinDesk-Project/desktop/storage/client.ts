@@ -1,4 +1,5 @@
 import { Worker } from 'node:worker_threads';
+import type { CommitmentPreferences } from '../../shared/commitments';
 import type {
   ExpenseLifecycleRequest,
   ExpenseLifecycleResult,
@@ -31,6 +32,20 @@ import type {
 
 /** Canal interno para um único worker; sem SQL, eval ou caminho em mensagens. */
 export class StorageClient {
+  getCommitmentCardsLayout(): Promise<StorageResult<CardLayout | null>> {
+    return this.request('read-commitment-cards-layout');
+  }
+  saveCommitmentCardsLayout(value: CardLayout): Promise<StorageResult<CardLayout>> {
+    return this.request('save-commitment-cards-layout', value);
+  }
+  getCommitmentPreferences(): Promise<StorageResult<CommitmentPreferences>> {
+    return this.request('read-commitment-preferences');
+  }
+  saveCommitmentPreferences(
+    value: CommitmentPreferences,
+  ): Promise<StorageResult<CommitmentPreferences>> {
+    return this.request('save-commitment-preferences', value);
+  }
   getInvoiceCardsLayout(): Promise<StorageResult<CardLayout | null>> {
     return this.request('read-invoice-cards-layout');
   }

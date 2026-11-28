@@ -76,6 +76,8 @@ test('F07a/D136: atualização v1→v2 preserva manuais, recibos, excluídas, ca
     },
   };
   delete legacy.facts.cardRefunds;
+  delete legacy.facts.commitments;
+  delete legacy.facts.commitmentSeries;
   const prefs = store.readPreferences(),
     categories = store.readCategories(),
     token = store.getExpenseEdit(manual).token;
@@ -101,7 +103,7 @@ test('F07a/D136: atualização v1→v2 preserva manuais, recibos, excluídas, ca
     const before = preserved();
     store = new DemoStore(root);
     const after = store.readDemo();
-    assert.equal(after.seedVersion, 4);
+    assert.equal(after.seedVersion, 6);
     assert.deepEqual(
       after.facts.movements.filter((m) => !isSeptember(m.id)),
       legacy.facts.movements,
@@ -146,7 +148,7 @@ test('F07a/D136: falha ao atualizar recibo de chegadas reverte fatos e versão d
     assert.equal(db.prepare('SELECT payload FROM demo_state').get().payload, bytes);
     db.exec('DROP TRIGGER fail_seed_update');
     const next = new DemoStore(root);
-    assert.equal(next.readDemo().seedVersion, 4);
+    assert.equal(next.readDemo().seedVersion, 6);
     next.close();
   } finally {
     db.close();
@@ -732,7 +734,7 @@ test('FIN-047/048: estrutura financeira inválida e versão futura do agregado p
     const store = new DemoStore(root);
     const data = store.readDemo();
     store.close();
-    if (incompatible) data.formatVersion = 3;
+    if (incompatible) data.formatVersion = 5;
     else data.facts.movements[0].kind = 'unknown';
     const filename = join(root, 'demo.sqlite');
     const db = new DatabaseSync(filename);

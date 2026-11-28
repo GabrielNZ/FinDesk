@@ -1,4 +1,5 @@
 import type { CivilDate } from '../domain/civil-date';
+import type { CommitmentPreferences } from './commitments';
 import type { FinanceFacts } from '../domain/finance-facts';
 import type { CardLayout } from './card-layout';
 import type { StatementLayout } from './statement-layout';
@@ -18,9 +19,9 @@ import type {
 } from './expenses';
 
 export interface DemoSnapshot {
-  readonly formatVersion: 1 | 2;
+  readonly formatVersion: 1 | 2 | 3 | 4;
   readonly seedId: 'demo-financas-v1';
-  readonly seedVersion: 1 | 2 | 3 | 4;
+  readonly seedVersion: 1 | 2 | 3 | 4 | 5 | 6;
   readonly asOf: CivilDate;
   readonly timezone: 'America/Sao_Paulo';
   readonly facts: FinanceFacts;
@@ -56,6 +57,12 @@ export interface StorageInfo {
 }
 
 export interface StorageApi {
+  getCommitmentCardsLayout(): Promise<StorageResult<CardLayout | null>>;
+  saveCommitmentCardsLayout(value: CardLayout): Promise<StorageResult<CardLayout>>;
+  getCommitmentPreferences(): Promise<StorageResult<CommitmentPreferences>>;
+  saveCommitmentPreferences(
+    value: CommitmentPreferences,
+  ): Promise<StorageResult<CommitmentPreferences>>;
   getInvoiceCardsLayout(): Promise<StorageResult<CardLayout | null>>;
   saveInvoiceCardsLayout(value: CardLayout): Promise<StorageResult<CardLayout>>;
   getExpenseChartsLayout(): Promise<StorageResult<CardLayout | null>>;
@@ -88,6 +95,10 @@ export interface StorageApi {
 }
 
 export const STORAGE_CHANNELS = {
+  readCommitmentCardsLayout: 'findesk:commitment-cards-layout-read',
+  saveCommitmentCardsLayout: 'findesk:commitment-cards-layout-save',
+  readCommitmentPreferences: 'findesk:commitment-preferences-read',
+  saveCommitmentPreferences: 'findesk:commitment-preferences-save',
   readInvoiceCardsLayout: 'findesk:invoice-cards-layout-read',
   saveInvoiceCardsLayout: 'findesk:invoice-cards-layout-save',
   readExpenseChartsLayout: 'findesk:expense-charts-layout-read',

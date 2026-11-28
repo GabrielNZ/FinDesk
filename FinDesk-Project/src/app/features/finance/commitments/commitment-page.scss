@@ -1,0 +1,254 @@
+:host {
+  display: block;
+  min-width: 0;
+}
+.commitment-tools,
+.commitment-filters {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+.commitment-tools {
+  gap: 10px 16px;
+}
+.period-options,
+.view-options {
+  display: flex;
+  align-items: center;
+  padding: 3px;
+  border: 1px solid var(--fd-border);
+  border-radius: 8px;
+}
+button {
+  font: inherit;
+  color: var(--fd-muted);
+  background: transparent;
+  border: 0;
+  border-radius: 5px;
+  padding: 7px 10px;
+  font-size: 11px;
+  cursor: pointer;
+}
+button[aria-pressed='true'] {
+  color: var(--fd-text);
+  background: #a9c8b51c;
+}
+button:hover:not(:disabled) {
+  color: var(--fd-text);
+  background: #a9c8b510;
+}
+button:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+button:focus-visible {
+  outline: 2px solid var(--fd-accent);
+  outline-offset: 2px;
+}
+.period-information {
+  flex: 1;
+  min-width: 150px;
+  font-size: 11px;
+  color: var(--fd-muted);
+  font-variant-numeric: tabular-nums;
+}
+.period-information small {
+  display: block;
+  font-size: 9px;
+  margin-top: 3px;
+}
+.commitment-filters {
+  gap: 5px;
+}
+.clear-day {
+  border: 1px solid var(--fd-border);
+  margin-left: 10px;
+}
+.clear-day i {
+  margin-left: 6px;
+  font-size: 9px;
+}
+.calendar {
+  padding: 22px 20px;
+}
+h2 {
+  margin: 0;
+  font-size: 17px;
+  font-weight: 500;
+}
+.calendar-navigation {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin: 20px 0;
+}
+h3 {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 500;
+}
+.calendar-navigation button {
+  padding: 8px;
+}
+.calendar-navigation i {
+  font-size: 10px;
+}
+.week {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+}
+.week > div {
+  min-width: 0;
+}
+.weekdays {
+  margin-bottom: 8px;
+  color: var(--fd-muted);
+  font-size: 9px;
+  text-align: center;
+}
+.week button {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  width: 100%;
+  height: 64px;
+  padding: 6px 0;
+  font-size: 15px;
+  font-variant-numeric: tabular-nums;
+}
+.week button.today {
+  box-shadow: inset 0 0 0 1px #a9c8b570;
+}
+.week button.selected {
+  background: var(--fd-accent);
+  color: #15201c;
+}
+.week small {
+  font-size: 8px;
+}
+.calendar-note,
+.empty-state {
+  color: var(--fd-muted);
+  font-size: 11px;
+  line-height: 1.6;
+  margin: 16px 0 0;
+}
+.day-list {
+  color: var(--fd-accent);
+  margin-top: 10px;
+  border: 1px solid var(--fd-border);
+}
+.selection-navigation {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 20px 24px 0;
+}
+.calendar-heading {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  align-items: baseline;
+}
+.interval-total {
+  display: grid;
+  gap: 4px;
+  text-align: right;
+  font-size: 11px;
+  color: var(--fd-muted);
+}
+.interval-total strong {
+  font-size: 18px;
+  color: var(--fd-text);
+  font-weight: 500;
+}
+.interval-total small {
+  font-size: 10px;
+}
+.selection-navigation > span {
+  flex: 1;
+  color: var(--fd-muted);
+  font-size: 12px;
+}
+.selection-navigation small {
+  margin-left: 10px;
+}
+.selection-navigation button {
+  border: 1px solid var(--fd-border);
+}
+.selection-navigation i {
+  font-size: 11px;
+}
+.no-items {
+  margin: 0 24px 24px;
+  color: var(--fd-muted);
+  font-size: 12px;
+}
+.previous-cards {
+  margin-top: 24px;
+  padding-top: 20px;
+  border-top: 1px solid var(--fd-border);
+}
+.previous-cards header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+}
+.previous-cards header > span {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  font-size: 11px;
+  color: var(--fd-muted);
+}
+.previous-cards header strong {
+  color: var(--fd-text);
+  font-size: 16px;
+  font-weight: 500;
+}
+.pending-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(220px, 100%), 1fr));
+  gap: 12px;
+  margin-top: 14px;
+}
+.pending-card {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 8px 16px;
+  padding: 16px;
+  text-align: left;
+  border: 1px solid var(--fd-border);
+  border-radius: 10px;
+  background: #a9c8b506;
+  color: var(--fd-text);
+}
+.pending-card > span {
+  font-size: 14px;
+}
+.pending-card strong {
+  font-size: 22px;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+}
+.pending-card small {
+  color: var(--fd-muted);
+  font-size: 10px;
+}
+.pending-card .pending-status {
+  grid-column: 1 / -1;
+  color: #d6b385;
+}
+@container (max-width: 400px) {
+  .calendar {
+    padding: 20px 12px;
+  }
+  .week button {
+    height: 42px;
+  }
+}

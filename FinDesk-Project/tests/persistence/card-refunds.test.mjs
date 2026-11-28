@@ -29,6 +29,8 @@ async function temporary(t) {
 function legacy(snapshot) {
   const facts = { ...snapshot.facts };
   delete facts.cardRefunds;
+  delete facts.commitments;
+  delete facts.commitmentSeries;
   return { ...snapshot, formatVersion: 1, seedVersion: 3, facts };
 }
 function auxiliary(db) {
@@ -68,8 +70,8 @@ test('D177: formato v1/seed v3 migra atomicamente, preserva fatos/auxiliares/lay
     const aux = auxiliary(db);
     store = new DemoStore(root);
     const after = store.readDemo();
-    assert.equal(after.formatVersion, 2);
-    assert.equal(after.seedVersion, 4);
+    assert.equal(after.formatVersion, 4);
+    assert.equal(after.seedVersion, 6);
     assert.equal(after.facts.cardRefunds.length, 1);
     for (const key of Object.keys(before.facts))
       assert.deepEqual(after.facts[key], before.facts[key]);
@@ -84,7 +86,7 @@ test('D177: formato v1/seed v3 migra atomicamente, preserva fatos/auxiliares/lay
     assert.deepEqual(store.readDemo(), after);
     const restored = store.restoreDemo();
     assert.equal(restored.facts.cardRefunds.length, 1);
-    assert.equal(restored.seedVersion, 4);
+    assert.equal(restored.seedVersion, 6);
     assert.deepEqual(store.readPreferences(), preferences);
     assert.deepEqual(store.readInvoiceCardsLayout(), layout);
   } finally {

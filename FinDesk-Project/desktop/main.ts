@@ -31,6 +31,8 @@ import {
   parseExpenseAnalysisLayoutRequest,
   parseExpenseChartsLayoutRequest,
   parseInvoiceCardsLayoutRequest,
+  parseCommitmentCardsLayoutRequest,
+  parseCommitmentPreferencesRequest,
   StorageFailure,
 } from './storage/contracts';
 import { storageDirectory } from './storage/paths';
@@ -124,6 +126,8 @@ async function start(): Promise<void> {
   }
 
   const readOperations = {
+    [STORAGE_CHANNELS.readCommitmentCardsLayout]: () => storage?.getCommitmentCardsLayout(),
+    [STORAGE_CHANNELS.readCommitmentPreferences]: () => storage?.getCommitmentPreferences(),
     [STORAGE_CHANNELS.readInvoiceCardsLayout]: () => storage?.getInvoiceCardsLayout(),
     [STORAGE_CHANNELS.readExpenseChartsLayout]: () => storage?.getExpenseChartsLayout(),
     [STORAGE_CHANNELS.readExpenseAnalysisLayout]: () => storage?.getExpenseAnalysisLayout(),
@@ -149,6 +153,30 @@ async function start(): Promise<void> {
     try {
       return (
         storage?.saveExpenseAnalysisLayout(parseExpenseAnalysisLayoutRequest(args[0])) ??
+        failure(new StorageFailure('unavailable'))
+      );
+    } catch (error) {
+      return failure(error);
+    }
+  });
+  ipcMain.handle(STORAGE_CHANNELS.saveCommitmentCardsLayout, (event, ...args: unknown[]) => {
+    if (!trustedSender(event) || args.length !== 1)
+      return failure(new StorageFailure('invalid-request'));
+    try {
+      return (
+        storage?.saveCommitmentCardsLayout(parseCommitmentCardsLayoutRequest(args[0])) ??
+        failure(new StorageFailure('unavailable'))
+      );
+    } catch (error) {
+      return failure(error);
+    }
+  });
+  ipcMain.handle(STORAGE_CHANNELS.saveCommitmentPreferences, (event, ...args: unknown[]) => {
+    if (!trustedSender(event) || args.length !== 1)
+      return failure(new StorageFailure('invalid-request'));
+    try {
+      return (
+        storage?.saveCommitmentPreferences(parseCommitmentPreferencesRequest(args[0])) ??
         failure(new StorageFailure('unavailable'))
       );
     } catch (error) {

@@ -119,6 +119,37 @@ export interface SourceCoverage {
   readonly status: 'current' | 'incomplete' | 'failed';
 }
 
+/** Ocorrência explícita de conta; não gera novas ocorrências ou débito de caixa. */
+export interface CommitmentOccurrence {
+  readonly seriesId?: string | null;
+  readonly id: string;
+  readonly name: string;
+  readonly accountId: string;
+  readonly dueOn: CivilDate;
+  readonly amount: Money | null;
+  readonly paymentMovementId: string | null;
+  readonly origin: Origin;
+}
+
+/** Registros observados anteriores à abertura do caixa; não são novos débitos. */
+export interface CommitmentHistory {
+  readonly nature: 'observed';
+  readonly id: string;
+  readonly dueOn: CivilDate;
+  readonly amount: Money | null;
+  readonly paidOn: CivilDate | null;
+  readonly origin: Origin;
+}
+export interface CommitmentSeries {
+  readonly id: string;
+  readonly accountId: string;
+  readonly destination: string;
+  readonly categoryId: string | null;
+  readonly frequency: 'monthly' | 'annual';
+  readonly priorHistory: readonly CommitmentHistory[];
+  readonly origin: Origin;
+}
+
 /** Fatos e vínculos locais. Não é esquema SQL nem API de importação. */
 export interface FinanceFacts {
   readonly accounts: readonly Account[];
@@ -129,6 +160,9 @@ export interface FinanceFacts {
   readonly invoiceItems: readonly InvoiceItem[];
   /** Ausente somente no contrato legado, anterior ao suporte a estornos. */
   readonly cardRefunds?: readonly CardRefund[];
+  /** Ausente somente nos agregados legados anteriores à F10a. */
+  readonly commitments?: readonly CommitmentOccurrence[];
+  readonly commitmentSeries?: readonly CommitmentSeries[];
   readonly salaries: readonly SalaryExpectation[];
   readonly subscriptions: readonly SubscriptionFact[];
   readonly coverage: readonly SourceCoverage[];

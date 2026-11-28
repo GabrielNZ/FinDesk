@@ -56,6 +56,13 @@ import { createDemoScenario } from '../../fixtures/financas/demo';
 import { withSeptemberHistory } from '../../fixtures/financas/comparison-history';
 import { withSecondCard } from '../../fixtures/financas/card-wallet';
 import { withCardRefund } from '../../fixtures/financas/card-refund';
+import { withCommitments } from '../../fixtures/financas/commitments';
+import { withCommitmentDetails } from '../../fixtures/financas/commitment-details';
+import {
+  DEFAULT_COMMITMENT_PREFERENCES,
+  parseCommitmentPreferences,
+} from '../../application/commitment-preferences';
+import type { CommitmentPreferences } from '../../shared/commitments';
 import type { DemoSnapshot, FinancePreferences, StorageInfo } from '../../shared/storage-api';
 import { parsePreferences, parseStoredJson, StorageFailure, validateSnapshot } from './contracts';
 import { DEMO_MIGRATIONS, migrate, PREFERENCE_MIGRATIONS } from './migrations';
@@ -166,6 +173,30 @@ export class DemoStore {
           this.demo!.prepare('UPDATE demo_state SET payload = ? WHERE singleton = 1').run(
             JSON.stringify(next),
           );
+          previous = next;
+        }
+        if (previous.seedVersion === 4) {
+          let next;
+          try {
+            next = validateSnapshot(withCommitments(previous));
+          } catch {
+            throw new StorageFailure('corrupt');
+          }
+          this.demo!.prepare('UPDATE demo_state SET payload = ? WHERE singleton = 1').run(
+            JSON.stringify(next),
+          );
+          previous = next;
+        }
+        if (previous.seedVersion === 5) {
+          let next;
+          try {
+            next = validateSnapshot(withCommitmentDetails(previous));
+          } catch {
+            throw new StorageFailure('corrupt');
+          }
+          this.demo!.prepare('UPDATE demo_state SET payload = ? WHERE singleton = 1').run(
+            JSON.stringify(next),
+          );
         }
       });
       transaction(this.preferences, () => {
@@ -234,7 +265,9 @@ export class DemoStore {
   restoreDemo(): DemoSnapshot {
     const [demo] = this.requireOpen();
     transaction(demo, () => {
-      const fresh = withCardRefund(withSecondCard(withSeptemberHistory(freshDemo())));
+      const fresh = withCommitmentDetails(
+        withCommitments(withCardRefund(withSecondCard(withSeptemberHistory(freshDemo())))),
+      );
       const facts = demo
         .prepare('UPDATE demo_state SET payload = ? WHERE singleton = 1')
         .run(JSON.stringify(fresh));
@@ -881,6 +914,60 @@ export class DemoStore {
     } catch {
       throw new StorageFailure('corrupt');
     }
+  }
+  readCommitmentCardsLayout(): CardLayout | null {
+    const row = this.requireOpen()[1]
+      .prepare("SELECT payload FROM preferences WHERE key='layout.finance-commitments.v1'")
+      .get();
+    if (!row) return null;
+    const raw = parseStoredJson(row['payload']);
+    if (raw && typeof raw === 'object' && 'version' in raw && raw.version !== 3)
+      throw new StorageFailure('incompatible');
+    try {
+      return parseCardLayout(raw, 'finance-commitments');
+    } catch {
+      throw new StorageFailure('corrupt');
+    }
+  }
+  saveCommitmentCardsLayout(value: unknown): CardLayout {
+    const checked = parseCardLayout(value, 'finance-commitments');
+    this.readCommitmentCardsLayout();
+    const db = this.requireOpen()[1];
+    transaction(db, () =>
+      db
+        .prepare(
+          "INSERT INTO preferences (key,payload) VALUES ('layout.finance-commitments.v1',?) ON CONFLICT(key) DO UPDATE SET payload=excluded.payload",
+        )
+        .run(JSON.stringify(checked)),
+    );
+    return checked;
+  }
+  readCommitmentPreferences(): CommitmentPreferences {
+    const row = this.requireOpen()[1]
+      .prepare("SELECT payload FROM preferences WHERE key='commitments.v1'")
+      .get();
+    if (!row) return DEFAULT_COMMITMENT_PREFERENCES;
+    const raw = parseStoredJson(row['payload']);
+    if (raw && typeof raw === 'object' && 'version' in raw && raw.version !== 1)
+      throw new StorageFailure('incompatible');
+    try {
+      return parseCommitmentPreferences(raw);
+    } catch {
+      throw new StorageFailure('corrupt');
+    }
+  }
+  saveCommitmentPreferences(value: unknown): CommitmentPreferences {
+    const checked = parseCommitmentPreferences(value);
+    this.readCommitmentPreferences();
+    const db = this.requireOpen()[1];
+    transaction(db, () =>
+      db
+        .prepare(
+          "INSERT INTO preferences (key,payload) VALUES ('commitments.v1',?) ON CONFLICT(key) DO UPDATE SET payload=excluded.payload",
+        )
+        .run(JSON.stringify(checked)),
+    );
+    return checked;
   }
   readInvoiceCardsLayout(): CardLayout | null {
     const row = this.requireOpen()[1]

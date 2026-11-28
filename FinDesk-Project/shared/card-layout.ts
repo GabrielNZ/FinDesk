@@ -1,4 +1,6 @@
 export type FinanceCardId =
+  | 'commitment-agenda'
+  | 'commitment-calendar'
   | 'categories'
   | 'evolution'
   | 'upcoming'
@@ -12,7 +14,11 @@ export type FinanceCardId =
   | 'invoice-purchases'
   | 'invoice-future';
 export type CardArea =
-  'finance-general' | 'finance-analysis' | 'finance-charts' | 'finance-invoices';
+  | 'finance-general'
+  | 'finance-analysis'
+  | 'finance-charts'
+  | 'finance-invoices'
+  | 'finance-commitments';
 
 export interface CardPlacement {
   readonly id: FinanceCardId;

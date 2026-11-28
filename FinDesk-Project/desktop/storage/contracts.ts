@@ -1,6 +1,7 @@
 import { civilDate } from '../../domain/civil-date';
 import { validateFacts } from '../../domain/finance';
 import { snapshotShape } from './snapshot-shape';
+import { parseCommitmentPreferences } from '../../application/commitment-preferences';
 import { parseCardLayout } from '../../application/card-layout';
 import type { CardLayout } from '../../shared/card-layout';
 import { parseStatementLayout } from '../../application/statement-layout';
@@ -157,9 +158,9 @@ export function validateSnapshot(value: unknown): DemoSnapshot {
   try {
     const data = record(value);
     if (
-      (data['formatVersion'] !== 1 && data['formatVersion'] !== 2) ||
+      ![1, 2, 3, 4].includes(data['formatVersion'] as number) ||
       data['seedId'] !== 'demo-financas-v1' ||
-      ![1, 2, 3, 4].includes(data['seedVersion'] as number) ||
+      ![1, 2, 3, 4, 5, 6].includes(data['seedVersion'] as number) ||
       data['timezone'] !== 'America/Sao_Paulo'
     )
       throw new StorageFailure('incompatible');
@@ -177,13 +178,25 @@ export function validateSnapshot(value: unknown): DemoSnapshot {
       'subscriptions',
       'coverage',
     ];
-    if (data['formatVersion'] === 2) names.push('cardRefunds');
+    if ([2, 3, 4].includes(data['formatVersion'] as number)) names.push('cardRefunds');
+    if ([3, 4].includes(data['formatVersion'] as number)) names.push('commitments');
+    if (data['formatVersion'] === 4) names.push('commitmentSeries');
     if (Object.keys(facts).sort().join(',') !== names.sort().join(','))
       throw new StorageFailure('corrupt');
     for (const name of names) if (!Array.isArray(facts[name])) throw new StorageFailure('corrupt');
     const snapshot = value as DemoSnapshot;
     validateFacts(snapshot.facts);
     if ((snapshot.facts.cardRefunds ?? []).some((refund) => refund.on > snapshot.asOf))
+      throw new StorageFailure('corrupt');
+    if (
+      (snapshot.facts.commitmentSeries ?? []).some((series) =>
+        series.priorHistory.some(
+          (record) =>
+            record.dueOn > snapshot.asOf ||
+            (record.paidOn !== null && record.paidOn > snapshot.asOf),
+        ),
+      )
+    )
       throw new StorageFailure('corrupt');
     return snapshot;
   } catch (error) {
@@ -193,6 +206,10 @@ export function validateSnapshot(value: unknown): DemoSnapshot {
 }
 
 export type StorageOperation =
+  | 'read-commitment-cards-layout'
+  | 'save-commitment-cards-layout'
+  | 'read-commitment-preferences'
+  | 'save-commitment-preferences'
   | 'read-invoice-cards-layout'
   | 'save-invoice-cards-layout'
   | 'read-expense-charts-layout'
@@ -240,6 +257,20 @@ export function parseExpenseAnalysisLayoutRequest(value: unknown): CardLayout {
 export function parseInvoiceCardsLayoutRequest(value: unknown): CardLayout {
   try {
     return parseCardLayout(value, 'finance-invoices');
+  } catch {
+    throw new StorageFailure('invalid-request');
+  }
+}
+export function parseCommitmentCardsLayoutRequest(value: unknown): CardLayout {
+  try {
+    return parseCardLayout(value, 'finance-commitments');
+  } catch {
+    throw new StorageFailure('invalid-request');
+  }
+}
+export function parseCommitmentPreferencesRequest(value: unknown) {
+  try {
+    return parseCommitmentPreferences(value);
   } catch {
     throw new StorageFailure('invalid-request');
   }
@@ -331,6 +362,10 @@ export function validateRequest(value: unknown): WorkerRequest {
     (data['id'] as number) < 1 ||
     ![
       'read-invoice-cards-layout',
+      'read-commitment-cards-layout',
+      'save-commitment-cards-layout',
+      'read-commitment-preferences',
+      'save-commitment-preferences',
       'save-invoice-cards-layout',
       'read-expense-charts-layout',
       'save-expense-charts-layout',
@@ -374,6 +409,10 @@ export function validateRequest(value: unknown): WorkerRequest {
   else if (data['operation'] === 'classify-merchant') parseMerchantRequest(data['payload']);
   else if (data['operation'] === 'save-preferences') parsePreferences(data['payload']);
   else if (data['operation'] === 'save-card-layout') parseLayoutRequest(data['payload']);
+  else if (data['operation'] === 'save-commitment-cards-layout')
+    parseCommitmentCardsLayoutRequest(data['payload']);
+  else if (data['operation'] === 'save-commitment-preferences')
+    parseCommitmentPreferencesRequest(data['payload']);
   else if (data['operation'] === 'save-invoice-cards-layout')
     parseInvoiceCardsLayoutRequest(data['payload']);
   else if (data['operation'] === 'save-expense-charts-layout')
