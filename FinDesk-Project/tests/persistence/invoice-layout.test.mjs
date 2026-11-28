@@ -15,6 +15,7 @@ const {
   resolveCardLayout,
   resizeCard,
   reorderCard,
+  normalizeInvoiceLayout,
 } = require('../../out/application/card-layout.js');
 async function temporary(t) {
   const root = await mkdtemp(join(tmpdir(), 'findesk-invoice-layout-'));
@@ -29,12 +30,12 @@ async function temporary(t) {
   return root;
 }
 
-test('D164: contrato próprio de quatro cards, altura simétrica e adaptação sem alterar preferência', () => {
+test('D175: contrato de cinco cards preserva altura simétrica e adaptação sem alterar preferência', () => {
   const layout = defaultCardLayout('finance-invoices'),
     before = JSON.stringify(layout);
   assert.deepEqual(
     layout.cards.map((c) => c.id),
-    ['wallet', 'invoice', 'invoice-evolution', 'invoice-purchases'],
+    ['wallet', 'invoice', 'invoice-evolution', 'invoice-purchases', 'invoice-future'],
   );
   const wide = resolveCardLayout(layout, 1500).cards;
   assert.equal(wide[1].height, 400);
@@ -59,6 +60,45 @@ test('D164: contrato próprio de quatro cards, altura simétrica e adaptação s
     { ...layout, cards: layout.cards.map((c) => (c.id === 'invoice' ? { ...c, rows: 0 } : c)) },
   ])
     assert.throws(() => parseCardLayout(wrong, 'finance-invoices'));
+});
+test('D175: layout v3 é acrescentado em memória; leitura não muda bytes e gesto explícito salva v4', async (t) => {
+  const root = await temporary(t),
+    store = new DemoStore(root),
+    db = new DatabaseSync(join(root, 'preferences.sqlite'));
+  try {
+    const current = defaultCardLayout('finance-invoices');
+    const legacy = {
+      ...current,
+      version: 3,
+      cards: current.cards
+        .filter((c) => c.id !== 'invoice-future')
+        .map((c) => (c.id === 'invoice' ? { ...c, columns: 4.1, rows: 6.1, align: 0.3 } : c)),
+      rowStarts: ['wallet', 'invoice-purchases'],
+    };
+    const bytes = JSON.stringify(legacy);
+    db.prepare("INSERT INTO preferences(key,payload) VALUES('layout.finance-invoices.v1', ?)").run(
+      bytes,
+    );
+    const read = store.readInvoiceCardsLayout();
+    assert.deepEqual(read, legacy);
+    const upgraded = normalizeInvoiceLayout(read);
+    assert.equal(upgraded.version, 4);
+    assert.deepEqual(upgraded.cards.slice(0, 4), legacy.cards);
+    assert.equal(
+      db.prepare("SELECT payload FROM preferences WHERE key='layout.finance-invoices.v1'").get()
+        .payload,
+      bytes,
+    );
+    assert.equal(upgraded.cards.at(-1).id, 'invoice-future');
+    assert.deepEqual(store.saveInvoiceCardsLayout(upgraded), upgraded);
+    assert.throws(() =>
+      store.saveInvoiceCardsLayout({ ...upgraded, cards: upgraded.cards.slice(0, 4) }),
+    );
+    assert.throws(() => parseCardLayout({ ...defaultCardLayout(), version: 4 }));
+  } finally {
+    db.close();
+    store.close();
+  }
 });
 test('D164: worker persiste/reabre só o layout de Cartão; restauração demo preserva layouts/fatos/preferências', async (t) => {
   const root = await temporary(t),

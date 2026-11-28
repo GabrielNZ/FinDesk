@@ -24,6 +24,7 @@ import { CardConsultation } from './card-consultation.service';
 import { InvoiceCategories } from './invoice-categories';
 import { InvoicePurchaseList } from './invoice-purchases';
 import { InvoiceEvolutionChart } from './invoice-evolution';
+import { CardFuturePanel } from './card-future';
 import { CardBoard } from '../cards/card-board';
 import { CARD_LAYOUT_AREA, CardLayoutState } from '../cards/card-layout.service';
 import { CardLayoutAction } from '../cards/card-layout-action';
@@ -36,6 +37,7 @@ import { CardLayoutAction } from '../cards/card-layout-action';
     InvoiceEvolutionChart,
     CardBoard,
     CardLayoutAction,
+    CardFuturePanel,
   ],
   providers: [CardLayoutState, { provide: CARD_LAYOUT_AREA, useValue: 'finance-invoices' }],
   templateUrl: './card-page.html',

@@ -216,6 +216,18 @@
             />
           }
         }
+      } @else if (id === 'invoice-future') {
+        @if (selectedCard(); as card) {
+          @if (selected(); as row) {
+            <fd-card-future
+              [snapshot]="context.snapshot()!"
+              [accountId]="context.accountId()"
+              [cardId]="card.id"
+              [invoiceId]="row.invoice.id"
+              [currency]="context.currencyMode()"
+            />
+          }
+        }
       } @else if (id === 'invoice-purchases') {
         @if (selectedCard(); as card) {
           @if (selected(); as row) {

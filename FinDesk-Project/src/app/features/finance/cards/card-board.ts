@@ -120,6 +120,7 @@ export class CardBoard {
     invoice: 'Fatura',
     'invoice-evolution': 'Evolução das faturas',
     'invoice-purchases': 'Compras desta fatura',
+    'invoice-future': 'Futuro do cartão',
     largest: 'Maior gasto',
     increase: 'Maior aumento',
     decrease: 'Maior redução',
@@ -178,7 +179,10 @@ export class CardBoard {
     return this.resolved().cards.find((box) => box.id === id)!;
   }
   fitContent(id: FinanceCardId): boolean {
-    return this.state.area === 'finance-invoices' && id === 'invoice-purchases';
+    return (
+      this.state.area === 'finance-invoices' &&
+      (id === 'invoice-purchases' || id === 'invoice-future')
+    );
   }
   contentHeight(id: FinanceCardId, height: number): void {
     if (!this.fitContent(id) || this.contentMinimums()[id] === height) return;

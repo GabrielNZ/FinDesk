@@ -875,7 +875,13 @@ export class DemoStore {
       .get();
     if (!row) return null;
     const raw = parseStoredJson(row['payload']);
-    if (raw && typeof raw === 'object' && 'version' in raw && raw.version !== 3)
+    if (
+      raw &&
+      typeof raw === 'object' &&
+      'version' in raw &&
+      raw.version !== 3 &&
+      raw.version !== 4
+    )
       throw new StorageFailure('incompatible');
     try {
       return parseCardLayout(raw, 'finance-invoices');

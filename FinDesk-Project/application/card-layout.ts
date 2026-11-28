@@ -30,15 +30,16 @@ export const cardMinimums = (area: CardArea) =>
 export function defaultCardLayout(area: CardArea = 'finance-general'): CardLayout {
   if (area === 'finance-invoices')
     return {
-      version: 3,
+      version: 4,
       area,
       priority: 'invoice-evolution',
-      rowStarts: ['wallet', 'invoice-purchases'],
+      rowStarts: ['wallet', 'invoice-purchases', 'invoice-future'],
       cards: [
         { id: 'wallet', columns: 3.2, rows: 5.2 },
         { id: 'invoice', columns: 3.676, rows: 5.2 },
         { id: 'invoice-evolution', columns: 5.146, rows: 5.2, align: 1 },
         { id: 'invoice-purchases', columns: 12, rows: 4.5 },
+        { id: 'invoice-future', columns: 12, rows: 4.5 },
       ],
     };
   if (area === 'finance-charts')
@@ -85,13 +86,26 @@ export function normalizeAnalysisLayout(layout: CardLayout): CardLayout {
   };
 }
 
+/** Acrescenta o novo card em memória, sem regravar o layout v3 ao consultar. */
+export function normalizeInvoiceLayout(layout: CardLayout): CardLayout {
+  if (layout.area !== 'finance-invoices' || layout.version !== 3) return layout;
+  return {
+    ...layout,
+    version: 4,
+    cards: [...layout.cards, { id: 'invoice-future', columns: 12, rows: 4.5 }],
+    ...(layout.rowStarts ? { rowStarts: [...layout.rowStarts, 'invoice-future' as const] } : {}),
+  };
+}
+
 /** Contrato fechado, reutilizado na aplicação e nas fronteiras privilegiadas. */
 export function parseCardLayout(value: unknown, expectedArea?: CardArea): CardLayout {
   const data = object(value);
   const area = data['area'];
   const ids =
     area === 'finance-invoices'
-      ? INVOICE_IDS
+      ? data['version'] === 4
+        ? [...INVOICE_IDS, 'invoice-future' as const]
+        : INVOICE_IDS
       : area === 'finance-analysis'
         ? ANALYSIS_IDS
         : area === 'finance-charts'
@@ -99,7 +113,7 @@ export function parseCardLayout(value: unknown, expectedArea?: CardArea): CardLa
           : IDS;
   const minimums = cardMinimums(area as CardArea);
   const legacy = data['version'] === 1;
-  const current = data['version'] === 3;
+  const current = data['version'] === 3 || (area === 'finance-invoices' && data['version'] === 4);
   const hasRows = current && 'rowStarts' in data;
   if (
     Object.keys(data).sort().join(',') !==
@@ -168,7 +182,7 @@ export function parseCardLayout(value: unknown, expectedArea?: CardArea): CardLa
   )
     throw new RangeError('Linhas inválidas.');
   return {
-    version: 3,
+    version: area === 'finance-invoices' && data['version'] === 4 ? 4 : 3,
     area: area as CardArea,
     priority: priority as FinanceCardId | null,
     cards,

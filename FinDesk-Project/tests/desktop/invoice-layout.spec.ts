@@ -39,7 +39,7 @@ test('D164/D165: cards do cartão movem, redimensionam, preservam instância/fat
     await page.emulateMedia({ reducedMotion: 'reduce' });
     await page.getByRole('link', { name: 'Finanças', exact: true }).click();
     await page.getByRole('link', { name: 'Cartão', exact: true }).click();
-    await expect(page.locator('fd-card-page .card-item')).toHaveCount(4);
+    await expect(page.locator('fd-card-page .card-item')).toHaveCount(5);
     return page;
   };
   try {
@@ -74,7 +74,7 @@ test('D164/D165: cards do cartão movem, redimensionam, preservam instância/fat
     await page.mouse.up();
     await expect
       .poll(async () => (await saved(page))?.cards.map((c) => c.id))
-      .toEqual(['wallet', 'invoice-evolution', 'invoice', 'invoice-purchases']);
+      .toEqual(['wallet', 'invoice-evolution', 'invoice', 'invoice-purchases', 'invoice-future']);
     expect(
       await sameChart!.evaluate((node) => node === document.querySelector('fd-invoice-evolution')),
     ).toBe(true);
@@ -146,7 +146,7 @@ test('D164/D165: cards do cartão movem, redimensionam, preservam instância/fat
     await restore.click();
     await expect
       .poll(async () => (await saved(page))?.cards.map((c) => c.id))
-      .toEqual(['wallet', 'invoice', 'invoice-evolution', 'invoice-purchases']);
+      .toEqual(['wallet', 'invoice', 'invoice-evolution', 'invoice-purchases', 'invoice-future']);
     // D172: expansão é um mínimo visual; reorganização/resize não a gravam como altura preferida.
     await app!.evaluate(({ BrowserWindow }) =>
       BrowserWindow.getAllWindows()[0]!.setSize(1800, 1000),

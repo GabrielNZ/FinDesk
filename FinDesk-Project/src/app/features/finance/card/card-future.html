@@ -1,0 +1,181 @@
+<section class="card-future" aria-label="Futuro registrado do cartão">
+  @if (query(); as value) {
+    <header>
+      <div>
+        <h2>Futuro do cartão</h2>
+        <p>Após {{ month(value.reference.invoice.dueOn) }} · Por vencimento</p>
+      </div>
+      <div class="future-total">
+        <span>Subtotal conhecido</span><strong>{{ money(value.value) }}</strong>
+        @if (converted(value.original)) {
+          <small>Original: {{ money(value.original) }}</small>
+        }
+      </div>
+    </header>
+    @if (value.invoices.length) {
+      <div class="future-bars" role="group" aria-label="Faturas posteriores registradas">
+        @for (row of value.invoices; track row.reading.invoice.id) {
+          <button
+            type="button"
+            class="future-invoice"
+            [attr.data-future-invoice]="row.reading.invoice.id"
+            [attr.aria-expanded]="expanded() === row.reading.invoice.id"
+            aria-controls="future-invoice-detail"
+            [attr.aria-label]="
+              month(row.reading.invoice.dueOn) +
+              ', vencimento ' +
+              date(row.reading.invoice.dueOn) +
+              ', ' +
+              money(row.value) +
+              ', ' +
+              status(row) +
+              ', ver itens registrados'
+            "
+            (click)="choose(row.reading.invoice.id)"
+          >
+            <span class="future-month"
+              >{{ month(row.reading.invoice.dueOn) }}<small>{{ status(row) }}</small></span
+            >
+            <span class="future-track" aria-hidden="true">
+              @if (row.value) {
+                <i
+                  class="future-fill"
+                  [class.zero]="row.value.minorUnits === 0"
+                  [style.width.%]="row.percent"
+                ></i>
+              } @else {
+                <span class="future-missing">—</span>
+              }
+            </span>
+            <strong>{{
+              row.value
+                ? money(row.value)
+                : row.unavailable === 'no-items'
+                  ? 'Sem itens'
+                  : 'Indisponível'
+            }}</strong>
+          </button>
+        }
+      </div>
+      @if (value.missingInvoices) {
+        <p class="notice">
+          {{ value.missingInvoices }}
+          {{
+            value.missingInvoices === 1
+              ? 'fatura sem itens registrados; não representa zero.'
+              : 'faturas sem itens registrados; não representam zero.'
+          }}
+        </p>
+      }
+      @if (value.unavailable === 'precision') {
+        <p class="notice">Subtotal fora da precisão disponível.</p>
+      }
+      @if (value.unavailable === 'conversion') {
+        <p class="notice">Conversão do subtotal indisponível.</p>
+      }
+    } @else {
+      <p class="notice">Nenhuma fatura posterior registrada. Isso não confirma quitação.</p>
+    }
+    @for (row of detail() ? [detail()!] : []; track row.reading.invoice.id) {
+      <div class="future-reveal" animate.enter="future-enter" animate.leave="future-leave">
+        <div
+          class="future-detail"
+          id="future-invoice-detail"
+          role="region"
+          aria-label="Itens da fatura posterior"
+          tabindex="0"
+        >
+          <div class="detail-heading">
+            <h3>{{ month(row.reading.invoice.dueOn) }} · {{ status(row) }}</h3>
+            <button
+              type="button"
+              (click)="close()"
+              aria-label="Fechar detalhes da fatura posterior"
+            >
+              <i class="pi pi-times" aria-hidden="true"></i>
+            </button>
+          </div>
+          <p>
+            Vencimento {{ date(row.reading.invoice.dueOn) }} · {{ row.items.length }} itens
+            registrados
+          </p>
+          @if (!catalogue.value()) {
+            <p class="notice">{{ catalogue.error() ?? 'Carregando estabelecimentos…' }}</p>
+            @if (catalogue.error()) {
+              <button type="button" (click)="catalogue.load()">Tentar novamente</button>
+            }
+          } @else if (row.items.length) {
+            <table>
+              <caption class="visually-hidden">
+                Itens registrados da fatura posterior
+              </caption>
+              <thead>
+                <tr>
+                  <th>Estabelecimento</th>
+                  <th>Tipo / parcela</th>
+                  <th class="amount">Nesta fatura</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (entry of row.items; track entry.item.id) {
+                  <tr [attr.data-future-item]="entry.item.id">
+                    <td>
+                      {{ catalogue.merchantLabel(entry.purchase.merchantId)
+                      }}<small>Compra em {{ date(entry.purchase.purchasedOn) }}</small>
+                    </td>
+                    <td>
+                      {{ kind(entry)
+                      }}<small>
+                        @if (entry.purchase.installmentCount > 1) {
+                          {{ entry.item.installmentNumber }} de
+                          {{ entry.purchase.installmentCount }}
+                        } @else {
+                          À vista
+                        }
+                        @if (entry.purchase.scheduleCoverage === 'partial') {
+                          · Agenda parcial
+                        }
+                      </small>
+                    </td>
+                    <td class="amount">
+                      {{ money(entry.value) }}
+                      @if (converted(entry.item.amount)) {
+                        <small>{{ money(entry.item.amount) }}</small>
+                      }
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          } @else {
+            <p class="notice">Nenhum item conhecido nesta fatura.</p>
+          }
+        </div>
+      </div>
+    }
+    @if (value.incompletePurchases) {
+      <p class="notice">
+        {{ value.incompletePurchases }}
+        {{
+          value.incompletePurchases === 1
+            ? 'compra com agenda parcial; pode haver parcelas não informadas.'
+            : 'compras com agenda parcial; pode haver parcelas não informadas.'
+        }}
+      </p>
+    }
+    <footer><span>Recorrências previstas</span><strong>Ainda não projetadas</strong></footer>
+    <p class="notice">
+      Itens registrados após a referência; não é dívida total nem valor final de faturas em
+      formação.
+    </p>
+    @if (converted(value.original)) {
+      <p class="notice">
+        Cotação fictícia · 1 USD = 5 BRL · 29/10/2026. Proporções na moeda original; totais e
+        faturas convertidos separadamente.
+      </p>
+    }
+  } @else {
+    <h2>Futuro do cartão</h2>
+    <p class="notice">Não foi possível consultar as faturas posteriores.</p>
+  }
+</section>

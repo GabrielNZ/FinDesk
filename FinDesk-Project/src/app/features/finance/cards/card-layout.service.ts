@@ -3,6 +3,7 @@ import {
   defaultCardLayout,
   parseCardLayout,
   normalizeAnalysisLayout,
+  normalizeInvoiceLayout,
 } from '../../../../../application/card-layout';
 import type { CardArea, CardLayout, FinanceCardId } from '../../../../../shared/card-layout';
 export const CARD_LAYOUT_AREA = new InjectionToken<CardArea>('card-layout-area', {
@@ -54,7 +55,9 @@ export class CardLayoutState {
         this.layout.set(
           result.value === null
             ? defaultCardLayout(this.area)
-            : normalizeAnalysisLayout(parseCardLayout(result.value, this.area)),
+            : normalizeInvoiceLayout(
+                normalizeAnalysisLayout(parseCardLayout(result.value, this.area)),
+              ),
         );
         this.initialized = true;
         this.state.set('ready');
